@@ -1,0 +1,11 @@
+{
+  "response": [
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/mpls/global/interface-attributes/interface[interface-id=GigabitEthernet0/0/0/0]/state",
+      "val": {
+        "interface-id": "GigabitEthernet0/0/0/0",
+        "mpls-enabled": true
+      }
+    }
+  ]
+}

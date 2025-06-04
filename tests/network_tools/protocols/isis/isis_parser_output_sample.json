@@ -1,0 +1,85 @@
+{
+  "router_id": null,
+  "net": "49.0100.0100.0100.0101.00",
+  "level_capability": "LEVEL_1_2",
+  "authentication_check": true,
+  "segment_routing_enabled": true,
+  "interfaces": [
+    {
+      "name": "Loopback0",
+      "enabled": true,
+      "passive": true,
+      "circuit_type": "POINT_TO_POINT",
+      "levels": [
+        {
+          "level_number": 1,
+          "enabled": true,
+          "hello_authentication": false
+        },
+        {
+          "level_number": 2,
+          "enabled": true,
+          "hello_authentication": false
+        }
+      ],
+      "authentication_enabled": false,
+      "bfd_enabled": false
+    },
+    {
+      "name": "GigabitEthernet0/0/0/0",
+      "enabled": true,
+      "passive": false,
+      "circuit_type": "POINT_TO_POINT",
+      "levels": [
+        {
+          "level_number": 1,
+          "enabled": true,
+          "hello_authentication": false
+        }
+      ],
+      "authentication_enabled": false,
+      "bfd_enabled": false
+    },
+    {
+      "name": "GigabitEthernet0/0/0/1",
+      "enabled": true,
+      "passive": false,
+      "circuit_type": "POINT_TO_POINT",
+      "levels": [
+        {
+          "level_number": 1,
+          "enabled": true,
+          "hello_authentication": false
+        }
+      ],
+      "authentication_enabled": false,
+      "bfd_enabled": false
+    }
+  ],
+  "adjacencies": [
+    {
+      "interface": "GigabitEthernet0/0/0/0",
+      "system_id": "0100.0100.0103",
+      "neighbor_ipv4": "100.101.103.103",
+      "neighbor_ipv6": "::",
+      "level": 1,
+      "adjacency_type": "LEVEL_1",
+      "state": "UP",
+      "area_address": [
+        "49.0100"
+      ]
+    },
+    {
+      "interface": "GigabitEthernet0/0/0/1",
+      "system_id": "0100.0100.0105",
+      "neighbor_ipv4": "100.101.105.105",
+      "neighbor_ipv6": "::",
+      "level": 1,
+      "adjacency_type": "LEVEL_1",
+      "state": "UP",
+      "area_address": [
+        "49.0100"
+      ]
+    }
+  ]
+}

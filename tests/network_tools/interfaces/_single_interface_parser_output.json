@@ -1,0 +1,22 @@
+{
+  "interface": {
+    "name": "GigabitEthernet0/0/0/0",
+    "admin_state": "UP",
+    "oper_state": "UP",
+    "description": "this is a test",
+    "ip_address": "100.101.103.101",
+    "prefix_length": 24,
+    "vrf": null,
+    "mtu": 1514,
+    "mac_address": "02:42:ac:12:00:03",
+    "speed": "SPEED_1GB",
+    "duplex": "FULL",
+    "counters": {
+      "in_packets": "233218",
+      "out_packets": "238235",
+      "in_errors": "0",
+      "out_errors": "0"
+    }
+  },
+  "timestamp": 1745232366249448283
+}

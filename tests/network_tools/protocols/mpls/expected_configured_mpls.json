@@ -1,0 +1,29 @@
+{
+  "enabled": true,
+  "label_blocks": [
+    {
+      "name": "default-srgb",
+      "lower_bound": 16000,
+      "upper_bound": 18000
+    },
+    {
+      "name": "default-srlb",
+      "lower_bound": 15000,
+      "upper_bound": 15999
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "GigabitEthernet0/0/0/0",
+      "mpls_enabled": true
+    },
+    {
+      "name": "GigabitEthernet0/0/0/1",
+      "mpls_enabled": true
+    }
+  ],
+  "global_settings": {
+    "null_label": "openconfig-mpls-types:IMPLICIT",
+    "ttl_propagation": true
+  }
+}

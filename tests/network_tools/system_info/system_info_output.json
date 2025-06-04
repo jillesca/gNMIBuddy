@@ -1,0 +1,38 @@
+{
+  "hostname": "xrd-9",
+  "current_datetime": "2025-05-25T16:15:52.641+00:00",
+  "software_version": "24.2.1",
+  "timezone": "Universal",
+  "memory_physical": "33657106432",
+  "grpc_servers": [
+    {
+      "name": "DEFAULT",
+      "enable": true,
+      "port": 57777,
+      "transport_security": false,
+      "listen_addresses": [
+        "ANY"
+      ]
+    }
+  ],
+  "logging": [
+    {
+      "severity": "DEBUG",
+      "facility": "openconfig-system-logging:ALL"
+    }
+  ],
+  "message": {
+    "msg": "RP/0/RP0/CPU0May 25 15:24:20.229 UTC: plat_sl_client[186]: %LICENSE-PLAT_CLIENT-6-SIA_IN_COMPLIANCE : Device is in SIA Compliance ",
+    "priority": 190,
+    "app_name": "plat_sl_client"
+  },
+  "users": [
+    {
+      "username": "admin",
+      "role": "root-lr"
+    }
+  ],
+  "boot_time": "1747381914000000000",
+  "boot_time_human": "2025-05-16 07:51:54 UTC",
+  "uptime": "9d 8h 23m 58s"
+}

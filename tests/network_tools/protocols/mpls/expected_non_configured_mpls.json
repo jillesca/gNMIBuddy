@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "label_blocks": [
+    "NO_LABEL_BLOCKS_CONFIGURED"
+  ],
+  "interfaces": [
+    "NO_INTERFACES_CONFIGURED"
+  ],
+  "global_settings": {
+    "ttl_propagation": true
+  }
+}

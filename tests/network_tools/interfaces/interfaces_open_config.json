@@ -1,0 +1,778 @@
+{
+  "response": [
+    {
+      "path": "interfaces",
+      "val": {
+        "interface": [
+          {
+            "name": "Loopback0",
+            "state": {
+              "name": "Loopback0",
+              "type": "iana-if-type:softwareLoopback",
+              "mtu": 1500,
+              "loopback-mode": false,
+              "enabled": true,
+              "ifindex": 7,
+              "admin-status": "UP",
+              "oper-status": "UP",
+              "last-change": "1744111129620007047",
+              "logical": true,
+              "management": false,
+              "cpu": false,
+              "counters": {
+                "carrier-transitions": "1"
+              }
+            },
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "index": 0,
+                  "openconfig-if-ip:ipv4": {
+                    "addresses": {
+                      "address": [
+                        {
+                          "ip": "100.100.100.101",
+                          "state": {
+                            "ip": "100.100.100.101",
+                            "prefix-length": 32,
+                            "origin": "static"
+                          }
+                        }
+                      ]
+                    },
+                    "state": {
+                      "mtu": 1500,
+                      "dhcp-client": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "MgmtEth0/RP0/CPU0/0",
+            "openconfig-if-ethernet:ethernet": {
+              "state": {
+                "auto-negotiate": false,
+                "mac-address": "02:42:c6:12:9e:16",
+                "duplex-mode": "FULL",
+                "port-speed": "SPEED_1GB",
+                "enable-flow-control": false,
+                "hw-mac-address": "02:42:c6:12:9e:16",
+                "negotiated-port-speed": "SPEED_UNKNOWN",
+                "counters": {
+                  "in-mac-pause-frames": "0",
+                  "in-oversize-frames": "0",
+                  "in-undersize-frames": "0",
+                  "in-jabber-frames": "0",
+                  "in-fragment-frames": "0",
+                  "out-8021q-frames": "0",
+                  "in-crc-errors": "0",
+                  "in-maxsize-exceeded": "0",
+                  "out-mac-pause-frames": "0",
+                  "in-8021q-frames": "0",
+                  "openconfig-if-ethernet-ext:in-distribution": {
+                    "in-frames-64-octets": "0",
+                    "in-frames-65-127-octets": "0",
+                    "in-frames-128-255-octets": "0",
+                    "in-frames-256-511-octets": "0",
+                    "in-frames-512-1023-octets": "0",
+                    "in-frames-1024-1518-octets": "0"
+                  }
+                }
+              }
+            },
+            "hold-time": {
+              "state": {
+                "up": 10,
+                "down": 0
+              }
+            },
+            "state": {
+              "name": "MgmtEth0/RP0/CPU0/0",
+              "type": "iana-if-type:ethernetCsmacd",
+              "mtu": 1514,
+              "loopback-mode": false,
+              "enabled": true,
+              "ifindex": 3,
+              "admin-status": "UP",
+              "oper-status": "UP",
+              "last-change": "1744111130931414835",
+              "logical": false,
+              "management": true,
+              "cpu": false,
+              "counters": {
+                "carrier-transitions": "1",
+                "in-pkts": "666116",
+                "in-octets": "40422223",
+                "in-multicast-pkts": "0",
+                "in-broadcast-pkts": "8644",
+                "in-unicast-pkts": "657472",
+                "in-errors": "0",
+                "in-unknown-protos": "0",
+                "in-fcs-errors": "0",
+                "in-discards": "0",
+                "out-pkts": "675043",
+                "out-octets": "63836177",
+                "out-multicast-pkts": "0",
+                "out-broadcast-pkts": "3",
+                "out-unicast-pkts": "675040",
+                "out-errors": "0",
+                "out-discards": "0",
+                "Cisco-IOS-XR-openconfig-interfaces-stats-ext:cisco": {
+                  "last-read-time": "0"
+                }
+              },
+              "openconfig-if-sdn-ext:forwarding-viable": true
+            },
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "index": 0,
+                  "openconfig-if-ip:ipv4": {
+                    "neighbors": {
+                      "neighbor": [
+                        {
+                          "ip": "198.18.128.1",
+                          "state": {
+                            "ip": "198.18.128.1",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "00:50:56:00:00:01"
+                          }
+                        },
+                        {
+                          "ip": "198.18.134.29",
+                          "state": {
+                            "ip": "198.18.134.29",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "00:50:56:97:86:53"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.16",
+                          "state": {
+                            "ip": "198.18.158.16",
+                            "origin": "OTHER",
+                            "link-layer-address": "02:42:c6:12:9e:16"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.17",
+                          "state": {
+                            "ip": "198.18.158.17",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:11"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.18",
+                          "state": {
+                            "ip": "198.18.158.18",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:14"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.19",
+                          "state": {
+                            "ip": "198.18.158.19",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:17"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.20",
+                          "state": {
+                            "ip": "198.18.158.20",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:18"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.21",
+                          "state": {
+                            "ip": "198.18.158.21",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:19"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.22",
+                          "state": {
+                            "ip": "198.18.158.22",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:10"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.23",
+                          "state": {
+                            "ip": "198.18.158.23",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:13"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.24",
+                          "state": {
+                            "ip": "198.18.158.24",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:12"
+                          }
+                        },
+                        {
+                          "ip": "198.18.158.25",
+                          "state": {
+                            "ip": "198.18.158.25",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:c6:12:9e:15"
+                          }
+                        }
+                      ]
+                    },
+                    "addresses": {
+                      "address": [
+                        {
+                          "ip": "198.18.158.16",
+                          "state": {
+                            "ip": "198.18.158.16",
+                            "prefix-length": 18,
+                            "origin": "static"
+                          }
+                        }
+                      ]
+                    },
+                    "state": {
+                      "mtu": 1500,
+                      "dhcp-client": false,
+                      "counters": {
+                        "in-pkts": "16001",
+                        "in-octets": "1429039",
+                        "out-pkts": "33161",
+                        "out-octets": "36349919",
+                        "in-multicast-pkts": "0",
+                        "in-multicast-octets": "0",
+                        "out-multicast-pkts": "0",
+                        "out-multicast-octets": "0"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "GigabitEthernet0/0/0/0",
+            "openconfig-if-ethernet:ethernet": {
+              "state": {
+                "auto-negotiate": false,
+                "mac-address": "02:42:ac:12:00:03",
+                "duplex-mode": "FULL",
+                "port-speed": "SPEED_1GB",
+                "enable-flow-control": false,
+                "hw-mac-address": "02:42:ac:12:00:03",
+                "negotiated-port-speed": "SPEED_UNKNOWN",
+                "counters": {
+                  "in-mac-pause-frames": "0",
+                  "in-oversize-frames": "0",
+                  "in-undersize-frames": "0",
+                  "in-jabber-frames": "0",
+                  "in-fragment-frames": "0",
+                  "out-8021q-frames": "0",
+                  "in-crc-errors": "0",
+                  "in-maxsize-exceeded": "0",
+                  "out-mac-pause-frames": "0",
+                  "in-8021q-frames": "0",
+                  "openconfig-if-ethernet-ext:in-distribution": {
+                    "in-frames-64-octets": "0",
+                    "in-frames-65-127-octets": "0",
+                    "in-frames-128-255-octets": "0",
+                    "in-frames-256-511-octets": "0",
+                    "in-frames-512-1023-octets": "0",
+                    "in-frames-1024-1518-octets": "0"
+                  }
+                }
+              }
+            },
+            "hold-time": {
+              "state": {
+                "up": 10,
+                "down": 0
+              }
+            },
+            "state": {
+              "name": "GigabitEthernet0/0/0/0",
+              "type": "iana-if-type:ethernetCsmacd",
+              "mtu": 1514,
+              "loopback-mode": false,
+              "description": "this is a test",
+              "enabled": true,
+              "ifindex": 4,
+              "admin-status": "UP",
+              "oper-status": "UP",
+              "last-change": "1744111130988170082",
+              "logical": false,
+              "management": false,
+              "cpu": false,
+              "counters": {
+                "carrier-transitions": "1",
+                "in-pkts": "232553",
+                "in-octets": "200056154",
+                "in-multicast-pkts": "132309",
+                "in-broadcast-pkts": "1",
+                "in-unicast-pkts": "100243",
+                "in-errors": "0",
+                "in-unknown-protos": "0",
+                "in-fcs-errors": "0",
+                "in-discards": "0",
+                "out-pkts": "237570",
+                "out-octets": "201311956",
+                "out-multicast-pkts": "132086",
+                "out-broadcast-pkts": "2",
+                "out-unicast-pkts": "105482",
+                "out-errors": "0",
+                "out-discards": "0",
+                "Cisco-IOS-XR-openconfig-interfaces-stats-ext:cisco": {
+                  "last-read-time": "0"
+                }
+              },
+              "openconfig-if-sdn-ext:forwarding-viable": true
+            },
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "index": 0,
+                  "openconfig-if-ip:ipv4": {
+                    "neighbors": {
+                      "neighbor": [
+                        {
+                          "ip": "100.101.103.101",
+                          "state": {
+                            "ip": "100.101.103.101",
+                            "origin": "OTHER",
+                            "link-layer-address": "02:42:ac:12:00:03"
+                          }
+                        },
+                        {
+                          "ip": "100.101.103.103",
+                          "state": {
+                            "ip": "100.101.103.103",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:ac:12:00:02"
+                          }
+                        }
+                      ]
+                    },
+                    "addresses": {
+                      "address": [
+                        {
+                          "ip": "100.101.103.101",
+                          "state": {
+                            "ip": "100.101.103.101",
+                            "prefix-length": 24,
+                            "origin": "static"
+                          }
+                        }
+                      ]
+                    },
+                    "state": {
+                      "mtu": 1500,
+                      "dhcp-client": false,
+                      "counters": {
+                        "in-pkts": "100158",
+                        "in-octets": "5919366",
+                        "out-pkts": "0",
+                        "out-octets": "0",
+                        "in-multicast-pkts": "0",
+                        "in-multicast-octets": "0",
+                        "out-multicast-pkts": "0",
+                        "out-multicast-octets": "0"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "GigabitEthernet0/0/0/1",
+            "openconfig-if-ethernet:ethernet": {
+              "state": {
+                "auto-negotiate": false,
+                "mac-address": "02:42:ac:13:00:02",
+                "duplex-mode": "FULL",
+                "port-speed": "SPEED_1GB",
+                "enable-flow-control": false,
+                "hw-mac-address": "02:42:ac:13:00:02",
+                "negotiated-port-speed": "SPEED_UNKNOWN",
+                "counters": {
+                  "in-mac-pause-frames": "0",
+                  "in-oversize-frames": "0",
+                  "in-undersize-frames": "0",
+                  "in-jabber-frames": "0",
+                  "in-fragment-frames": "0",
+                  "out-8021q-frames": "0",
+                  "in-crc-errors": "0",
+                  "in-maxsize-exceeded": "0",
+                  "out-mac-pause-frames": "0",
+                  "in-8021q-frames": "0",
+                  "openconfig-if-ethernet-ext:in-distribution": {
+                    "in-frames-64-octets": "0",
+                    "in-frames-65-127-octets": "0",
+                    "in-frames-128-255-octets": "0",
+                    "in-frames-256-511-octets": "0",
+                    "in-frames-512-1023-octets": "0",
+                    "in-frames-1024-1518-octets": "0"
+                  }
+                }
+              }
+            },
+            "hold-time": {
+              "state": {
+                "up": 10,
+                "down": 0
+              }
+            },
+            "state": {
+              "name": "GigabitEthernet0/0/0/1",
+              "type": "iana-if-type:ethernetCsmacd",
+              "mtu": 1514,
+              "loopback-mode": false,
+              "enabled": true,
+              "ifindex": 5,
+              "admin-status": "UP",
+              "oper-status": "UP",
+              "last-change": "1744111130988715987",
+              "logical": false,
+              "management": false,
+              "cpu": false,
+              "counters": {
+                "carrier-transitions": "1",
+                "in-pkts": "169239",
+                "in-octets": "196538145",
+                "in-multicast-pkts": "132350",
+                "in-broadcast-pkts": "2",
+                "in-unicast-pkts": "36887",
+                "in-errors": "0",
+                "in-unknown-protos": "0",
+                "in-fcs-errors": "0",
+                "in-discards": "0",
+                "out-pkts": "169398",
+                "out-octets": "197131008",
+                "out-multicast-pkts": "132036",
+                "out-broadcast-pkts": "1",
+                "out-unicast-pkts": "37361",
+                "out-errors": "0",
+                "out-discards": "0",
+                "Cisco-IOS-XR-openconfig-interfaces-stats-ext:cisco": {
+                  "last-read-time": "0"
+                }
+              },
+              "openconfig-if-sdn-ext:forwarding-viable": true
+            },
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "index": 0,
+                  "openconfig-if-ip:ipv4": {
+                    "neighbors": {
+                      "neighbor": [
+                        {
+                          "ip": "100.101.105.101",
+                          "state": {
+                            "ip": "100.101.105.101",
+                            "origin": "OTHER",
+                            "link-layer-address": "02:42:ac:13:00:02"
+                          }
+                        },
+                        {
+                          "ip": "100.101.105.105",
+                          "state": {
+                            "ip": "100.101.105.105",
+                            "origin": "DYNAMIC",
+                            "link-layer-address": "02:42:ac:13:00:03"
+                          }
+                        }
+                      ]
+                    },
+                    "addresses": {
+                      "address": [
+                        {
+                          "ip": "100.101.105.101",
+                          "state": {
+                            "ip": "100.101.105.101",
+                            "prefix-length": 24,
+                            "origin": "static"
+                          }
+                        }
+                      ]
+                    },
+                    "state": {
+                      "mtu": 1500,
+                      "dhcp-client": false,
+                      "counters": {
+                        "in-pkts": "36804",
+                        "in-octets": "2341857",
+                        "out-pkts": "0",
+                        "out-octets": "0",
+                        "in-multicast-pkts": "0",
+                        "in-multicast-octets": "0",
+                        "out-multicast-pkts": "0",
+                        "out-multicast-octets": "0"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "GigabitEthernet0/0/0/2",
+            "openconfig-if-ethernet:ethernet": {
+              "state": {
+                "auto-negotiate": false,
+                "mac-address": "02:42:ac:14:00:02",
+                "duplex-mode": "FULL",
+                "port-speed": "SPEED_1GB",
+                "enable-flow-control": false,
+                "hw-mac-address": "02:42:ac:14:00:02",
+                "negotiated-port-speed": "SPEED_UNKNOWN",
+                "counters": {
+                  "in-mac-pause-frames": "0",
+                  "in-oversize-frames": "0",
+                  "in-undersize-frames": "0",
+                  "in-jabber-frames": "0",
+                  "in-fragment-frames": "0",
+                  "out-8021q-frames": "0",
+                  "in-crc-errors": "0",
+                  "in-maxsize-exceeded": "0",
+                  "out-mac-pause-frames": "0",
+                  "in-8021q-frames": "0",
+                  "openconfig-if-ethernet-ext:in-distribution": {
+                    "in-frames-64-octets": "0",
+                    "in-frames-65-127-octets": "0",
+                    "in-frames-128-255-octets": "0",
+                    "in-frames-256-511-octets": "0",
+                    "in-frames-512-1023-octets": "0",
+                    "in-frames-1024-1518-octets": "0"
+                  }
+                }
+              }
+            },
+            "hold-time": {
+              "state": {
+                "up": 10,
+                "down": 0
+              }
+            },
+            "state": {
+              "name": "GigabitEthernet0/0/0/2",
+              "type": "iana-if-type:ethernetCsmacd",
+              "mtu": 1514,
+              "loopback-mode": false,
+              "enabled": true,
+              "ifindex": 6,
+              "admin-status": "UP",
+              "oper-status": "UP",
+              "last-change": "1744111130989160571",
+              "logical": false,
+              "management": false,
+              "cpu": false,
+              "counters": {
+                "carrier-transitions": "1",
+                "in-pkts": "310",
+                "in-octets": "21700",
+                "in-multicast-pkts": "310",
+                "in-broadcast-pkts": "0",
+                "in-unicast-pkts": "0",
+                "in-errors": "0",
+                "in-unknown-protos": "0",
+                "in-fcs-errors": "0",
+                "in-discards": "0",
+                "out-pkts": "1",
+                "out-octets": "42",
+                "out-multicast-pkts": "0",
+                "out-broadcast-pkts": "1",
+                "out-unicast-pkts": "0",
+                "out-errors": "0",
+                "out-discards": "0",
+                "Cisco-IOS-XR-openconfig-interfaces-stats-ext:cisco": {
+                  "last-read-time": "0"
+                }
+              },
+              "openconfig-if-sdn-ext:forwarding-viable": true
+            },
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "index": 0,
+                  "openconfig-if-ip:ipv4": {
+                    "neighbors": {
+                      "neighbor": [
+                        {
+                          "ip": "10.1.1.3",
+                          "state": {
+                            "ip": "10.1.1.3",
+                            "origin": "OTHER",
+                            "link-layer-address": "02:42:ac:14:00:02"
+                          }
+                        }
+                      ]
+                    },
+                    "addresses": {
+                      "address": [
+                        {
+                          "ip": "10.1.1.3",
+                          "state": {
+                            "ip": "10.1.1.3",
+                            "prefix-length": 24,
+                            "origin": "static"
+                          }
+                        }
+                      ]
+                    },
+                    "state": {
+                      "mtu": 1500,
+                      "dhcp-client": false,
+                      "counters": {
+                        "in-pkts": "0",
+                        "in-octets": "0",
+                        "out-pkts": "0",
+                        "out-octets": "0",
+                        "in-multicast-pkts": "0",
+                        "in-multicast-octets": "0",
+                        "out-multicast-pkts": "0",
+                        "out-multicast-octets": "0"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "sr-srte_c_100_ep_100.100.100.102",
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "index": 0,
+                  "openconfig-if-ip:ipv6": {
+                    "state": {
+                      "enabled": true,
+                      "mtu": 1500,
+                      "dup-addr-detect-transmits": 1,
+                      "counters": {
+                        "in-pkts": "0",
+                        "in-octets": "0",
+                        "out-pkts": "0",
+                        "out-octets": "0",
+                        "in-multicast-pkts": "0",
+                        "in-multicast-octets": "0",
+                        "out-multicast-pkts": "0",
+                        "out-multicast-octets": "0"
+                      }
+                    }
+                  },
+                  "openconfig-if-ip:ipv4": {
+                    "addresses": {
+                      "address": [
+                        {
+                          "ip": "100.100.100.101",
+                          "state": {
+                            "ip": "100.100.100.101",
+                            "prefix-length": 32,
+                            "origin": "static"
+                          }
+                        }
+                      ]
+                    },
+                    "state": {
+                      "mtu": 1500,
+                      "dhcp-client": false,
+                      "counters": {
+                        "in-pkts": "0",
+                        "in-octets": "0",
+                        "out-pkts": "0",
+                        "out-octets": "0",
+                        "in-multicast-pkts": "0",
+                        "in-multicast-octets": "0",
+                        "out-multicast-pkts": "0",
+                        "out-multicast-octets": "0"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "Null0",
+            "state": {
+              "name": "Null0",
+              "type": "iana-if-type:other",
+              "mtu": 1500,
+              "loopback-mode": false,
+              "enabled": true,
+              "ifindex": 2,
+              "admin-status": "UP",
+              "oper-status": "UP",
+              "last-change": "1744111107088736846",
+              "logical": true,
+              "management": false,
+              "cpu": false,
+              "counters": {
+                "carrier-transitions": "1",
+                "in-pkts": "0",
+                "in-octets": "0",
+                "in-multicast-pkts": "0",
+                "in-broadcast-pkts": "0",
+                "in-unicast-pkts": "0",
+                "in-errors": "0",
+                "in-unknown-protos": "0",
+                "in-fcs-errors": "0",
+                "in-discards": "0",
+                "out-pkts": "0",
+                "out-octets": "0",
+                "out-multicast-pkts": "0",
+                "out-broadcast-pkts": "0",
+                "out-unicast-pkts": "0",
+                "out-errors": "0",
+                "out-discards": "0",
+                "Cisco-IOS-XR-openconfig-interfaces-stats-ext:cisco": {
+                  "last-read-time": "0"
+                }
+              }
+            }
+          },
+          {
+            "name": "srte_c_100_ep_100.100.100.102",
+            "state": {
+              "counters": {
+                "in-pkts": "0",
+                "in-octets": "0",
+                "in-multicast-pkts": "0",
+                "in-broadcast-pkts": "0",
+                "in-unicast-pkts": "0",
+                "in-errors": "0",
+                "in-unknown-protos": "0",
+                "in-fcs-errors": "0",
+                "in-discards": "0",
+                "out-pkts": "2",
+                "out-octets": "136",
+                "out-multicast-pkts": "0",
+                "out-broadcast-pkts": "0",
+                "out-unicast-pkts": "2",
+                "out-errors": "0",
+                "out-discards": "0",
+                "Cisco-IOS-XR-openconfig-interfaces-stats-ext:cisco": {
+                  "last-read-time": "0"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "timestamp": 1745229316107126650
+}

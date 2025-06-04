@@ -1,0 +1,1 @@
+MPLS is not effectively configured on this device. While some global settings may exist, there are no MPLS-enabled interfaces or label blocks detected.

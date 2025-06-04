@@ -1,0 +1,9 @@
+{
+  "response": [
+    {
+      "path": "show logging | utility egrep '(-[1-5]-|ISIS|BGP|ADJCHANGE|LINK-3|LINEPROTO|MPLS|VRF|VPN|CONFIG-3)' | utility egrep -v logged ",
+      "val": "------------------------ show logging | utility egrep -------------------------\n--- '(-[1-5]-|isis|bgp|adjchange|link-3|lineproto|mpls|vrf|vpn|config-3)' | ---\n-------------------------- utility egrep -v logged  ---------------------------\nRP/0/RP0/CPU0:Apr 23 15:32:41.491 UTC: ifmgr[277]: %PKT_INFRA-LINK-5-CHANGED : Interface GigabitEthernet0/0/0/0, changed state to Administratively Down \nRP/0/RP0/CPU0:Apr 23 15:32:41.491 UTC: isis[1003]: %ROUTING-ISIS-5-ADJCHANGE : ISIS (1): Adjacency to xrd-3 (GigabitEthernet0/0/0/0) (L1) Down, Interface state down \nRP/0/RP0/CPU0:Apr 23 15:32:44.879 UTC: ifmgr[277]: %PKT_INFRA-LINK-3-UPDOWN : Interface GigabitEthernet0/0/0/0, changed state to Down \nRP/0/RP0/CPU0:Apr 23 15:32:44.879 UTC: ifmgr[277]: %PKT_INFRA-LINEPROTO-5-UPDOWN : Line protocol on Interface GigabitEthernet0/0/0/0, changed state to Down \nRP/0/RP0/CPU0:Apr 23 15:32:44.891 UTC: ifmgr[277]: %PKT_INFRA-LINK-3-UPDOWN : Interface GigabitEthernet0/0/0/0, changed state to Up \nRP/0/RP0/CPU0:Apr 23 15:32:44.892 UTC: ifmgr[277]: %PKT_INFRA-LINEPROTO-5-UPDOWN : Line protocol on Interface GigabitEthernet0/0/0/0, changed state to Up \nRP/0/RP0/CPU0:Apr 23 15:32:44.907 UTC: isis[1003]: %ROUTING-ISIS-5-ADJCHANGE : ISIS (1): Adjacency to xrd-3 (GigabitEthernet0/0/0/0) (L1) Up, New adjacency"
+    }
+  ],
+  "timestamp": 1745422368688168903
+}

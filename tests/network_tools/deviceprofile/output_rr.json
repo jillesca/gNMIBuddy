@@ -1,0 +1,8 @@
+{
+  "is_mpls_enabled": true,
+  "is_isis_enabled": true,
+  "is_bgp_l3vpn_enabled": true,
+  "is_route_reflector": true,
+  "has_vpn_ipv4_unicast_bgp": false,
+  "role": "RR"
+}

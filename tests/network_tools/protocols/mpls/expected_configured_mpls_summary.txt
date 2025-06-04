@@ -1,0 +1,10 @@
+MPLS Configuration Summary:
+- TTL Propagation: Enabled
+
+MPLS Label Blocks:
+- default-srgb: Range 16000-18000
+- default-srlb: Range 15000-15999
+
+MPLS-Enabled Interfaces:
+- GigabitEthernet0/0/0/0
+- GigabitEthernet0/0/0/1

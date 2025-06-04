@@ -1,0 +1,156 @@
+[
+  {
+    "source": "xrd-5",
+    "target": "xrd-3",
+    "attributes": {
+      "network": "100.103.105.0/24",
+      "local_interface": "GigabitEthernet0/0/0/1",
+      "remote_interface": "GigabitEthernet0/0/0/1",
+      "local_ip": "100.103.105.105",
+      "remote_ip": "100.103.105.103"
+    }
+  },
+  {
+    "source": "xrd-5",
+    "target": "xrd-6",
+    "attributes": {
+      "network": "100.105.106.0/24",
+      "local_interface": "GigabitEthernet0/0/0/0",
+      "remote_interface": "GigabitEthernet0/0/0/0",
+      "local_ip": "100.105.106.105",
+      "remote_ip": "100.105.106.106"
+    }
+  },
+  {
+    "source": "xrd-5",
+    "target": "xrd-1",
+    "attributes": {
+      "network": "100.101.105.0/24",
+      "local_interface": "GigabitEthernet0/0/0/2",
+      "remote_interface": "GigabitEthernet0/0/0/1",
+      "local_ip": "100.101.105.105",
+      "remote_ip": "100.101.105.101"
+    }
+  },
+  {
+    "source": "xrd-5",
+    "target": "xrd-8",
+    "attributes": {
+      "network": "100.105.108.0/24",
+      "local_interface": "GigabitEthernet0/0/0/3",
+      "remote_interface": "GigabitEthernet0/0/0/0",
+      "local_ip": "100.105.108.105",
+      "remote_ip": "100.105.108.108"
+    }
+  },
+  {
+    "source": "xrd-2",
+    "target": "xrd-2",
+    "attributes": {
+      "network": "100.100.100.102/32",
+      "local_interface": "Loopback0",
+      "remote_interface": "sr-srte_c_100_ep_100.100.100.101",
+      "local_ip": "100.100.100.102",
+      "remote_ip": "100.100.100.102"
+    }
+  },
+  {
+    "source": "xrd-2",
+    "target": "xrd-4",
+    "attributes": {
+      "network": "100.102.104.0/24",
+      "local_interface": "GigabitEthernet0/0/0/0",
+      "remote_interface": "GigabitEthernet0/0/0/2",
+      "local_ip": "100.102.104.102",
+      "remote_ip": "100.102.104.104"
+    }
+  },
+  {
+    "source": "xrd-2",
+    "target": "xrd-6",
+    "attributes": {
+      "network": "100.102.106.0/24",
+      "local_interface": "GigabitEthernet0/0/0/1",
+      "remote_interface": "GigabitEthernet0/0/0/2",
+      "local_ip": "100.102.106.102",
+      "remote_ip": "100.102.106.106"
+    }
+  },
+  {
+    "source": "xrd-1",
+    "target": "xrd-1",
+    "attributes": {
+      "network": "100.100.100.101/32",
+      "local_interface": "Loopback0",
+      "remote_interface": "sr-srte_c_100_ep_100.100.100.102",
+      "local_ip": "100.100.100.101",
+      "remote_ip": "100.100.100.101"
+    }
+  },
+  {
+    "source": "xrd-1",
+    "target": "xrd-3",
+    "attributes": {
+      "network": "100.101.103.0/24",
+      "local_interface": "GigabitEthernet0/0/0/0",
+      "remote_interface": "GigabitEthernet0/0/0/2",
+      "local_ip": "100.101.103.101",
+      "remote_ip": "100.101.103.103"
+    }
+  },
+  {
+    "source": "xrd-4",
+    "target": "xrd-6",
+    "attributes": {
+      "network": "100.104.106.0/24",
+      "local_interface": "GigabitEthernet0/0/0/1",
+      "remote_interface": "GigabitEthernet0/0/0/1",
+      "local_ip": "100.104.106.104",
+      "remote_ip": "100.104.106.106"
+    }
+  },
+  {
+    "source": "xrd-4",
+    "target": "xrd-3",
+    "attributes": {
+      "network": "100.103.104.0/24",
+      "local_interface": "GigabitEthernet0/0/0/0",
+      "remote_interface": "GigabitEthernet0/0/0/0",
+      "local_ip": "100.103.104.104",
+      "remote_ip": "100.103.104.103"
+    }
+  },
+  {
+    "source": "xrd-4",
+    "target": "xrd-7",
+    "attributes": {
+      "network": "100.104.107.0/24",
+      "local_interface": "GigabitEthernet0/0/0/3",
+      "remote_interface": "GigabitEthernet0/0/0/1",
+      "local_ip": "100.104.107.104",
+      "remote_ip": "100.104.107.107"
+    }
+  },
+  {
+    "source": "xrd-3",
+    "target": "xrd-7",
+    "attributes": {
+      "network": "100.103.107.0/24",
+      "local_interface": "GigabitEthernet0/0/0/3",
+      "remote_interface": "GigabitEthernet0/0/0/0",
+      "local_ip": "100.103.107.103",
+      "remote_ip": "100.103.107.107"
+    }
+  },
+  {
+    "source": "xrd-8",
+    "target": "xrd-6",
+    "attributes": {
+      "network": "100.106.108.0/24",
+      "local_interface": "GigabitEthernet0/0/0/1",
+      "remote_interface": "GigabitEthernet0/0/0/3",
+      "local_ip": "100.106.108.108",
+      "remote_ip": "100.106.108.106"
+    }
+  }
+]

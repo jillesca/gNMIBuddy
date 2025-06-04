@@ -1,0 +1,8 @@
+{
+  "is_mpls_enabled": false,
+  "is_isis_enabled": false,
+  "is_bgp_l3vpn_enabled": false,
+  "is_route_reflector": false,
+  "has_vpn_ipv4_unicast_bgp": false,
+  "role": "CE"
+}

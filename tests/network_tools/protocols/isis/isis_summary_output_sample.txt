@@ -1,0 +1,19 @@
+ISIS Router Information:
+  Network Entity Title (NET): 49.0100.0100.0100.0101.00
+  Level Capability: LEVEL_1_2
+  Segment Routing: Enabled
+
+ISIS Interfaces:
+  Loopback0: Enabled, Passive
+    Level-1: Enabled
+    Level-2: Enabled
+  GigabitEthernet0/0/0/0: Enabled, Active
+    Level-1: Enabled
+  GigabitEthernet0/0/0/1: Enabled, Active
+    Level-1: Enabled
+
+ISIS Adjacencies:
+  GigabitEthernet0/0/0/0 -> 0100.0100.0103 (100.101.103.103)
+    Level: 1, State: UP
+  GigabitEthernet0/0/0/1 -> 0100.0100.0105 (100.101.105.105)
+    Level: 1, State: UP

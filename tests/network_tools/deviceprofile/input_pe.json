@@ -1,0 +1,27 @@
+{
+  "response": [
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/mpls/global/interface-attributes/interface[interface-id=GigabitEthernet0/0/0/0]/state",
+      "val": {
+        "interface-id": "GigabitEthernet0/0/0/0",
+        "mpls-enabled": true
+      }
+    },
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/protocols/protocol[identifier=ISIS][name=1]/isis/global/state",
+      "val": {
+        "authentication-check": true,
+        "instance-id": 0
+      }
+    },
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/protocols/protocol[identifier=BGP][name=default]/bgp/global/afi-safis/afi-safi[afi-safi-name=L3VPN_IPV4_UNICAST]/state",
+      "val": {
+        "afi-safi-name": "openconfig-bgp-types:L3VPN_IPV4_UNICAST",
+        "enabled": true,
+        "total-paths": 1,
+        "total-prefixes": 1
+      }
+    }
+  ]
+}

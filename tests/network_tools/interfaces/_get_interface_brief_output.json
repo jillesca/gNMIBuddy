@@ -1,0 +1,58 @@
+{
+  "interfaces": [
+    {
+      "name": "Loopback0",
+      "admin_status": "UP",
+      "oper_status": "UP",
+      "ip_address": "100.100.100.101/255.255.255.255"
+    },
+    {
+      "name": "MgmtEth0/RP0/CPU0/0",
+      "admin_status": "UP",
+      "oper_status": "UP",
+      "ip_address": "198.18.158.16/255.255.192.0",
+      "vrf": "Mgmt"
+    },
+    {
+      "name": "GigabitEthernet0/0/0/0",
+      "admin_status": "UP",
+      "oper_status": "UP",
+      "ip_address": "100.101.103.101/255.255.255.0"
+    },
+    {
+      "name": "GigabitEthernet0/0/0/1",
+      "admin_status": "UP",
+      "oper_status": "UP",
+      "ip_address": "100.101.105.101/255.255.255.0"
+    },
+    {
+      "name": "GigabitEthernet0/0/0/2",
+      "admin_status": "UP",
+      "oper_status": "UP",
+      "ip_address": "10.1.1.3/255.255.255.0",
+      "vrf": "100"
+    },
+    {
+      "name": "sr-srte_c_100_ep_100.100.100.102",
+      "ip_address": "100.100.100.101/255.255.255.255"
+    },
+    {
+      "name": "Null0",
+      "admin_status": "UP",
+      "oper_status": "UP"
+    },
+    {
+      "name": "srte_c_100_ep_100.100.100.102"
+    }
+  ],
+  "summary": {
+    "total_interfaces": 8,
+    "admin_up": 6,
+    "admin_down": 2,
+    "oper_up": 6,
+    "oper_down": 2,
+    "with_ip": 6,
+    "with_vrf": 2
+  },
+  "timestamp": 1745232001558596515
+}

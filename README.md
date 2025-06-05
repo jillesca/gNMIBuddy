@@ -225,10 +225,7 @@ uv run cli_app.py list-commands --detailed
 
 ## 🚧 Development Notes
 
-- Add device profile to the tools.
-  - Based on the config and meta data from openconfig models, determine the type of device (P, PE, RR, etc)
 - Add a capabitlity check to review if the mininum openconfig models are supported by the device.
   - Handle errors.
 - Create an interface and encapsulation for what the parsers recieve and output
 - Create a gnmi not found object. errors for not found feature confuses llms.
-- add tools for show environment-like commands

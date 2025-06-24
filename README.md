@@ -2,7 +2,7 @@
 
 An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) integration, it also provides a full CLI for direct use.
 
-> **Why opinionated?** Curates only the most useful network data paths instead of exposing everything gNMI offers.
+> **Opinionated by design:** gNMI and YANG expose overwhelming amounts of data with countless parameters. This tool provides what I consider the most relevant information for LLMs.
 
 ## 🎯 What It Does
 

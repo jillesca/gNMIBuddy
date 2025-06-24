@@ -133,7 +133,7 @@ Then test with the provided `xrd_sandbox.json` inventory file.
 
 ### Testing with AI Agents
 
-Want to see how this MCP tool integrates with actual AI agents? Check out [oncall-netops](https://github.com/jillesca/oncall-netops) - a graph of agents that use gNMIBuddy to demonstrate real-world network operations scenarios.
+Want to see how this MCP tool integrates with actual AI agents? Check out [sp_oncall](https://github.com/jillesca/sp_oncall) - a graph of agents that use gNMIBuddy to demonstrate real-world network operations scenarios.
 
 ## 💻 CLI Reference
 

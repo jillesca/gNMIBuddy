@@ -26,30 +26,20 @@ The tool provides a structured JSON output that can be easily parsed by other to
 
 ### Installing uv
 
-This project requires `uv` primarily for MCP integration with LLMs. If you're only using the CLI interface without MCP, traditional pip installation is sufficient. To install `uv` check out [uv's official documentation](https://docs.astral.sh/uv/#installation).
+This project uses `uv` for dependency management and virtual environment handling. To install `uv` check out [uv's official documentation](https://docs.astral.sh/uv/#installation).
 
-For macOS, uv worked by using Homebrew: `brew install uv`.
+For macOS, uv can be installed using Homebrew: `brew install uv`.
 
 ### Setup
 
-1. Install required dependencies:
-
-   With uv (recommended):
+1. Install and run the application:
 
    ```bash
-   # this creates a virtual environment, installs the dependencies, and runs the cli_app.py
-   # once the virtual environment is activated, you can run the cli_app.py without uv
-   uv run cli_app.py
+   # This creates a virtual environment, installs dependencies, and runs the CLI app
+   uv run cli_app.py --help
    ```
 
-   Or with traditional pip (sufficient for CLI usage only):
-
-   ```bash
-   pip install -r requirements.txt
-   python cli_app.py
-   ```
-
-2. Provide a JSON inventory file (see `host.json` or `sandbox.json` for examples)
+2. Provide a JSON inventory file (see `xrd_sandbox.json` for examples)
 
 ### VSCode MCP Server Setup
 
@@ -119,18 +109,14 @@ uv run --with "paramiko,ansible" \
 ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
 ```
 
-From here you can test the tool with the `xrd_sandbox.json` inventory file:
+From here you can test the tool with the `xrd_sandbox.json` inventory file.
 
 ## 💻 CLI Usage
 
 The tool provides a user-friendly command-line interface:
 
 ```bash
-# Using uv (required for MCP integration, optional for CLI usage)
 uv run cli_app.py [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS]
-
-# Using traditional Python
-python cli_app.py [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS]
 ```
 
 ## MPC Test

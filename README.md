@@ -1,127 +1,114 @@
 # 🧪 gNMIBuddy
 
-A Python-based tool designed primarily for LLMs (Large Language Models) to retrieve network information from network devices using gNMI (gRPC Network Management Interface) and OpenConfig models. While optimized for AI integration, it also provides a full CLI interface for direct human operation.
+An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) integration, it also provides a full CLI for direct use.
 
-## 📋 Overview
+> **Why opinionated?** Curates only the most useful network data paths instead of exposing everything gNMI offers.
 
-This tool implements Model Context Protocol ([MCP](https://modelcontextprotocol.io/introduction)) for seamless LLM connectivity while allowing network engineers to:
+## 🎯 What It Does
 
-- 🔄 Retrieve routing information (`BGP`, `ISIS`, etc.)
-- 🔌 Get interface details and status
-- 🏷️ Collect MPLS and segment routing information
-- 🔒 Access VPN/VRF configuration
-- 📜 View device logs with filtering capabilities
-- 📊 List all available devices in the inventory
+Retrieve structured network data in JSON format:
 
-The tool provides a structured JSON output that can be easily parsed by other tools or scripts.
+- 🔄 **Routing**: BGP, ISIS protocols and neighbor states
+- 🔌 **Interfaces**: Status, configuration, and statistics
+- 🏷️ **MPLS**: Labels, forwarding tables, and segment routing
+- 🔒 **VPN/VRF**: L3VPN configuration and route targets
+- 📝 **Logs**: Filtered device logs with keyword search
+- 🏠 **Topology**: Device profiles and network adjacencies
 
-## 🛠️ Installation
+See the [API definition](/api.py) for all available APIs and options.
+
+## ⚡ Quick Start
 
 ### Prerequisites
 
-- 🐍 Python 3.13+
-- 🖥️ Network devices with gNMI enabled
-- 📊 Network devices **must** support `openconfig-network-instance:network-instances` YANG model
-  - Only the `get_logs` function uses XR-specific 'show' command.
+- Python 3.13+
+- Network devices with gNMI _enabled_ and `openconfig-network-instance` support
+- Device inventory file (JSON format)
 
-### Installing uv
+### Installation
 
-This project uses `uv` for dependency management and virtual environment handling. To install `uv` check out [uv's official documentation](https://docs.astral.sh/uv/#installation).
-
-For macOS, uv can be installed using Homebrew: `brew install uv`.
-
-### Setup
-
-1. Install and run the application:
-
-   ```bash
-   # This creates a virtual environment, installs dependencies, and runs the CLI app
-   uv run cli_app.py --help
-   ```
-
-2. Provide a JSON inventory file (see `xrd_sandbox.json` for examples)
-
-### VSCode MCP Server Setup
-
-To enable MCP integration with VSCode:
-
-1. Create a `.vscode` directory in your project root
-2. Add an `mcp.json` file with the following content:
-
-   ```json
-   {
-     "servers": {
-       "gNMIBuddy": {
-         "command": "uv",
-         "args": [
-           "run",
-           "--with",
-           "mcp[cli],pygnmi,networkx",
-           "mcp",
-           "run",
-           "${workspaceFolder}/mcp_server.py"
-         ],
-         "env": {
-           "NETWORK_INVENTORY": "${workspaceFolder}/<your_inventory_file>.json"
-         }
-       }
-     }
-   }
-   ```
-
-Note: You can also configure this in VSCode user settings, but you'll need to use absolute paths as variable substitution won't work in that context.
-
-### Claude MCP Setup
-
-To enable MCP integration with Claude:
-
-1. Open Claude settings by clicking the gear icon > Developer > Edit config
-2. Add the following configuration (update paths to your actual locations):
-
-   ```json
-   {
-     "mcpServers": {
-       "gNMIBuddy": {
-         "command": "uv",
-         "args": [
-           "run",
-           "--with",
-           "mcp[cli],pygnmi,networkx",
-           "mcp",
-           "run",
-           "/absolute/path/to/mcp_server.py"
-         ],
-         "env": {
-           "NETWORK_INVENTORY": "/absolute/path/to/<your_inventory_file>.json"
-         }
-       }
-     }
-   }
-   ```
-
-## 🧪 Quick Test with DevNet XRd Sandbox
-
-If you don't have an XRd at hand, you can use the [DevNet XRd Sandbox.](https://devnetsandbox.cisco.com/DevNet/) Use the helper playbook `ansible-helper/xrd_apply_config.yaml` to apply the minimal gRPC configurations.
+Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):
 
 ```bash
-ANSIBLE_HOST_KEY_CHECKING=False \
-uv run --with "paramiko,ansible" \
-ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
+# macOS
+brew install uv
 ```
 
-From here you can test the tool with the `xrd_sandbox.json` inventory file.
-
-## 💻 CLI Usage
-
-The tool provides a user-friendly command-line interface:
+Run the application:
 
 ```bash
-uv run cli_app.py [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS]
+# Creates virtual environment, installs dependencies, and shows help
+uv run cli_app.py --help
 ```
 
-## MPC Test
+### Basic Usage
 
-You can also run the MCP server directly using the `inspector` tool.
+```bash
+# List available devices
+uv run cli_app.py list-devices
+
+# Get routing info from a device
+uv run cli_app.py --device xrd-1 routing --protocol bgp
+
+# Check all interfaces across all devices
+uv run cli_app.py --all-devices interface
+```
+
+## 🤖 LLM Integration (MCP)
+
+### VSCode Setup
+
+Create `.vscode/mcp.json` in your project:
+
+```json
+{
+  "servers": {
+    "gNMIBuddy": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp[cli],pygnmi,networkx",
+        "mcp",
+        "run",
+        "${workspaceFolder}/mcp_server.py"
+      ],
+      "env": {
+        "NETWORK_INVENTORY": "${workspaceFolder}/<your_inventory_file>.json"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop Setup
+
+Add to Claude's configuration (Settings > Developer > Edit config):
+
+```json
+{
+  "mcpServers": {
+    "gNMIBuddy": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp[cli],pygnmi,networkx",
+        "mcp",
+        "run",
+        "/absolute/path/to/mcp_server.py"
+      ],
+      "env": {
+        "NETWORK_INVENTORY": "/absolute/path/to/your_inventory.json"
+      }
+    }
+  }
+}
+```
+
+### Testing MCP
+
+Use the MCP inspector for testing:
 
 ```bash
 npx @modelcontextprotocol/inspector \
@@ -129,114 +116,59 @@ uv run --with "mcp[cli],pygnmi,networkx" \
 mcp run mcp_server.py
 ```
 
-> [!TIP]
-> Don't forget to set the `NETWORK_INVENTORY` environment variable on the inspector tool to point to your inventory file or you'll get errors.
+> **Note:** Set the `NETWORK_INVENTORY` environment variable or you'll get errors.
+
+## 🧪 Testing with DevNet Sandbox
+
+Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/) with the included Ansible playbook:
+
+```bash
+# Enable gRPC on the DevNet XRd Sandbox
+ANSIBLE_HOST_KEY_CHECKING=False \
+uv run --with "paramiko,ansible" \
+ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
+```
+
+Then test with the provided `xrd_sandbox.json` inventory file.
+
+## 💻 CLI Reference
 
 ### Global Options
 
-- `--device DEVICE_NAME`: Specify a single target device from the inventory
-- `--all-devices`: Run the command on all devices in the inventory concurrently
-  - `--max-workers N`: Maximum number of concurrent workers (default: 5)
-- `--inventory PATH`: Path to a custom inventory JSON file
-  - Or set environment variable: `export NETWORK_INVENTORY=path/to/your/inventory.json`
-  - For testing, you can use the provided `sandbox.json`
-- `--log-level {debug,info,warning,error}`: Set the logging level (default: info)
+Choose **one** target option:
 
-Note: You must use either `--device` OR `--all-devices`, not both.
+- `--device DEVICE_NAME`: Single device from inventory
+- `--inventory PATH`: Custom inventory file (or set `NETWORK_INVENTORY` env var)
 
-### Available Commands
+Use the `--help` flag for detailed command options.
 
-- 🔄 `routing`: Get routing information
-- 🔌 `interface`: Get interface information
-- 🏷️ `mpls`: Get MPLS and segment routing information
-- 🔒 `vpn`: Get VPN/VRF configuration information
-- 📜 `logging`: Get logs from the device
-- 📋 `list-devices`: Show all available devices in the inventory
-- ℹ️ `list-commands`: Display all available CLI commands and options
-
-### Command Options
-
-#### 🔄 routing
+### Examples
 
 ```bash
-uv run cli_app.py --device DEVICE_NAME routing [OPTIONS]
-```
-
-- `--protocol PROTOCOL`: Filter by routing protocol (`bgp`, `isis`)
-- `--detail`: Show detailed information
-
-#### 🔌 interface
-
-```bash
-uv run cli_app.py --device DEVICE_NAME interface [OPTIONS]
-```
-
-- `--name INTERFACE_NAME`: Specific interface name (e.g., `GigabitEthernet0/0/0/0`)
-
-#### 🏷️ mpls
-
-```bash
-uv run cli_app.py --device DEVICE_NAME mpls [OPTIONS]
-```
-
-- `--detail`: Show detailed information
-
-#### 🔒 vpn
-
-```bash
-uv run cli_app.py --device DEVICE_NAME vpn [OPTIONS]
-```
-
-- `--vrf VRF_NAME`: Specific VRF name
-- `--detail`: Show detailed information
-
-#### 📜 logging
-
-```bash
-uv run cli_app.py --device DEVICE_NAME logging [OPTIONS]
-```
-
-- `--keywords KEYWORDS`: Filter logs by specific keywords
-
-#### ℹ️ list-commands
-
-```bash
-uv run cli_app.py list-commands [OPTIONS]
-```
-
-- `--detailed`: Show detailed command information
-
-### 📝 Examples
-
-```bash
-# Get routing information with BGP protocol details
+# Routing with BGP details
 uv run cli_app.py --device xrd-1 routing --protocol bgp --detail
 
-# Get information for a specific interface
+# Specific interface
 uv run cli_app.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
 
-# Get MPLS information with details
+# MPLS details
 uv run cli_app.py --device xrd-1 mpls --detail
 
-# Get VRF information for a specific VRF
-uv run cli_app.py --device xrd-3 vpn --vrf default
+# VRF information
+uv run cli_app.py --device xrd-3 vpn --vrf customer-a
 
-# Get logs filtered by keyword
-uv run cli_app.py --device xrd-2 logging --keywords "error"
+# Filtered logs
+uv run cli_app.py --device xrd-2 logging --keywords "bgp|error"
 
-# Run the same command on all devices
-uv run cli_app.py --all-devices interface --name GigabitEthernet0/0/0/0
-
-# List all available devices in inventory
-uv run cli_app.py list-devices
-
-# Get detailed help on available commands
-uv run cli_app.py list-commands --detailed
+# Run on all devices
+uv run cli_app.py --all-devices interface
 ```
 
 ## 🚧 Development Notes
 
-- Add a capabitlity check to review if the mininum openconfig models are supported by the device.
-  - Handle errors.
-- Create an interface and encapsulation for what the parsers recieve and output
-- Create a gnmi not found object. errors for not found feature confuses llms.
+**Planned Improvements:**
+
+- [ ] Capability check for minimum OpenConfig model support
+- [ ] Standardized parser interfaces and output formats
+- [ ] Enhanced error handling for missing gNMI features
+- [ ] Device compatibility validation

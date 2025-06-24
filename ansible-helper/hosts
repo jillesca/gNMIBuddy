@@ -1,0 +1,15 @@
+[xr]
+xrd-1	ansible_host=10.10.20.101
+xrd-2	ansible_host=10.10.20.102
+xrd-3	ansible_host=10.10.20.103
+xrd-4	ansible_host=10.10.20.104
+xrd-5	ansible_host=10.10.20.105
+xrd-6	ansible_host=10.10.20.106
+xrd-7	ansible_host=10.10.20.107
+xrd-8	ansible_host=10.10.20.108
+
+[xr:vars]
+ansible_user=cisco
+ansible_password=C1sco12345
+ansible_connection=network_cli
+ansible_network_os=cisco.iosxr.iosxr

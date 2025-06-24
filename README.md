@@ -109,6 +109,18 @@ To enable MCP integration with Claude:
    }
    ```
 
+## 🧪 Quick Test with DevNet XRd Sandbox
+
+If you don't have an XRd at hand, you can use the [DevNet XRd Sandbox.](https://devnetsandbox.cisco.com/DevNet/) Use the helper playbook `ansible-helper/xrd_apply_config.yaml` to apply the minimal gRPC configurations.
+
+```bash
+ANSIBLE_HOST_KEY_CHECKING=False \
+uv run --with "paramiko,ansible" \
+ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
+```
+
+From here you can test the tool with the `xrd_sandbox.json` inventory file:
+
 ## 💻 CLI Usage
 
 The tool provides a user-friendly command-line interface:
@@ -120,6 +132,19 @@ uv run cli_app.py [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS]
 # Using traditional Python
 python cli_app.py [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS]
 ```
+
+## MPC Test
+
+You can also run the MCP server directly using the `inspector` tool.
+
+```bash
+npx @modelcontextprotocol/inspector \
+uv run --with "mcp[cli],pygnmi,networkx" \
+mcp run mcp_server.py
+```
+
+> [!TIP]
+> Don't forget to set the `NETWORK_INVENTORY` environment variable on the inspector tool to point to your inventory file or you'll get errors.
 
 ### Global Options
 

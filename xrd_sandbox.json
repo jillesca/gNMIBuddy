@@ -1,0 +1,66 @@
+[
+  {
+    "ip_address": "10.10.20.101",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-1"
+  },
+  {
+    "ip_address": "10.10.20.102",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-2"
+  },
+  {
+    "ip_address": "10.10.20.103",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-3"
+  },
+  {
+    "ip_address": "10.10.20.104",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-4"
+  },
+  {
+    "ip_address": "10.10.20.105",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-5"
+  },
+  {
+    "ip_address": "10.10.20.106",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-6"
+  },
+  {
+    "ip_address": "10.10.20.107",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-7"
+  },
+  {
+    "ip_address": "10.10.20.108",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-8"
+  }
+]

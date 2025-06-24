@@ -1,0 +1,19 @@
+---
+- name: Apply gRPC configs to XRd DevNet Sandbox.
+  hosts: xr
+  gather_facts: false
+
+  vars:
+    ansible_command_timeout: 60
+
+  tasks:
+    - name: Enable gRPC
+      cisco.iosxr.iosxr_config:
+        lines:
+          - grpc
+    - name: Configure gRPC parameters
+      cisco.iosxr.iosxr_config:
+        lines:
+          - port 57777
+          - no-tls
+        parents: grpc

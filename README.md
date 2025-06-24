@@ -25,6 +25,11 @@ See the [API definition](/api.py) for all available APIs and options.
 - Network devices with gNMI _enabled_ and `openconfig-network-instance` support
 - Device inventory file (JSON format)
 
+**Tested on:**
+
+- **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
+- **OpenConfig:** `openconfig-network-instance` (`1.3.0`)
+
 ### Installation
 
 Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):

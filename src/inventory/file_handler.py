@@ -86,7 +86,7 @@ def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
             device["name"]: Device.from_dict(device)
             for device in device_inventory
         }
-        logger.info(
+        logger.debug(
             f"Successfully loaded {len(devices)} devices from inventory {inventory_file}"
         )
         return devices

@@ -75,14 +75,16 @@ def parse_args(
     # Debug: Print arguments that will be parsed
     if args is None:
         args = sys.argv[1:]
-    print(f"DEBUG: Parsing arguments: {args}")
+    logger.debug(f"DEBUG: Parsing arguments: {args}")
 
     try:
         # Parse arguments
         parsed_args = parser.parse_args(args)
 
         # Debug: Print parsed arguments
-        print(f"DEBUG: Successfully parsed arguments: {vars(parsed_args)}")
+        logger.debug(
+            f"DEBUG: Successfully parsed arguments: {vars(parsed_args)}"
+        )
 
         # Configure logging with the specified log level
         if hasattr(parsed_args, "log_level") and parsed_args.log_level:
@@ -95,14 +97,14 @@ def parse_args(
                 if hasattr(parsed_args, "device")
                 else ""
             )
-            logger.info(
+            logger.debug(
                 f"Command line arguments parsed: command={parsed_args.command}{device_info}"
             )
             logger.debug(f"All parsed arguments: {vars(parsed_args)}")
 
         return parsed_args, parser
     except Exception as e:
-        print(f"DEBUG: Error parsing arguments: {e}")
+        logger.error(f"DEBUG: Error parsing arguments: {e}")
         raise
 
 

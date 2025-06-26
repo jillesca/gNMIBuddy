@@ -59,7 +59,7 @@ class InventoryManager:
             instance.set_devices(load_inventory(inventory_path))
             instance.set_initialized(True)
             device_count = len(instance.get_devices())
-            logger.info(f"Initialized inventory with {device_count} devices")
+            logger.debug(f"Initialized inventory with {device_count} devices")
             if logger.isEnabledFor(logging.DEBUG):
                 device_names = list(instance.get_devices().keys())
                 logger.debug(f"Loaded devices: {device_names}")

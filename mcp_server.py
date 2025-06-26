@@ -3,12 +3,20 @@
 MCP entry point for gNMIBuddy - Registers network tool functions as MCP tools.
 Uses a decorator factory to register API functions without duplicating signatures and docstrings.
 """
+import os
+import logging
 from functools import wraps
 from mcp.server.fastmcp import FastMCP
 
 import api
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("mcp")
+
+
 mcp = FastMCP("gNMIBuddy")
+logger.info("Started MCP server for gNMIBuddy")
+logger.debug(f'Network Inventory: {os.environ.get("NETWORK_INVENTORY")}')
 
 
 def register_as_mcp_tool(func):
@@ -22,6 +30,7 @@ def register_as_mcp_tool(func):
     Returns:
         A decorated function that will be registered as an MCP tool
     """
+    logger.debug(f"Calling MCP tool: {func.__name__} ")
 
     # Define a dynamic wrapper that preserves the original function's signature
     @mcp.tool()

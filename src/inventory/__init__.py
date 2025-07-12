@@ -5,34 +5,13 @@ Provides functions and classes for managing network device inventory.
 """
 
 import logging
-from typing import List, Optional, Tuple, Union, TypedDict
+from typing import Optional, Tuple, Union
 
-from .models import Device
+from .models import Device, DeviceListResult, DeviceErrorResult
 from .manager import InventoryManager
 
 # Setup module logger
 logger = logging.getLogger(__name__)
-
-
-# Type definitions for improved type safety
-class DeviceInfo(TypedDict):
-    """Type definition for device information dictionary."""
-
-    name: str
-    ip_address: str
-    port: int
-
-
-class DeviceListResult(TypedDict):
-    """Type definition for the device list result."""
-
-    devices: List[DeviceInfo]
-
-
-class DeviceErrorResult(TypedDict):
-    """Type definition for device error result."""
-
-    error: str
 
 
 def initialize_inventory(cli_path: Optional[str] = None) -> None:

@@ -5,7 +5,36 @@ Contains dataclasses for representing network devices.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List, TypedDict
+
+
+class DeviceInfo(TypedDict):
+    """Type definition for device information dictionary.
+
+    Contains non-sensitive device information that is safe to expose.
+    This is a subset of the Device dataclass fields.
+    """
+
+    name: str
+    ip_address: str
+    port: int
+    nos: str
+
+
+class DeviceListResult(TypedDict):
+    """Type definition for the device list result."""
+
+    devices: List[DeviceInfo]
+
+
+class DeviceErrorResult(TypedDict):
+    """Type definition for device error result.
+
+    Enhanced to include device context when available.
+    """
+
+    error: str
+    device_info: Optional[DeviceInfo]
 
 
 @dataclass

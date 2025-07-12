@@ -48,19 +48,23 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
         GnmiDataResponse object containing either the retrieved data or error information
     """
     logger.debug(f"gNMI request parameters: {request}")
-
-    target = (device.ip_address, device.port)
-    username = device.username
-    password = device.password
-    insecure = device.insecure
+    gnmi_params = {
+        "target": (device.ip_address, device.port),
+        "username": device.username,
+        "password": device.password,
+        "insecure": device.insecure,
+        "path_cert": device.path_cert,
+        "path_key": device.path_key,
+        "path_root": device.path_root,
+        "override": device.override,
+        "skip_verify": device.skip_verify,
+        "gnmi_timeout": device.gnmi_timeout,
+        "grpc_options": device.grpc_options,
+        "show_diff": device.show_diff,
+    }
 
     try:
-        with gNMIclient(
-            target=target,
-            username=username,
-            password=password,
-            insecure=insecure,
-        ) as gc:
+        with gNMIclient(**gnmi_params) as gc:
 
             result = gc.get(**request)
             raw_response = _extract_gnmi_data(response=result)

@@ -25,17 +25,16 @@ class TestMplsInfoFunctions:
     def test_mpls_request(self):
         """Test the mpls_request function generates the correct GNMI request."""
         request = mpls_request()
-        request_dict = request.to_dict()
 
         # Check the request has the correct path for MPLS data
-        assert "path" in request_dict
-        assert len(request_dict["path"]) == 1
+        assert hasattr(request, "path")
+        assert len(request.path) == 1
         assert (
             "openconfig-network-instance:network-instances/network-instance[name=*]/mpls"
-            in request_dict["path"][0]
+            in request.path[0]
         )
-        assert request_dict["encoding"] == "json_ietf"
-        assert request_dict["datatype"] == "all"
+        assert request.encoding == "json_ietf"
+        assert request.datatype == "all"
 
     @patch("src.network_tools.mpls_info.get_gnmi_data")
     def test_get_mpls_information_success(self, mock_get_gnmi_data):

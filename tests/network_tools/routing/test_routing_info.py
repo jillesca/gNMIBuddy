@@ -31,30 +31,28 @@ class TestRoutingInfoFunctions:
     def test_bgp_request(self):
         """Test the bgp_request function generates the correct GNMI request."""
         request = bgp_request()
-        request_dict = request.to_dict()
 
         # Check the request has the correct path for BGP data
-        assert "path" in request_dict
-        assert len(request_dict["path"]) == 1
+        assert hasattr(request, "path")
+        assert len(request.path) == 1
         assert (
             "openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol/bgp"
-            in request_dict["path"][0]
+            in request.path[0]
         )
-        assert request_dict["encoding"] == "json_ietf"
-        assert request_dict["datatype"] == "all"
+        assert request.encoding == "json_ietf"
+        assert request.datatype == "all"
 
     def test_isis_request(self):
         """Test the isis_request function generates the correct GNMI request."""
         request = isis_request()
-        request_dict = request.to_dict()
 
         # Check the request has the correct paths for ISIS data
-        assert "path" in request_dict
-        assert len(request_dict["path"]) == 2
-        assert any("interfaces" in path for path in request_dict["path"])
-        assert any("global" in path for path in request_dict["path"])
-        assert request_dict["encoding"] == "json_ietf"
-        assert request_dict["datatype"] == "all"
+        assert hasattr(request, "path")
+        assert len(request.path) == 2
+        assert any("interfaces" in path for path in request.path)
+        assert any("global" in path for path in request.path)
+        assert request.encoding == "json_ietf"
+        assert request.datatype == "all"
 
     @patch("src.network_tools.routing_info._get_bgp_info")
     @patch("src.network_tools.routing_info._get_isis_info")

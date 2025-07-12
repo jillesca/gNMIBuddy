@@ -21,7 +21,8 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
     topology_graph = nx.Graph()
     # Always add all devices as nodes, regardless of their interfaces or adjacencies
     all_devices = set()
-    for interface_result in interface_results:
+    device_order = {}  # Track device order from input
+    for i, interface_result in enumerate(interface_results):
         if not isinstance(interface_result, dict):
             continue
         if (
@@ -33,8 +34,12 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
         if not device_name:
             continue
         all_devices.add(device_name)
-    # Add all devices as nodes before processing edges
-    for device in all_devices:
+        if device_name not in device_order:
+            device_order[device_name] = i
+    # Add all devices as nodes before processing edges, in input order
+    for device in sorted(
+        all_devices, key=lambda x: device_order.get(x, float("inf"))
+    ):
         topology_graph.add_node(device)
     ip_subnet_entries = extract_interface_subnets(interface_results)
     mgmt_names = {"MgmtEth0/RP0/CPU0/0"}
@@ -65,15 +70,31 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
                 or endpoint_b.get("interface") in mgmt_names
             ):
                 continue
-            node1, node2 = sorted([endpoint_a["device"], endpoint_b["device"]])
+
+            # Determine source/target based on device order in input
+            device_a_order = device_order.get(
+                endpoint_a["device"], float("inf")
+            )
+            device_b_order = device_order.get(
+                endpoint_b["device"], float("inf")
+            )
+
+            if device_a_order < device_b_order:
+                source_endpoint, target_endpoint = endpoint_a, endpoint_b
+            elif device_a_order > device_b_order:
+                source_endpoint, target_endpoint = endpoint_b, endpoint_a
+            else:
+                # Same device order (including self-loops), use original order
+                source_endpoint, target_endpoint = endpoint_a, endpoint_b
+
             topology_graph.add_edge(
-                node1,
-                node2,
+                source_endpoint["device"],
+                target_endpoint["device"],
                 network=network,
-                local_interface=endpoint_a["interface"],
-                remote_interface=endpoint_b["interface"],
-                local_ip=endpoint_a["ip"],
-                remote_ip=endpoint_b["ip"],
+                local_interface=source_endpoint["interface"],
+                remote_interface=target_endpoint["interface"],
+                local_ip=source_endpoint["ip"],
+                remote_ip=target_endpoint["ip"],
             )
     return topology_graph
 

@@ -5,47 +5,24 @@ Provides additional coverage focusing on the real-world hosts.json file.
 """
 
 import os
-import pytest
 from pathlib import Path
 
 from src.inventory.manager import InventoryManager
 
 
-@pytest.fixture
-def reset_inventory_manager():
-    """Reset the InventoryManager singleton between tests."""
-    # Reset before test
-    InventoryManager._instance = None
-    InventoryManager._devices = {}
-    InventoryManager._initialized = False
-
-    # Run the test
-    yield
-
-    # Reset after test
-    InventoryManager._instance = None
-    InventoryManager._devices = {}
-    InventoryManager._initialized = False
-
-
-@pytest.fixture
-def hosts_file():
-    """Return the path to the test_devices.json file."""
-    return os.path.join(Path(__file__).parent, "test_devices.json")
-
-
-@pytest.fixture
-def initialize_hosts(reset_inventory_manager, hosts_file):
-    """Initialize inventory manager with test_devices.json."""
-    InventoryManager.initialize(hosts_file)
-    return hosts_file
-
-
 class TestHostsInventory:
     """Test cases for the inventory manager using the test_devices.json file."""
 
-    def test_get_device_from_hosts(self, initialize_hosts):
+    def test_get_device_from_hosts(self):
         """Test retrieving devices from the test_devices.json file."""
+        # Reset and initialize
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+        
+        hosts_file = os.path.join(Path(__file__).parent, "test_devices.json")
+        InventoryManager.initialize(hosts_file)
+        
         # Test getting a device that should exist in test_devices.json
         device, success = InventoryManager.get_device("test-device-1")
 
@@ -57,8 +34,16 @@ class TestHostsInventory:
         assert device.username == "test_user"
         assert device.password == "test_pass"
 
-    def test_get_invalid_device_from_hosts(self, initialize_hosts):
+    def test_get_invalid_device_from_hosts(self):
         """Test retrieving non-existent device from test_devices.json."""
+        # Reset and initialize
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+        
+        hosts_file = os.path.join(Path(__file__).parent, "test_devices.json")
+        InventoryManager.initialize(hosts_file)
+        
         result, success = InventoryManager.get_device("non-existent-router")
 
         # Assertions
@@ -66,8 +51,16 @@ class TestHostsInventory:
         assert "error" in result
         assert "non-existent-router" in result["error"]
 
-    def test_list_devices_from_hosts(self, initialize_hosts):
+    def test_list_devices_from_hosts(self):
         """Test listing all devices from test_devices.json."""
+        # Reset and initialize
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+        
+        hosts_file = os.path.join(Path(__file__).parent, "test_devices.json")
+        InventoryManager.initialize(hosts_file)
+        
         # Get list of devices
         result = InventoryManager.list_devices()
 

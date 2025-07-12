@@ -13,28 +13,8 @@ from src.inventory.models import Device
 
 
 @pytest.fixture
-def reset_inventory_manager():
-    """Reset the InventoryManager singleton between tests."""
-    # Reset before test
-    InventoryManager._instance = None
-    InventoryManager._devices = {}
-    InventoryManager._initialized = False
-
-    # Run the test
-    yield
-
-    # Reset after test
-    InventoryManager._instance = None
-    InventoryManager._devices = {}
-    InventoryManager._initialized = False
-
-
-@pytest.fixture
 def inventory_paths():
     """Provide paths to the inventory files used in tests."""
-    # Project root is two directories up from tests/inventory
-    project_root = Path(__file__).parent.parent.parent
-
     # Test data paths
     return {
         "test_devices": os.path.join(
@@ -49,10 +29,13 @@ def inventory_paths():
 class TestGetDevice:
     """Tests for the get_device function."""
 
-    def test_get_device_from_test_devices(
-        self, reset_inventory_manager, inventory_paths
-    ):
+    def test_get_device_from_test_devices(self, inventory_paths):
         """Test retrieving a device using a test inventory file."""
+        # Reset before test
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+
         # Initialize with test data
         InventoryManager.initialize(inventory_paths["test_devices"])
 
@@ -75,10 +58,13 @@ class TestGetDevice:
         assert isinstance(error_result, dict)
         assert "error" in error_result
 
-    def test_get_device_from_sandbox(
-        self, reset_inventory_manager, inventory_paths
-    ):
+    def test_get_device_from_sandbox(self, inventory_paths):
         """Test retrieving a device from the test_devices.json file."""
+        # Reset before test
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+
         # Initialize with sandbox data
         InventoryManager.initialize(inventory_paths["sandbox"])
 
@@ -92,10 +78,13 @@ class TestGetDevice:
         assert device.ip_address == "10.0.0.1"
         assert device.port == 57777
 
-    def test_get_device_from_hosts(
-        self, reset_inventory_manager, inventory_paths
-    ):
+    def test_get_device_from_hosts(self, inventory_paths):
         """Test retrieving a device from the test_devices.json file."""
+        # Reset before test
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+
         # Initialize with hosts data
         InventoryManager.initialize(inventory_paths["hosts"])
 
@@ -114,10 +103,13 @@ class TestGetDevice:
 class TestListDevices:
     """Tests for the list_devices function."""
 
-    def test_list_devices_from_test_devices(
-        self, reset_inventory_manager, inventory_paths
-    ):
+    def test_list_devices_from_test_devices(self, inventory_paths):
         """Test listing devices from the test inventory file."""
+        # Reset before test
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+
         # Initialize with test data
         InventoryManager.initialize(inventory_paths["test_devices"])
 
@@ -134,10 +126,13 @@ class TestListDevices:
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
-    def test_list_devices_from_sandbox(
-        self, reset_inventory_manager, inventory_paths
-    ):
+    def test_list_devices_from_sandbox(self, inventory_paths):
         """Test listing devices from the test_devices.json file."""
+        # Reset before test
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+
         InventoryManager.initialize(inventory_paths["sandbox"])
 
         # Get the device list
@@ -153,10 +148,13 @@ class TestListDevices:
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
-    def test_list_devices_from_hosts(
-        self, reset_inventory_manager, inventory_paths
-    ):
+    def test_list_devices_from_hosts(self, inventory_paths):
         """Test listing devices from the test_devices.json file."""
+        # Reset before test
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+
         # Initialize with hosts data
         InventoryManager.initialize(inventory_paths["hosts"])
 
@@ -173,10 +171,13 @@ class TestListDevices:
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
-    def test_list_devices_from_empty_inventory(
-        self, reset_inventory_manager, inventory_paths
-    ):
+    def test_list_devices_from_empty_inventory(self, inventory_paths):
         """Test listing devices from an empty inventory file."""
+        # Reset before test
+        InventoryManager._instance = None
+        InventoryManager._devices = {}
+        InventoryManager._initialized = False
+
         # Initialize with empty inventory
         InventoryManager.initialize(inventory_paths["empty"])
 

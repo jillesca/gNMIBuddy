@@ -40,8 +40,8 @@ def inventory_paths():
         "test_devices": os.path.join(
             Path(__file__).parent, "test_devices.json"
         ),
-        "sandbox": os.path.join(project_root, "sandbox.json"),
-        "hosts": os.path.join(project_root, "hosts.json"),
+        "sandbox": os.path.join(Path(__file__).parent, "test_devices.json"),
+        "hosts": os.path.join(Path(__file__).parent, "test_devices.json"),
         "empty": os.path.join(Path(__file__).parent, "empty_inventory.json"),
     }
 
@@ -78,37 +78,37 @@ class TestGetDevice:
     def test_get_device_from_sandbox(
         self, reset_inventory_manager, inventory_paths
     ):
-        """Test retrieving a device from the sandbox.json file."""
+        """Test retrieving a device from the test_devices.json file."""
         # Initialize with sandbox data
         InventoryManager.initialize(inventory_paths["sandbox"])
 
-        # Get the sandbox device
-        device, success = InventoryManager.get_device("sandbox")
+        # Get the test device
+        device, success = InventoryManager.get_device("test-device-1")
 
         # Assertions
         assert success
         assert isinstance(device, Device)
-        assert device.name == "sandbox"
-        assert device.ip_address == "sandbox-iosxr-1.cisco.com"
+        assert device.name == "test-device-1"
+        assert device.ip_address == "10.0.0.1"
         assert device.port == 57777
 
     def test_get_device_from_hosts(
         self, reset_inventory_manager, inventory_paths
     ):
-        """Test retrieving a device from the hosts.json file."""
+        """Test retrieving a device from the test_devices.json file."""
         # Initialize with hosts data
         InventoryManager.initialize(inventory_paths["hosts"])
 
-        # Get one of the devices from hosts.json
-        device, success = InventoryManager.get_device("xrd-1")
+        # Get one of the devices from test_devices.json
+        device, success = InventoryManager.get_device("test-device-2")
 
         # Assertions
         assert success
         assert isinstance(device, Device)
-        assert device.name == "xrd-1"
-        assert device.ip_address == "198.18.158.16"
+        assert device.name == "test-device-2"
+        assert device.ip_address == "10.0.0.2"
         assert device.port == 57777
-        assert device.username == "admin"
+        assert device.username == "test_user"
 
 
 class TestListDevices:
@@ -137,8 +137,7 @@ class TestListDevices:
     def test_list_devices_from_sandbox(
         self, reset_inventory_manager, inventory_paths
     ):
-        """Test listing devices from the sandbox.json file."""
-        # Initialize with sandbox data
+        """Test listing devices from the test_devices.json file."""
         InventoryManager.initialize(inventory_paths["sandbox"])
 
         # Get the device list
@@ -147,13 +146,17 @@ class TestListDevices:
         # Assertions
         assert isinstance(result, dict)
         assert "devices" in result
-        assert len(result["devices"]) == 1
-        assert result["devices"][0]["name"] == "sandbox"
+        assert len(result["devices"]) == 2
+
+        # Check that test devices are in the list
+        device_names = [d["name"] for d in result["devices"]]
+        assert "test-device-1" in device_names
+        assert "test-device-2" in device_names
 
     def test_list_devices_from_hosts(
         self, reset_inventory_manager, inventory_paths
     ):
-        """Test listing devices from the hosts.json file."""
+        """Test listing devices from the test_devices.json file."""
         # Initialize with hosts data
         InventoryManager.initialize(inventory_paths["hosts"])
 
@@ -163,12 +166,12 @@ class TestListDevices:
         # Assertions
         assert isinstance(result, dict)
         assert "devices" in result
-        assert len(result["devices"]) >= 10
+        assert len(result["devices"]) == 2
 
         # Check that expected devices are in the list
         device_names = [d["name"] for d in result["devices"]]
-        for i in range(1, 11):
-            assert f"xrd-{i}" in device_names
+        assert "test-device-1" in device_names
+        assert "test-device-2" in device_names
 
     def test_list_devices_from_empty_inventory(
         self, reset_inventory_manager, inventory_paths

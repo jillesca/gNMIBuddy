@@ -105,21 +105,20 @@ class TestInventoryManager(unittest.TestCase):
 
     def test_inventory_initialization_with_specific_file(self):
         """Test initializing inventory with a specific file path."""
-        # Initialize with sandbox file
-        sandbox_file = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "sandbox.json",
+        # Initialize with test_devices file
+        test_file = os.path.join(
+            os.path.dirname(__file__), "test_devices.json"
         )
-        InventoryManager.initialize(sandbox_file)
+        InventoryManager.initialize(test_file)
 
-        # Verify initialization with sandbox data
+        # Verify initialization with test data
         instance = InventoryManager.get_instance()
         self.assertTrue(instance.is_initialized())
 
-        # Check if we can get the sandbox device
-        device, success = InventoryManager.get_device("sandbox")
+        # Check if we can get the first test device
+        device, success = InventoryManager.get_device("test-device-1")
         self.assertTrue(success)
-        self.assertEqual(device.ip_address, "sandbox-iosxr-1.cisco.com")
+        self.assertEqual(device.ip_address, "10.0.0.1")
 
 
 @patch("src.inventory.manager.InventoryManager.initialize")

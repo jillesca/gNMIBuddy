@@ -5,7 +5,7 @@ Contains dataclasses for representing network devices.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Optional
 
 
 @dataclass
@@ -45,16 +45,3 @@ class Device:
     grpc_options: Optional[list] = None
     show_diff: Optional[str] = None
     insecure: bool = True
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Device":
-        """
-        Create a Device object from a dictionary.
-
-        Args:
-            data: Dictionary containing device attributes
-
-        Returns:
-            A new Device instance with attributes from the dictionary
-        """
-        return cls(**data)

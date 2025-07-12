@@ -141,7 +141,7 @@ if __name__ == "__main__":
     # Parse the JSON file to get device information
     devices = parse_json_file(json_file_path)
 
-    device = Device.from_dict(devices[0])
+    device = Device(**devices[0])
 
     # Creating a GnmiRequest for an example query
     request = GnmiRequest(

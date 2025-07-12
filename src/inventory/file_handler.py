@@ -83,8 +83,7 @@ def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
     try:
         device_inventory = parse_json_file(inventory_file)
         devices: Dict[str, Device] = {
-            device["name"]: Device.from_dict(device)
-            for device in device_inventory
+            device["name"]: Device(**device) for device in device_inventory
         }
         logger.debug(
             f"Successfully loaded {len(devices)} devices from inventory {inventory_file}"

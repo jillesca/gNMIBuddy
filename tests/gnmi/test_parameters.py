@@ -27,21 +27,18 @@ class TestGnmiRequest:
         assert request.prefix is None
         assert request.encoding == "json_ietf"
         assert request.datatype == "all"
-        assert request.extended_params == {}
 
-        # Test with all parameters
+        # Test with all core parameters plus some gNMI specific ones
         request = GnmiRequest(
             path=["/interfaces", "/network-instances"],
             prefix="/openconfig",
             encoding="json",
             datatype="config",
-            extended_params={"timeout": 30},
         )
         assert request.path == ["/interfaces", "/network-instances"]
         assert request.prefix == "/openconfig"
         assert request.encoding == "json"
         assert request.datatype == "config"
-        assert request.extended_params == {"timeout": 30}
 
     def test_mapping_functionality(self):
         """Test mapping functionality of the GnmiRequest class."""
@@ -50,23 +47,20 @@ class TestGnmiRequest:
         assert request["path"] == ["/interfaces"]
         assert request["encoding"] == "json_ietf"
         assert request["datatype"] == "all"
-        # prefix should not be in keys when None
-        assert "prefix" not in list(request.keys())
+        # prefix is included even when None (simplified behavior)
+        assert request["prefix"] is None
 
-        # Test with all parameters including extended parameters
+        # Test with all parameters including gNMI specific parameters
         request = GnmiRequest(
             path=["/interfaces", "/network-instances"],
             prefix="/openconfig",
             encoding="json",
             datatype="config",
-            extended_params={"timeout": 30, "labels": ["test"]},
         )
         assert request["path"] == ["/interfaces", "/network-instances"]
         assert request["prefix"] == "/openconfig"
         assert request["encoding"] == "json"
         assert request["datatype"] == "config"
-        assert request["timeout"] == 30
-        assert request["labels"] == ["test"]
 
         # Test that it can be unpacked with **
         def mock_function(**kwargs):
@@ -74,7 +68,6 @@ class TestGnmiRequest:
 
         result = mock_function(**request)
         assert result["path"] == ["/interfaces", "/network-instances"]
-        assert result["timeout"] == 30
 
     def test_multiple_paths(self):
         """Test handling of multiple path expressions."""

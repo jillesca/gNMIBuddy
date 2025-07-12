@@ -52,10 +52,14 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
     target = (device.ip_address, device.port)
     username = device.username
     password = device.password
+    insecure = device.insecure
 
     try:
         with gNMIclient(
-            target=target, username=username, password=password, insecure=True
+            target=target,
+            username=username,
+            password=password,
+            insecure=insecure,
         ) as gc:
 
             result = gc.get(**request)

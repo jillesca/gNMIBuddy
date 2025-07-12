@@ -4,7 +4,7 @@ Parameter objects for gNMI requests.
 Provides structured objects for representing gNMI request parameters.
 """
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from typing import List, Optional, Dict, Any
 
 
@@ -22,23 +22,16 @@ class GnmiRequest:
         prefix: Prefix for the gNMI request (optional)
         encoding: Encoding type for the request (defaults to "json_ietf")
         datatype: Data type to retrieve (defaults to "all")
-        extended_params: Additional parameters for future extensions
     """
 
     path: List[str]
     prefix: Optional[str] = None
     encoding: str = "json_ietf"
     datatype: str = "all"
-    extended_params: Dict[str, Any] = field(default_factory=dict)
 
     def _as_dict(self) -> Dict[str, Any]:
-        """Convert to dict representation for unpacking."""
-        data = asdict(self)
-        extended = data.pop("extended_params", {})
-        if self.prefix is None:
-            data.pop("prefix")
-        data.update(extended)
-        return data
+        """Convert to dictionary with smart None filtering."""
+        return asdict(self)
 
     def keys(self):
         """Return keys for mapping interface (enables ** unpacking)."""

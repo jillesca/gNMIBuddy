@@ -18,7 +18,7 @@ def get_non_default_vrf_names(device: Device) -> List[str]:
     Returns a list of VRF names (strings) that are not in DEFAULT_INTERNAL_VRFS.
     """
     vrf_names_request = GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-network-instance:network-instances/network-instance[name=*]/state/name",
         ],
     )

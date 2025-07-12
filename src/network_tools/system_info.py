@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Define common requests as constants
 def system_request():
     return GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-system:/system",
         ],
     )

@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     # Creating a GnmiRequest for an example query
     request = GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-interfaces:interfaces/interface[name=*]/state/admin-status",
             "openconfig-interfaces:interfaces/interface[name=*]/state/oper-status",
         ],

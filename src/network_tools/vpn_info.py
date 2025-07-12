@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 VPN/VRF information module.
-Provides functions for retrieving VRF/VPN information from network devices using XPath.
+Provides functions for retrieving VRF/VPN information from network devices using gNMI.
 """
 
 import logging
@@ -78,7 +78,7 @@ def _get_vrfs_name(device: Device) -> List[str] | VpnResponse:
     """
     # Create a GnmiRequest for VRF names
     vrf_names_request = GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-network-instance:network-instances/network-instance[name=*]/state/name",
         ],
     )
@@ -124,15 +124,15 @@ def _get_vrf_details(
             summary={"message": "No VRFs found"},
         )
 
-    vrf_xpath_queries = []
+    vrf_path_queries = []
     for vrf_name in vrf_names:
-        vrf_xpath_queries.append(
+        vrf_path_queries.append(
             f"openconfig-network-instance:network-instances/network-instance[name={vrf_name}]"
         )
 
     # Create a GnmiRequest for VRF details
     vrf_details_request = GnmiRequest(
-        xpath=vrf_xpath_queries, encoding="json_ietf"
+        path=vrf_path_queries, encoding="json_ietf"
     )
 
     # Get detailed VRF data

@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # Define common requests as constants
 def isis_request():
     return GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol/isis/interfaces/",
             "openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol/isis/global/",
         ],
@@ -36,7 +36,7 @@ def isis_request():
 
 def bgp_request():
     return GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol/bgp"
         ],
     )

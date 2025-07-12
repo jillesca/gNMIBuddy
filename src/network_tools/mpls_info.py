@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def mpls_request():
     return GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-network-instance:network-instances/network-instance[name=*]/mpls",
         ],
     )

@@ -27,7 +27,7 @@ class TestMplsInfoFunctions:
         request = mpls_request()
         request_dict = request.to_dict()
 
-        # Check the request has the correct XPath for MPLS data
+        # Check the request has the correct path for MPLS data
         assert "path" in request_dict
         assert len(request_dict["path"]) == 1
         assert (

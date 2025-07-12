@@ -18,14 +18,14 @@ class GnmiRequest:
     clarity and maintainability.
 
     Attributes:
-        xpath: List of XPath strings to retrieve
+        path: List of gNMI path strings to retrieve
         prefix: Prefix for the gNMI request (optional)
         encoding: Encoding type for the request (defaults to "json_ietf")
         datatype: Data type to retrieve (defaults to "all")
         extended_params: Additional parameters for future extensions
     """
 
-    xpath: List[str]
+    path: List[str]
     prefix: Optional[str] = None
     encoding: str = "json_ietf"
     datatype: str = "all"
@@ -35,13 +35,7 @@ class GnmiRequest:
         """
         Convert the request to a dictionary suitable for the gNMI client.
         """
-        result = {
-            "path": self.xpath,
-            "prefix": self.prefix,
-            "encoding": self.encoding,
-            "datatype": self.datatype,
-        }
-
-        result.update(self.extended_params)
-
+        result = self.__dict__.copy()
+        extended = result.pop("extended_params", {})
+        result.update(extended)
         return result

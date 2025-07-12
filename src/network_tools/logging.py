@@ -52,7 +52,7 @@ def get_logging_information(
     log_query = f"show logging | utility egrep '{log_filter}' | utility egrep -v logged "
 
     # Create a GnmiRequest with the appropriate parameters for logs
-    log_request = GnmiRequest(xpath=[log_query], encoding="ascii")
+    log_request = GnmiRequest(path=[log_query], encoding="ascii")
 
     response = get_gnmi_data(device=device, request=log_request)
 

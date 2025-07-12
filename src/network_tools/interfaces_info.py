@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Interface functions module.
-Provides functions for retrieving interface information from network devices using XPath.
+Provides functions for retrieving interface information from network devices using gNMI.
 """
 
 import logging
@@ -52,7 +52,7 @@ def _get_interface_brief(
         InterfaceResponse object containing structured summary information
     """
     interface_brief_request = GnmiRequest(
-        xpath=["openconfig-interfaces:interfaces"],
+        path=["openconfig-interfaces:interfaces"],
     )
     response = get_gnmi_data(device, interface_brief_request)
 
@@ -126,7 +126,7 @@ def _get_single_interface_info(
 
 def _create_single_interface_request(interface_name: str) -> GnmiRequest:
     return GnmiRequest(
-        xpath=[
+        path=[
             f"openconfig-interfaces:interfaces/interface[name={interface_name}]"
         ],
     )

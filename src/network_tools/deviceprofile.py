@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def deviceprofile_request():
     return GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol/bgp/global/afi-safis/afi-safi[name=*]/state",
             "openconfig-network-instance:network-instances/network-instance[name=*]/mpls/global/interface-attributes/interface[interface-id=*]/state",
             "openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol/isis/global/state",
@@ -68,8 +68,8 @@ def _get_vpn_bgp_info(device: Device):
     vpn_bgp_afi_safi_states = []
     if vpn_names:
         for vpn in vpn_names:
-            xpath = f"openconfig-network-instance:network-instances/network-instance[name={vpn}]/protocols/protocol/bgp/global/afi-safis/afi-safi[afi-safi-name=*]/state"
-            vpn_req = GnmiRequest(xpath=[xpath])
+            path_query = f"openconfig-network-instance:network-instances/network-instance[name={vpn}]/protocols/protocol/bgp/global/afi-safis/afi-safi[afi-safi-name=*]/state"
+            vpn_req = GnmiRequest(path=[path_query])
             vpn_resp = get_gnmi_data(device, vpn_req)
             if hasattr(vpn_resp, "data") and vpn_resp.data:
                 vpn_bgp_afi_safi_states.extend(vpn_resp.data)

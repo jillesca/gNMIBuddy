@@ -33,7 +33,7 @@ class TestRoutingInfoFunctions:
         request = bgp_request()
         request_dict = request.to_dict()
 
-        # Check the request has the correct XPath for BGP data
+        # Check the request has the correct path for BGP data
         assert "path" in request_dict
         assert len(request_dict["path"]) == 1
         assert (
@@ -48,7 +48,7 @@ class TestRoutingInfoFunctions:
         request = isis_request()
         request_dict = request.to_dict()
 
-        # Check the request has the correct XPaths for ISIS data
+        # Check the request has the correct paths for ISIS data
         assert "path" in request_dict
         assert len(request_dict["path"]) == 2
         assert any("interfaces" in path for path in request_dict["path"])

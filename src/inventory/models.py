@@ -5,26 +5,13 @@ Contains dataclasses for representing network devices.
 """
 
 from dataclasses import dataclass
-from typing import Optional, List, TypedDict
-
-
-class DeviceInfo(TypedDict):
-    """Type definition for device information dictionary.
-
-    Contains non-sensitive device information that is safe to expose.
-    This is a subset of the Device dataclass fields.
-    """
-
-    name: str
-    ip_address: str
-    port: int
-    nos: str
+from typing import Optional, List, Dict, Any, TypedDict
 
 
 class DeviceListResult(TypedDict):
     """Type definition for the device list result."""
 
-    devices: List[DeviceInfo]
+    devices: List[Dict[str, Any]]
 
 
 class DeviceErrorResult(TypedDict):
@@ -34,7 +21,7 @@ class DeviceErrorResult(TypedDict):
     """
 
     error: str
-    device_info: Optional[DeviceInfo]
+    device_info: Optional[Dict[str, Any]]
 
 
 @dataclass
@@ -74,3 +61,17 @@ class Device:
     grpc_options: Optional[list] = None
     show_diff: Optional[str] = None
     insecure: bool = True
+
+    def to_device_info(self) -> Dict[str, Any]:
+        """
+        Convert Device to device info dictionary, excluding sensitive information.
+
+        Returns:
+            Dictionary with non-sensitive device information
+        """
+        return {
+            "name": self.name,
+            "ip_address": self.ip_address,
+            "port": self.port,
+            "nos": self.nos,
+        }

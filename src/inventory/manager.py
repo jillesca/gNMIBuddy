@@ -7,7 +7,7 @@ Manages device inventory with a singleton pattern.
 import logging
 from typing import Dict, Optional, Tuple, Union
 
-from .models import Device, DeviceListResult, DeviceErrorResult, DeviceInfo
+from .models import Device, DeviceListResult, DeviceErrorResult
 from .file_handler import get_inventory_path, load_inventory
 
 # Setup module logger
@@ -68,13 +68,17 @@ class InventoryManager:
         if not devices:
             error_msg = "No inventory file specified or the inventory is empty. Please provide a path via --inventory option or set the NETWORK_INVENTORY environment variable."
             logger.warning(error_msg)
-            return (DeviceErrorResult(error=error_msg), False)
+            return (
+                DeviceErrorResult(error=error_msg, device_info=None),
+                False,
+            )
 
         if device_name not in devices:
             logger.warning(f"Device '{device_name}' not found in inventory")
             return (
                 DeviceErrorResult(
-                    error=f"Device '{device_name}' not found in inventory"
+                    error=f"Device '{device_name}' not found in inventory",
+                    device_info=None,
                 ),
                 False,
             )
@@ -103,15 +107,7 @@ class InventoryManager:
             logger.warning("No devices found in inventory")
             return DeviceListResult(devices=[])
 
-        device_list = [
-            DeviceInfo(
-                name=name,
-                ip_address=device.ip_address,
-                port=device.port,
-                nos=device.nos,
-            )
-            for name, device in devices.items()
-        ]
+        device_list = [device.to_device_info() for device in devices.values()]
         # logger.info(f"Listed {len(device_list)} devices from inventory")
         return DeviceListResult(devices=device_list)
 

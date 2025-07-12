@@ -58,8 +58,7 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
             target=target, username=username, password=password, insecure=True
         ) as gc:
 
-            request_params = request.to_dict()
-            result = gc.get(**request_params)
+            result = gc.get(**request)
             raw_response = _extract_gnmi_data(response=result)
             return _create_response_from_raw_data(raw_response=raw_response)
 

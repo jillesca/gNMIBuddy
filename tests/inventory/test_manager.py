@@ -6,7 +6,7 @@ Focuses on testing the get_device and list_devices functions.
 
 import os
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from src.inventory.manager import InventoryManager
 from src.inventory.models import Device

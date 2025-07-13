@@ -11,6 +11,7 @@ from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import (
     ErrorResponse,
     FeatureNotFoundResponse,
+    SuccessResponse,
 )
 from src.inventory.models import Device
 from src.parsers.system_info_parser import SystemInfoParser
@@ -43,18 +44,25 @@ def get_system_information(device: Device) -> Dict[str, Any]:
 
     # Error/feature-not-found handling
     if isinstance(response, ErrorResponse):
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     if isinstance(response, FeatureNotFoundResponse):
         return {
             "device_name": device.name,
-            "feature_not_found": response.to_dict(),
+            "feature_not_found": response,
         }
 
-    response_dict = response.to_dict()
+    # Work directly with response data
+    data_for_parsing = {}
+    if isinstance(response, SuccessResponse):
+        if response.raw_data:
+            data_for_parsing = response.raw_data
+        elif response.data:
+            data_for_parsing = {"response": response.data}
+
     parser = SystemInfoParser()
     try:
-        parsed_data = parser.parse(response_dict)
+        parsed_data = parser.parse(data_for_parsing)
         return {
             "device_name": device.name,
             "system_info": parsed_data,
@@ -70,4 +78,4 @@ def get_system_information(device: Device) -> Dict[str, Any]:
             type="PARSING_ERROR",
             message=f"Error parsing system info: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}

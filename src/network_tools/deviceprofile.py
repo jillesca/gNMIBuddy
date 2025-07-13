@@ -35,24 +35,28 @@ def get_device_profile(device: Device) -> Dict[str, Any]:
     response = get_gnmi_data(device, deviceprofile_request())
 
     if isinstance(response, ErrorResponse):
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     if isinstance(response, FeatureNotFoundResponse):
         return {
             "device_name": device.name,
-            "feature_not_found": response.to_dict(),
+            "feature_not_found": response,
         }
-
-    response_dict = response.to_dict()
 
     # Get VPN info and BGP AFI-SAFI state for non-default VPNs
     vpn_info, vpn_bgp_afi_safi_states = _get_vpn_bgp_info(device)
-    response_dict["vpn_info"] = vpn_info
-    response_dict["vpn_bgp_afi_safi_states"] = vpn_bgp_afi_safi_states
+
+    # Create a data dict for parsing that includes both response data and VPN info
+    data_for_parsing = {
+        "response_data": response.data,
+        "raw_data": response.raw_data,
+        "vpn_info": vpn_info,
+        "vpn_bgp_afi_safi_states": vpn_bgp_afi_safi_states,
+    }
 
     parser = DeviceProfileParser()
     try:
-        parsed_data = parser.parse(response_dict)
+        parsed_data = parser.parse(data_for_parsing)
         return {
             "device_name": device.name,
             "profile": parsed_data,
@@ -68,7 +72,7 @@ def get_device_profile(device: Device) -> Dict[str, Any]:
             type="PARSING_ERROR",
             message=f"Error parsing device profile: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}
 
 
 def _get_vpn_bgp_info(device: Device):
@@ -87,7 +91,7 @@ def _get_vpn_bgp_info(device: Device):
             if not isinstance(vpn_resp, ErrorResponse) and not isinstance(
                 vpn_resp, FeatureNotFoundResponse
             ):
-                vpn_data = vpn_resp.to_dict()
-                if vpn_data:
-                    vpn_bgp_afi_safi_states.extend(vpn_data)
+                # Work directly with response data instead of calling to_dict()
+                if vpn_resp.data:
+                    vpn_bgp_afi_safi_states.extend(vpn_resp.data)
     return vpn_info, vpn_bgp_afi_safi_states

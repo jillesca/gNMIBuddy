@@ -8,7 +8,7 @@ import logging
 from typing import Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse
+from src.gnmi.responses import ErrorResponse, SuccessResponse
 from src.inventory.models import Device
 from src.parsers.protocols.mpls.mpls_parser import (
     parse_mpls_data,
@@ -44,10 +44,18 @@ def get_mpls_information(
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving MPLS information: %s", response.message)
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     try:
-        mpls_data = parse_mpls_data(response.to_dict())
+        # Work directly with response data
+        data_for_parsing = {}
+        if isinstance(response, SuccessResponse):
+            if response.raw_data:
+                data_for_parsing = response.raw_data
+            elif response.data:
+                data_for_parsing = {"response": response.data}
+
+        mpls_data = parse_mpls_data(data_for_parsing)
         summary = generate_mpls_summary(mpls_data)
 
         # Add summary to the mpls_data for consistent return format
@@ -67,4 +75,4 @@ def get_mpls_information(
             type="PARSING_ERROR",
             message=f"Error parsing MPLS data: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}

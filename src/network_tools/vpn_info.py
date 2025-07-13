@@ -8,7 +8,7 @@ import logging
 from typing import List, Optional, Dict, Any, Union
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse
+from src.gnmi.responses import ErrorResponse, SuccessResponse
 from src.inventory.models import Device
 from src.parsers.protocols.vrf import (
     parse_vrf_data,
@@ -90,22 +90,30 @@ def _get_vrfs_name(device: Device) -> Union[List[str], Dict[str, Any]]:
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving VRF names: %s", response.message)
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     # Extract VRF names from the response
     vrf_names = []
-    response_dict = response.to_dict()
-    if response_dict and isinstance(response_dict, list):
-        for item in response_dict:
-            if isinstance(item, dict) and "val" in item:
-                val = item.get("val")
-                if (
-                    val
-                    and isinstance(val, str)
-                    and val.lower()
-                    not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
-                ):
-                    vrf_names.append(val)
+    if isinstance(response, SuccessResponse):
+        # Work directly with response data
+        if response.data:
+            response_data = response.data
+        elif response.raw_data:
+            response_data = response.raw_data.get("response", [])
+        else:
+            response_data = []
+
+        if isinstance(response_data, list):
+            for item in response_data:
+                if isinstance(item, dict) and "val" in item:
+                    val = item.get("val")
+                    if (
+                        val
+                        and isinstance(val, str)
+                        and val.lower()
+                        not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
+                    ):
+                        vrf_names.append(val)
     return vrf_names
 
 
@@ -148,10 +156,18 @@ def _get_vrf_details(
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving VRF details: %s", response.message)
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     try:
-        parsed_data = parse_vrf_data(response.to_dict())
+        # Work directly with response data
+        data_for_parsing = {}
+        if isinstance(response, SuccessResponse):
+            if response.raw_data:
+                data_for_parsing = response.raw_data
+            elif response.data:
+                data_for_parsing = {"response": response.data}
+
+        parsed_data = parse_vrf_data(data_for_parsing)
         llm_data = generate_llm_friendly_data(parsed_data)
         summary = generate_vrf_summary(parsed_data)
 
@@ -169,4 +185,4 @@ def _get_vrf_details(
             type="PARSING_ERROR",
             message=f"Error parsing VRF data: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}

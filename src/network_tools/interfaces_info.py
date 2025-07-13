@@ -8,7 +8,7 @@ import logging
 from typing import Dict, Any, Optional
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse
+from src.gnmi.responses import ErrorResponse, SuccessResponse
 from src.inventory.models import Device
 from src.parsers.interfaces.data_formatter import format_interface_data_for_llm
 from src.parsers.interfaces.single_interface_parser import (
@@ -60,9 +60,17 @@ def _get_interface_brief(
             "Error retrieving interface brief information: %s",
             response.message,
         )
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
-    formatted_data = format_interface_data_for_llm(response.to_dict())
+    # Only SuccessResponse has raw_data and data attributes
+    data_to_format = {}
+    if isinstance(response, SuccessResponse):
+        if response.raw_data:
+            data_to_format = response.raw_data
+        elif response.data:
+            data_to_format = {"response": response.data}
+
+    formatted_data = format_interface_data_for_llm(data_to_format)
     return {
         "device_name": device.name,
         "interfaces": (
@@ -102,11 +110,17 @@ def _get_single_interface_info(
             interface_name,
             response.message,
         )
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
-    # Check if response has data attribute (SuccessResponse) or if it's empty
-    response_dict = response.to_dict()
-    if not response_dict:
+    # Check if response has data (SuccessResponse) or if it's empty
+    data_for_parsing = {}
+    if isinstance(response, SuccessResponse):
+        if response.raw_data:
+            data_for_parsing = response.raw_data
+        elif response.data:
+            data_for_parsing = {"response": response.data}
+
+    if not data_for_parsing:
         error_msg = f"Interface {interface_name} not found"
         logger.error(error_msg)
         error_response = ErrorResponse(
@@ -114,9 +128,9 @@ def _get_single_interface_info(
             message=error_msg,
             details={"interface": interface_name, "status": "NOT_FOUND"},
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}
 
-    parsed_result = parse_single_interface_data(response_dict)
+    parsed_result = parse_single_interface_data(data_for_parsing)
     interface_result = {
         "device_name": device.name,
         "interfaces": [parsed_result] if parsed_result else [],

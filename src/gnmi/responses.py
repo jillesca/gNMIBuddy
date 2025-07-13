@@ -6,7 +6,6 @@ Provides structured objects for representing operation responses.
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Union
-import json
 
 
 @dataclass
@@ -36,24 +35,13 @@ class ErrorResponse:
 
         return cls(type=error_type, message=message, details=details)
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to a dictionary representation."""
-        result = {"type": self.type}
-
-        if self.message:
-            result["message"] = self.message
-
-        result.update(self.details)
-
-        return result
-
     def __str__(self) -> str:
         """String representation for debugging."""
-        return json.dumps(self.to_dict(), indent=2)
-
-    def to_json(self) -> str:
-        """Convert to a JSON string."""
-        return json.dumps(self.to_dict())
+        if self.message:
+            return (
+                f"ErrorResponse(type='{self.type}', message='{self.message}')"
+            )
+        return f"ErrorResponse(type='{self.type}')"
 
 
 @dataclass
@@ -88,30 +76,9 @@ class FeatureNotFoundResponse:
             details=details or {},
         )
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to a dictionary representation."""
-        result = {
-            "feature_not_found": {
-                "feature": self.feature_name,
-                "message": self.message,
-                "details": {},
-            }
-        }
-
-        if self.details:
-            # Copy the details into the result
-            for key, value in self.details.items():
-                result["feature_not_found"]["details"][key] = value
-
-        return result
-
     def __str__(self) -> str:
         """String representation for debugging."""
-        return json.dumps(self.to_dict(), indent=2)
-
-    def to_json(self) -> str:
-        """Convert to a JSON string."""
-        return json.dumps(self.to_dict())
+        return f"FeatureNotFoundResponse(feature='{self.feature_name}', message='{self.message}')"
 
 
 @dataclass
@@ -148,28 +115,13 @@ class SuccessResponse:
 
         return cls(raw_data=response, data=updates, timestamp=timestamp)
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to a dictionary representation."""
-        result = {}
-
-        if self.raw_data:
-            result.update(self.raw_data)
-
-        if self.data:
-            result["data"] = self.data
-
-        if self.timestamp:
-            result["timestamp"] = self.timestamp
-
-        return result
-
     def __str__(self) -> str:
         """String representation for debugging."""
-        return json.dumps(self.to_dict(), indent=2)
-
-    def to_json(self) -> str:
-        """Convert to a JSON string."""
-        return json.dumps(self.to_dict())
+        data_count = len(self.data) if self.data else 0
+        timestamp_str = (
+            f", timestamp='{self.timestamp}'" if self.timestamp else ""
+        )
+        return f"SuccessResponse(data_count={data_count}{timestamp_str})"
 
 
 # Type alias for return types - Go-like error handling pattern

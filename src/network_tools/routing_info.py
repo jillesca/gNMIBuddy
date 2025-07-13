@@ -8,7 +8,11 @@ import logging
 from typing import Optional, List, Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse, FeatureNotFoundResponse
+from src.gnmi.responses import (
+    ErrorResponse,
+    FeatureNotFoundResponse,
+    SuccessResponse,
+)
 from src.inventory.models import Device
 from src.parsers.protocols.bgp.config_parser import (
     parse_bgp_data,
@@ -84,18 +88,26 @@ def _get_isis_info(
 
     # Handle feature not found responses
     if isinstance(response, FeatureNotFoundResponse):
-        logger.info("No ISIS configuration found: %s", response.to_dict())
+        logger.info("No ISIS configuration found: %s", response)
         return {
             "device_name": device.name,
-            "feature_not_found": response.to_dict(),
+            "feature_not_found": response,
         }
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving ISIS information: %s", response.message)
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     try:
-        isis_data = parse_isis_data(response.to_dict())
+        # Work directly with response data
+        data_for_parsing = {}
+        if isinstance(response, SuccessResponse):
+            if response.raw_data:
+                data_for_parsing = response.raw_data
+            elif response.data:
+                data_for_parsing = {"response": response.data}
+
+        isis_data = parse_isis_data(data_for_parsing)
         summary = generate_isis_summary(isis_data)
 
         return {
@@ -112,7 +124,7 @@ def _get_isis_info(
             type="PARSING_ERROR",
             message=f"Error parsing ISIS data: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}
 
 
 def _get_bgp_info(
@@ -132,18 +144,26 @@ def _get_bgp_info(
 
     # Handle feature not found responses
     if isinstance(response, FeatureNotFoundResponse):
-        logger.info("No BGP configuration found: %s", response.to_dict())
+        logger.info("No BGP configuration found: %s", response)
         return {
             "device_name": device.name,
-            "feature_not_found": response.to_dict(),
+            "feature_not_found": response,
         }
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving BGP information: %s", response.message)
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     try:
-        bgp_data = parse_bgp_data(response.to_dict())
+        # Work directly with response data
+        data_for_parsing = {}
+        if isinstance(response, SuccessResponse):
+            if response.raw_data:
+                data_for_parsing = response.raw_data
+            elif response.data:
+                data_for_parsing = {"response": response.data}
+
+        bgp_data = parse_bgp_data(data_for_parsing)
         summary = generate_bgp_summary(bgp_data)
 
         return {
@@ -160,4 +180,4 @@ def _get_bgp_info(
             type="PARSING_ERROR",
             message=f"Error parsing BGP data: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}

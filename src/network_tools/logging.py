@@ -8,7 +8,7 @@ import logging
 from typing import Optional, Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse
+from src.gnmi.responses import ErrorResponse, SuccessResponse
 from src.inventory.models import Device
 from src.parsers.logs.filter import filter_logs
 
@@ -61,12 +61,20 @@ def get_logging_information(
         logger.error(
             "Failed to get logs from %s: %s", device.name, response.message
         )
-        return {"device_name": device.name, "error": response.to_dict()}
+        return {"device_name": device.name, "error": response}
 
     try:
+        # Work directly with response data
+        data_for_filter = {}
+        if isinstance(response, SuccessResponse):
+            if response.raw_data:
+                data_for_filter = response.raw_data
+            elif response.data:
+                data_for_filter = {"response": response.data}
+
         # Process the logs through the filter
         filtered_logs = filter_logs(
-            response.to_dict(), show_all_logs, minutes or 5
+            data_for_filter, show_all_logs, minutes or 5
         )
 
         if "error" in filtered_logs:
@@ -75,7 +83,7 @@ def get_logging_information(
             )
             return {
                 "device_name": device.name,
-                "error": error_response.to_dict(),
+                "error": error_response,
             }
 
         # Create a response with the filtered logs
@@ -94,4 +102,4 @@ def get_logging_information(
             type="LOG_PROCESSING_ERROR",
             message=f"Error processing logs: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response.to_dict()}
+        return {"device_name": device.name, "error": error_response}

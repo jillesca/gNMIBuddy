@@ -7,7 +7,21 @@ the gNMIBuddy application for representing operation results.
 """
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Dict, Any, Optional, Union
+
+
+class OperationStatus(Enum):
+    """
+    Enumeration for network operation status values.
+
+    Provides type safety and prevents typos when setting or checking
+    operation status in NetworkOperationResult objects.
+    """
+
+    SUCCESS = "success"
+    FAILED = "failed"
+    FEATURE_NOT_AVAILABLE = "feature_not_available"
 
 
 @dataclass
@@ -90,7 +104,7 @@ class NetworkOperationResult:
         ip_address: IP address of the target device
         nos: Network Operating System of the target device
         operation_type: Type of operation performed (interface, system, routing, etc.)
-        status: Operation result status ("success", "failed", "feature_not_available")
+        status: Operation result status (OperationStatus enum)
         data: The parsed/structured data from the operation
         metadata: Additional metadata about the operation and results
         error_response: Optional ErrorResponse object for failed operations
@@ -101,7 +115,7 @@ class NetworkOperationResult:
     ip_address: str
     nos: str
     operation_type: str
-    status: str  # "success", "failed", "feature_not_available"
+    status: OperationStatus
     data: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
     error_response: Optional[ErrorResponse] = None

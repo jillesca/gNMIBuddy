@@ -6,6 +6,7 @@ Provides functions for building and querying network topology graph.
 from src.schemas.responses import (
     NetworkOperationResult,
     ErrorResponse,
+    OperationStatus,
 )
 
 # Note: adjacency_dump import is commented out due to missing module
@@ -61,7 +62,7 @@ def path_cmd(device, target_device_name) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )
 
@@ -72,7 +73,7 @@ def path_cmd(device, target_device_name) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_info",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={"path": path_result},
         )
     except (KeyError, ValueError, TypeError) as e:
@@ -85,7 +86,7 @@ def path_cmd(device, target_device_name) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )
 
@@ -101,7 +102,7 @@ def segment_cmd(device, network) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )
 
@@ -112,7 +113,7 @@ def segment_cmd(device, network) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_info",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={"segment": segment_result},
         )
     except (KeyError, ValueError, TypeError) as e:
@@ -125,7 +126,7 @@ def segment_cmd(device, network) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )
 

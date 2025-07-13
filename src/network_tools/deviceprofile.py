@@ -7,8 +7,9 @@ Provides functions for retrieving device role/profile information from network d
 import logging
 from src.schemas.responses import (
     ErrorResponse,
-    FeatureNotFoundResponse,
+    OperationStatus,
     NetworkOperationResult,
+    FeatureNotFoundResponse,
 )
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
@@ -40,7 +41,7 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="device_profile",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=response,
         )
 
@@ -50,7 +51,7 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="device_profile",
-            status="feature_not_available",
+            status=OperationStatus.FEATURE_NOT_AVAILABLE,
             feature_not_found_response=response,
         )
 
@@ -67,7 +68,7 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="device_profile",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={"profile": parsed_data},
         )
     except (KeyError, ValueError, TypeError) as e:
@@ -81,7 +82,7 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="device_profile",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )
 

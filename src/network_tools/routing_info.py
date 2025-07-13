@@ -10,9 +10,10 @@ from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.schemas.responses import (
     ErrorResponse,
-    FeatureNotFoundResponse,
     SuccessResponse,
+    OperationStatus,
     NetworkOperationResult,
+    FeatureNotFoundResponse,
 )
 from src.schemas.models import Device
 from src.parsers.protocols.bgp.config_parser import (
@@ -68,7 +69,7 @@ def get_routing_information(
     # Collect data for requested protocols
     if protocol is None or "bgp" in protocol:
         bgp_result = _get_bgp_info(device, include_details)
-        if bgp_result.status == "success":
+        if bgp_result.status == OperationStatus.SUCCESS:
             if bgp_result.data:
                 routing_data["bgp"] = bgp_result.data.get("routing_data", {})
                 combined_summary.update(bgp_result.data.get("summary", {}))
@@ -78,7 +79,7 @@ def get_routing_information(
 
     if protocol is None or "isis" in protocol:
         isis_result = _get_isis_info(device, include_details)
-        if isis_result.status == "success":
+        if isis_result.status == OperationStatus.SUCCESS:
             if isis_result.data:
                 routing_data["isis"] = isis_result.data.get("routing_data", {})
                 combined_summary.update(isis_result.data.get("summary", {}))
@@ -91,7 +92,7 @@ def get_routing_information(
         ip_address=device.ip_address,
         nos=device.nos,
         operation_type="routing_info",
-        status="success",
+        status=OperationStatus.SUCCESS,
         data={"routing_data": routing_data, "summary": combined_summary},
         metadata={"protocol": protocol, "include_details": include_details},
     )
@@ -120,7 +121,7 @@ def _get_isis_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="feature_not_available",
+            status=OperationStatus.FEATURE_NOT_AVAILABLE,
             feature_not_found_response=response,
         )
 
@@ -131,7 +132,7 @@ def _get_isis_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=response,
         )
 
@@ -148,7 +149,7 @@ def _get_isis_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={
                 "routing_data": {"isis": isis_data},
                 "summary": (
@@ -170,7 +171,7 @@ def _get_isis_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )
 
@@ -198,7 +199,7 @@ def _get_bgp_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="feature_not_available",
+            status=OperationStatus.FEATURE_NOT_AVAILABLE,
             feature_not_found_response=response,
         )
 
@@ -209,7 +210,7 @@ def _get_bgp_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=response,
         )
 
@@ -228,7 +229,7 @@ def _get_bgp_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={
                 "routing_data": {"bgp": bgp_data},
                 "summary": (
@@ -250,6 +251,6 @@ def _get_bgp_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="routing_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )

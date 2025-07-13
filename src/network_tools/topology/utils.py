@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Dict, Any, List, Union
 import networkx as nx
 from src.schemas.models import Device
+from src.schemas.responses import OperationStatus
 from src.inventory.manager import InventoryManager
 from src.parsers.topology_parser import extract_interface_subnets
 from src.network_tools.routing_info import get_routing_information
@@ -149,12 +150,14 @@ def _get_interface(device: str) -> dict:
 
     # Handle NetworkOperationResult
     if hasattr(interface_response, "status"):
-        if interface_response.status == "success":
+        if interface_response.status == OperationStatus.SUCCESS:
             # Return the data from NetworkOperationResult
             result = interface_response.data.copy()
             result["device_name"] = device
             return result
-        elif interface_response.status == "feature_not_available":
+        elif (
+            interface_response.status == OperationStatus.FEATURE_NOT_AVAILABLE
+        ):
             feature_response = interface_response.feature_not_found_response
             return {
                 "feature_not_found": (

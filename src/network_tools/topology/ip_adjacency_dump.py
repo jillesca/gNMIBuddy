@@ -1,6 +1,10 @@
 import logging
 from src.schemas.models import Device
-from src.schemas.responses import NetworkOperationResult, ErrorResponse
+from src.schemas.responses import (
+    NetworkOperationResult,
+    ErrorResponse,
+    OperationStatus,
+)
 from .utils import _build_graph_ip_only
 
 logger = logging.getLogger(__name__)
@@ -34,7 +38,7 @@ def ip_adjacency_dump(device: Device) -> NetworkOperationResult:
                 ip_address="0.0.0.0",
                 nos="N/A",
                 operation_type="topology_ip_adjacency_dump",
-                status="failed",
+                status=OperationStatus.FAILED,
                 data={"direct_connections": []},
                 metadata={
                     "total_connections": 0,
@@ -71,7 +75,7 @@ def ip_adjacency_dump(device: Device) -> NetworkOperationResult:
             ip_address="0.0.0.0",
             nos="N/A",
             operation_type="topology_ip_adjacency_dump",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={"direct_connections": direct_connections},
             metadata={
                 "total_connections": len(direct_connections),
@@ -94,7 +98,7 @@ def ip_adjacency_dump(device: Device) -> NetworkOperationResult:
             ip_address="0.0.0.0",
             nos="N/A",
             operation_type="topology_ip_adjacency_dump",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
             metadata={
                 "scope": "network-wide",

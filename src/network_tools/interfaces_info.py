@@ -9,6 +9,7 @@ from typing import Optional, Dict, Any
 from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
+    OperationStatus,
     NetworkOperationResult,
 )
 from src.schemas.models import Device
@@ -69,7 +70,7 @@ def _get_interface_brief(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="interface_brief",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=response,
         )
 
@@ -109,7 +110,7 @@ def _get_interface_brief(
         ip_address=device.ip_address,
         nos=device.nos,
         operation_type="interface_brief",
-        status="success",
+        status=OperationStatus.SUCCESS,
         data=result_data,
         metadata=metadata,
     )
@@ -143,7 +144,7 @@ def _get_single_interface_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="interface_details",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=response,
         )
 
@@ -158,7 +159,7 @@ def _get_single_interface_info(
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="interface_details",
-            status="failed",
+            status=OperationStatus.FAILED,
             metadata={
                 "interface": interface_name,
                 "issue_type": "INTERFACE_NOT_FOUND",
@@ -196,7 +197,7 @@ def _get_single_interface_info(
         ip_address=device.ip_address,
         nos=device.nos,
         operation_type="interface_details",
-        status="success",
+        status=OperationStatus.SUCCESS,
         data=result_data,
         metadata=metadata,
     )

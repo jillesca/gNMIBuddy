@@ -1,5 +1,9 @@
 from src.schemas.models import Device
-from src.schemas.responses import NetworkOperationResult, ErrorResponse
+from src.schemas.responses import (
+    ErrorResponse,
+    OperationStatus,
+    NetworkOperationResult,
+)
 from .utils import _build_graph_ip_only
 
 
@@ -24,7 +28,7 @@ def neighbors(device: Device) -> NetworkOperationResult:
                 ip_address=device.ip_address,
                 nos=device.nos,
                 operation_type="topology_neighbors",
-                status="success",
+                status=OperationStatus.SUCCESS,
                 data={"neighbors": []},
                 metadata={
                     "message": f"No neighbors found for device {device_name}",
@@ -47,7 +51,7 @@ def neighbors(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_neighbors",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={"neighbors": neighbor_list},
             metadata={
                 "neighbor_count": len(neighbor_list),
@@ -65,6 +69,6 @@ def neighbors(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="topology_neighbors",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )

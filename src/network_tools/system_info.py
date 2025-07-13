@@ -7,8 +7,9 @@ Provides functions for retrieving system information from network devices using 
 import logging
 from src.schemas.responses import (
     ErrorResponse,
-    FeatureNotFoundResponse,
+    OperationStatus,
     NetworkOperationResult,
+    FeatureNotFoundResponse,
 )
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
@@ -48,7 +49,7 @@ def get_system_information(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="system_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=response,
         )
 
@@ -58,7 +59,7 @@ def get_system_information(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="system_info",
-            status="feature_not_available",
+            status=OperationStatus.FEATURE_NOT_AVAILABLE,
             feature_not_found_response=response,
             metadata={
                 "feature_name": "system information",
@@ -81,7 +82,7 @@ def get_system_information(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="system_info",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={
                 "system_data": parsed_data,
                 "summary": summary,
@@ -99,6 +100,6 @@ def get_system_information(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="system_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )

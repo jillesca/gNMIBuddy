@@ -10,7 +10,12 @@ from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.parsers.logs.filter import filter_logs
-from src.schemas.responses import ErrorResponse, SuccessResponse
+from src.schemas.responses import (
+    ErrorResponse,
+    SuccessResponse,
+    OperationStatus,
+    NetworkOperationResult,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +26,7 @@ def get_logging_information(
     keywords: Optional[str] = None,
     minutes: Optional[int] = 5,
     show_all_logs: bool = False,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get logging information from a network device.
 
@@ -32,7 +37,7 @@ def get_logging_information(
         show_all_logs: If True, return all logs without time filtering (default: False)
 
     Returns:
-        Dict[str, Any]: Dictionary containing logs or error information
+        NetworkOperationResult: Response object containing logs or error information
     """
     # Prepare filter information for inclusion in the response
     filter_info = {
@@ -61,7 +66,14 @@ def get_logging_information(
         logger.error(
             "Failed to get logs from %s: %s", device.name, response.message
         )
-        return {"device_name": device.name, "error": response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
+            operation_type="logs",
+            status=OperationStatus.FAILED,
+            error_response=response,
+        )
 
     try:
         # Work directly with response data
@@ -79,25 +91,42 @@ def get_logging_information(
             error_response = ErrorResponse(
                 type="LOG_PROCESSING_ERROR", message=filtered_logs["error"]
             )
-            return {
-                "device_name": device.name,
-                "error": error_response,
-            }
+            return NetworkOperationResult(
+                device_name=device.name,
+                ip_address=device.ip_address,
+                nos=device.nos,
+                operation_type="logs",
+                status=OperationStatus.FAILED,
+                error_response=error_response,
+            )
 
         # Create a response with the filtered logs
-        return {
-            "device_name": device.name,
-            "logs": filtered_logs.get("logs", []),
-            "summary": {
-                "count": len(filtered_logs.get("logs", [])),
-                "filter_info": filter_info,
+        return NetworkOperationResult(
+            device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
+            operation_type="logs",
+            status=OperationStatus.SUCCESS,
+            data={
+                "logs": filtered_logs.get("logs", []),
+                "summary": {
+                    "count": len(filtered_logs.get("logs", [])),
+                    "filter_info": filter_info,
+                },
+                "filters_applied": filter_info,
             },
-            "filters_applied": filter_info,
-        }
+        )
     except Exception as e:
         logger.error("Error processing logs from %s: %s", device.name, str(e))
         error_response = ErrorResponse(
             type="LOG_PROCESSING_ERROR",
             message=f"Error processing logs: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
+            operation_type="logs",
+            status=OperationStatus.FAILED,
+            error_response=error_response,
+        )

@@ -7,6 +7,7 @@ import logging
 from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
+    OperationStatus,
     NetworkOperationResult,
 )
 from src.schemas.models import Device
@@ -28,12 +29,15 @@ def mpls_request():
     )
 
 
-def get_mpls_information(device: Device) -> NetworkOperationResult:
+def get_mpls_information(
+    device: Device, include_details: bool = False
+) -> NetworkOperationResult:
     """
     Get MPLS information from a network device.
 
     Args:
         device: Device object from inventory
+        include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
         NetworkOperationResult: Response object containing structured MPLS information
@@ -47,7 +51,7 @@ def get_mpls_information(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="mpls_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=response,
         )
 
@@ -67,7 +71,7 @@ def get_mpls_information(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="mpls_info",
-            status="success",
+            status=OperationStatus.SUCCESS,
             data={
                 "mpls_data": mpls_data,
                 "summary": (
@@ -76,6 +80,7 @@ def get_mpls_information(device: Device) -> NetworkOperationResult:
                     else {"summary": summary}
                 ),
             },
+            metadata={"include_details": include_details},
         )
     except (KeyError, ValueError, TypeError) as e:
         logger.error("Error parsing MPLS data: %s", str(e))
@@ -88,6 +93,6 @@ def get_mpls_information(device: Device) -> NetworkOperationResult:
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="mpls_info",
-            status="failed",
+            status=OperationStatus.FAILED,
             error_response=error_response,
         )

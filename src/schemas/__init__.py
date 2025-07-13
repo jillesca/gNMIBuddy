@@ -13,6 +13,7 @@ from .models import Device, DeviceListResult, DeviceErrorResult
 # Response models for network operations
 from .responses import (
     ErrorResponse,
+    OperationStatus,
     SuccessResponse,
     NetworkResponse,
     NetworkOperationResult,
@@ -30,4 +31,5 @@ __all__ = [
     "SuccessResponse",
     "NetworkOperationResult",
     "FeatureNotFoundResponse",
+    "OperationStatus",
 ]

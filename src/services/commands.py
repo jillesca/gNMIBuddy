@@ -5,6 +5,7 @@ Simplified network command service for executing commands with standardized erro
 
 import json
 import logging
+from enum import Enum
 from dataclasses import is_dataclass, asdict
 from typing import Dict, Any, Protocol, runtime_checkable
 
@@ -67,7 +68,13 @@ def _make_serializable(obj: Any) -> Any:
     Convert dataclass objects to dictionaries for JSON serialization.
     """
     if is_dataclass(obj) and not isinstance(obj, type):
-        return asdict(obj)
+        # Convert dataclass to dict and recursively process all fields
+        result = {}
+        for field_name, field_value in asdict(obj).items():
+            result[field_name] = _make_serializable(field_value)
+        return result
+    elif isinstance(obj, Enum):
+        return obj.value  # Convert enum to its string value
     elif isinstance(obj, dict):
         return {key: _make_serializable(value) for key, value in obj.items()}
     elif isinstance(obj, (list, tuple)):

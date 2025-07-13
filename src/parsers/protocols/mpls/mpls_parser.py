@@ -196,9 +196,12 @@ def generate_mpls_summary(mpls_data: Dict[str, Any]) -> str:
     if mpls_data["label_blocks"]:
         summary_lines.append("\nMPLS Label Blocks:")
         for block in mpls_data["label_blocks"]:
-            summary_lines.append(
-                f"- {block['name']}: Range {block['lower_bound']}-{block['upper_bound']}"
-            )
+            if "NO_LABEL_BLOCKS_CONFIGURED" in block:
+                summary_lines.append("- No label blocks configured")
+            else:
+                summary_lines.append(
+                    f"- {block['name']}: Range {block['lower_bound']}-{block['upper_bound']}"
+                )
 
     # Interfaces
     mpls_interfaces = [

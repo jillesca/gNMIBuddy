@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import GnmiError
+from src.gnmi.responses import ErrorResponse
 from src.inventory.models import Device
 from src.network_tools.responses import LogResponse
 from src.parsers.logs.filter import filter_logs
@@ -58,36 +58,37 @@ def get_logging_information(
 
     # logger.debug(f"Raw log response: {response}")
 
-    if response.is_error():
+    if isinstance(response, ErrorResponse):
         logger.error(
-            f"Failed to get logs from {device.name}: {response.error}"
+            "Failed to get logs from %s: %s", device.name, response.message
         )
-        return LogResponse.error_response(
-            response.error, device_name=device.name
-        )
+        return LogResponse(device_name=device.name, error=response)
 
     try:
         # Process the logs through the filter
-        filtered_logs = filter_logs(response.to_dict(), show_all_logs, minutes)
+        filtered_logs = filter_logs(
+            response.to_dict(), show_all_logs, minutes or 5
+        )
 
         if "error" in filtered_logs:
-            return LogResponse.error_response(
-                GnmiError(
-                    type="LOG_PROCESSING_ERROR", message=filtered_logs["error"]
-                ),
-                device_name=device.name,
+            error_response = ErrorResponse(
+                type="LOG_PROCESSING_ERROR", message=filtered_logs["error"]
             )
+            return LogResponse(device_name=device.name, error=error_response)
 
         # Create a response with the filtered logs
-        return LogResponse.from_logs(
-            filtered_logs, device_name=device.name, filter_info=filter_info
+        return LogResponse(
+            device_name=device.name,
+            logs=filtered_logs.get("logs", []),
+            summary={
+                "count": len(filtered_logs.get("logs", [])),
+                "filter_info": filter_info,
+            },
         )
     except Exception as e:
-        logger.error(f"Error processing logs from {device.name}: {str(e)}")
-        return LogResponse.error_response(
-            GnmiError(
-                type="LOG_PROCESSING_ERROR",
-                message=f"Error processing logs: {str(e)}",
-            ),
-            device_name=device.name,
+        logger.error("Error processing logs from %s: %s", device.name, str(e))
+        error_response = ErrorResponse(
+            type="LOG_PROCESSING_ERROR",
+            message=f"Error processing logs: {str(e)}",
         )
+        return LogResponse(device_name=device.name, error=error_response)

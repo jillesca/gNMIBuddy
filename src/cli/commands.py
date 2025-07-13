@@ -280,7 +280,7 @@ class TestAllCommand(BaseCommand):
                 "results": results,
             }
         else:
-            logger.info(f"Testing all APIs against device: {args.device}")
+            logger.info("Testing all APIs against device: %s", args.device)
             result = self._run_all_apis(args.device, args)
             return {
                 "command": "test-all",
@@ -306,16 +306,16 @@ class TestAllCommand(BaseCommand):
 
         results = {}
 
-        logger.info(f"Testing routing API for {device_name}")
+        logger.info("Testing routing API for %s", device_name)
         try:
             results["routing"] = get_routing_info(
                 device_name, include_details=args.detail
             )
         except Exception as e:
-            logger.error(f"Error testing routing API: {str(e)}")
+            logger.error("Error testing routing API: %s", e)
             results["routing"] = {"error": str(e)}
 
-        logger.info(f"Testing logs API for {device_name}")
+        logger.info("Testing logs API for %s", device_name)
         try:
             results["logs"] = get_logs(
                 device_name,
@@ -323,65 +323,65 @@ class TestAllCommand(BaseCommand):
                 show_all_logs=args.show_all_logs,
             )
         except Exception as e:
-            logger.error(f"Error testing logs API: {str(e)}")
+            logger.error("Error testing logs API: %s", e)
             results["logs"] = {"error": str(e)}
 
-        logger.info(f"Testing interface API for {device_name}")
+        logger.info("Testing interface API for %s", device_name)
         try:
             results["interface"] = get_interface_info(device_name)
         except Exception as e:
-            logger.error(f"Error testing interface API: {str(e)}")
+            logger.error("Error testing interface API: %s", e)
             results["interface"] = {"error": str(e)}
 
-        logger.info(f"Testing MPLS API for {device_name}")
+        logger.info("Testing MPLS API for %s", device_name)
         try:
             results["mpls"] = get_mpls_info(
                 device_name, include_details=args.detail
             )
         except Exception as e:
-            logger.error(f"Error testing MPLS API: {str(e)}")
+            logger.error("Error testing MPLS API: %s", e)
             results["mpls"] = {"error": str(e)}
 
-        logger.info(f"Testing VPN API for {device_name}")
+        logger.info("Testing VPN API for %s", device_name)
         try:
             results["vpn"] = get_vpn_info(
                 device_name, include_details=args.detail
             )
         except Exception as e:
-            logger.error(f"Error testing VPN API: {str(e)}")
+            logger.error("Error testing VPN API: %s", e)
             results["vpn"] = {"error": str(e)}
 
-        logger.info(f"Testing system for {device_name}")
+        logger.info("Testing system for %s", device_name)
         try:
             results["system"] = get_system_info(device_name)
         except Exception as e:
-            logger.error(f"Error testing System API: {str(e)}")
+            logger.error("Error testing System API: %s", e)
             results["system"] = {"error": str(e)}
 
-        logger.info(f"Testing  deviceprofile for {device_name}")
+        logger.info("Testing  deviceprofile for %s", device_name)
         try:
             results["deviceprofile"] = get_device_profile_api(device_name)
         except Exception as e:
-            logger.error(f"Error testing System API: {str(e)}")
+            logger.error("Error testing System API: %s", e)
             results["deviceprofile"] = {"error": str(e)}
 
-        logger.info(f"Testing topology_adjacency for {device_name}")
+        logger.info("Testing topology_adjacency for %s", device_name)
         try:
             results["topology_adjacency"] = get_topology_ip_adjacency_dump(
                 device_name
             )
         except Exception as e:
-            logger.error(f"Error testing topology_adjacency API: {str(e)}")
+            logger.error("Error testing topology_adjacency API: %s", e)
             results["topology_adjacency"] = {"error": str(e)}
 
-        logger.info(f"Testing topology_neighbors for {device_name}")
+        logger.info("Testing topology_neighbors for %s", device_name)
         try:
             results["topology_neighbors"] = get_topology_neighbors(device_name)
         except Exception as e:
-            logger.error(f"Error testing topology_neighbors API: {str(e)}")
+            logger.error("Error testing topology_neighbors API: %s", e)
             results["topology_neighbors"] = {"error": str(e)}
 
-        logger.info(f"Testing topology_path for {device_name}")
+        logger.info("Testing topology_path for %s", device_name)
         try:
             # Use device_name as both source and target for test, or skip if not provided
             # In real test, you may want to parametrize this
@@ -389,22 +389,22 @@ class TestAllCommand(BaseCommand):
                 device_name, device_name
             )
         except Exception as e:
-            logger.error(f"Error testing topology_path API: {str(e)}")
+            logger.error("Error testing topology_path API: %s", e)
             results["topology_path"] = {"error": str(e)}
 
-        logger.info(f"Testing topology_segment for {device_name}")
+        logger.info("Testing topology_segment for %s", device_name)
         try:
             # Use a dummy network for test, or parametrize as needed
             results["topology_segment"] = get_topology_segment(
                 device_name, "10.0.0.0/30"
             )
         except Exception as e:
-            logger.error(f"Error testing topology_segment API: {str(e)}")
+            logger.error("Error testing topology_segment API: %s", e)
             results["topology_segment"] = {"error": str(e)}
 
         if args.test_query:
             logger.info(
-                f"Skipping query API (not implemented) for {device_name}"
+                "Skipping query API (not implemented) for %s", device_name
             )
             results["query"] = {
                 "status": "skipped",
@@ -456,40 +456,40 @@ class TopologyNeighborsCommand(BaseCommand):
         return get_topology_neighbors(args.device)
 
 
-class TopologyPathCommand(BaseCommand):
-    name = "topology-path"
-    help = "Show shortest path between two devices"
-    description = (
-        "Show the shortest path between two devices in the topology graph"
-    )
+# class TopologyPathCommand(BaseCommand):
+#     name = "topology-path"
+#     help = "Show shortest path between two devices"
+#     description = (
+#         "Show the shortest path between two devices in the topology graph"
+#     )
 
-    def configure_parser(self, parser):
-        parser.add_argument(
-            "--target", required=True, help="Target device name"
-        )
+#     def configure_parser(self, parser):
+#         parser.add_argument(
+#             "--target", required=True, help="Target device name"
+#         )
 
-    def execute(self, args):
-        from api import get_topology_path
+#     def execute(self, args):
+#         from api import get_topology_path
 
-        return get_topology_path(args.device, args.target)
+#         return get_topology_path(args.device, args.target)
 
 
-class TopologySegmentCommand(BaseCommand):
-    name = "topology-segment"
-    help = "Show devices on a specified L3 segment"
-    description = "Show all devices on a specified L3 network segment in the topology graph"
+# class TopologySegmentCommand(BaseCommand):
+#     name = "topology-segment"
+#     help = "Show devices on a specified L3 segment"
+#     description = "Show all devices on a specified L3 network segment in the topology graph"
 
-    def configure_parser(self, parser):
-        parser.add_argument(
-            "--network",
-            required=True,
-            help="L3 network segment (e.g., 10.0.0.0/30)",
-        )
+#     def configure_parser(self, parser):
+#         parser.add_argument(
+#             "--network",
+#             required=True,
+#             help="L3 network segment (e.g., 10.0.0.0/30)",
+#         )
 
-    def execute(self, args):
-        from api import get_topology_segment
+#     def execute(self, args):
+#         from api import get_topology_segment
 
-        return get_topology_segment(args.device, args.network)
+#         return get_topology_segment(args.device, args.network)
 
 
 # Dictionary of all available commands
@@ -508,7 +508,7 @@ COMMANDS = {
         DeviceProfileCommand,
         TopologyIPAdjacencyCommand,
         TopologyNeighborsCommand,
-        TopologyPathCommand,
-        TopologySegmentCommand,
+        # TopologyPathCommand,
+        # TopologySegmentCommand,
     ]
 }

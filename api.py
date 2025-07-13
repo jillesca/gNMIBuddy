@@ -206,59 +206,59 @@ def get_topology_neighbors(
     return run(device_name, neighbors)
 
 
-def get_topology_path(
-    device_name: str,
-    target: str,
-) -> Dict[str, Any]:
-    """
-    Compute the shortest path between two devices.
+# def get_topology_path(
+#     device_name: str,
+#     target: str,
+# ) -> Dict[str, Any]:
+#     """
+#     Compute the shortest path between two devices.
 
-    Args:
-        device_name: Name of the source device in the inventory
-        target: Name of the target device
+#     Args:
+#         device_name: Name of the source device in the inventory
+#         target: Name of the target device
 
-    Returns:
-        Dictionary with the device name and the path (nodes and edges) between the devices.
-        Example:
-        {
-            "device": "PE1",
-            "path": {
-                "nodes": ["PE1", "P1", "PE2"],
-                "edges": [
-                    {"source": "PE1", "target": "P1", "attributes": {...}},
-                    {"source": "P1", "target": "PE2", "attributes": {...}}
-                ]
-            }
-        }
-    """
+#     Returns:
+#         Dictionary with the device name and the path (nodes and edges) between the devices.
+#         Example:
+#         {
+#             "device": "PE1",
+#             "path": {
+#                 "nodes": ["PE1", "P1", "PE2"],
+#                 "edges": [
+#                     {"source": "PE1", "target": "P1", "attributes": {...}},
+#                     {"source": "P1", "target": "PE2", "attributes": {...}}
+#                 ]
+#             }
+#         }
+#     """
 
-    return run(device_name, path, target)
+#     return run(device_name, path, target)
 
 
-def get_topology_segment(
-    device_name: str,
-    network: str,
-) -> Dict[str, Any]:
-    """
-    List devices on the specified L3 segment.
+# def get_topology_segment(
+#     device_name: str,
+#     network: str,
+# ) -> Dict[str, Any]:
+#     """
+#     List devices on the specified L3 segment.
 
-    Args:
-        device_name: Name of the device in the inventory (used for context)
-        network: The L3 network segment (e.g., "10.0.0.0/30")
+#     Args:
+#         device_name: Name of the device in the inventory (used for context)
+#         network: The L3 network segment (e.g., "10.0.0.0/30")
 
-    Returns:
-        Dictionary with the device name and the list of devices on the specified segment.
-        Example:
-        {
-            "device": "PE1",
-            "segment": {
-                "network": "10.0.0.0/30",
-                "devices": ["PE1", "P1"]
-            }
-        }
-    """
+#     Returns:
+#         Dictionary with the device name and the list of devices on the specified segment.
+#         Example:
+#         {
+#             "device": "PE1",
+#             "segment": {
+#                 "network": "10.0.0.0/30",
+#                 "devices": ["PE1", "P1"]
+#             }
+#         }
+#     """
 
-    return run(device_name, segment, network)
+#     return run(device_name, segment, network)
 
 
 def get_topology_ip_adjacency_dump(device_name: str) -> Dict[str, Any]:

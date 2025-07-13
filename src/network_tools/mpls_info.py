@@ -7,7 +7,7 @@ Provides functions for retrieving MPLS information from network devices using gN
 import logging
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import GnmiError
+from src.gnmi.responses import ErrorResponse
 from src.inventory.models import Device
 from src.network_tools.responses import MplsResponse
 from src.parsers.protocols.mpls.mpls_parser import (
@@ -42,9 +42,9 @@ def get_mpls_information(
     """
     response = get_gnmi_data(device, mpls_request())
 
-    if response.is_error():
-        logger.error(f"Error retrieving MPLS information: {response.error}")
-        return MplsResponse.error_response(response.error)
+    if isinstance(response, ErrorResponse):
+        logger.error("Error retrieving MPLS information: %s", response.message)
+        return MplsResponse(device_name=device.name, error=response)
 
     try:
         mpls_data = parse_mpls_data(response.to_dict())
@@ -54,20 +54,19 @@ def get_mpls_information(
         mpls_data["summary"] = summary
 
         mpls_response = MplsResponse(
-            success=True,
             device_name=device.name,
             mpls_data=mpls_data,
-            summary=summary,
+            summary=(
+                summary if isinstance(summary, dict) else {"summary": summary}
+            ),
             include_details=include_details,
-            raw_data=response.raw_data,
         )
 
         return mpls_response
     except Exception as e:
-        logger.error(f"Error parsing MPLS data: {str(e)}")
-        return MplsResponse.error_response(
-            GnmiError(
-                type="PARSING_ERROR",
-                message=f"Error parsing MPLS data: {str(e)}",
-            )
+        logger.error("Error parsing MPLS data: %s", str(e))
+        error_response = ErrorResponse(
+            type="PARSING_ERROR",
+            message=f"Error parsing MPLS data: {str(e)}",
         )
+        return MplsResponse(device_name=device.name, error=error_response)

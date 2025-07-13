@@ -8,7 +8,7 @@ import logging
 from typing import List, Optional
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import GnmiError
+from src.gnmi.responses import ErrorResponse
 from src.inventory.models import Device
 from src.network_tools.responses import VpnResponse
 from src.parsers.protocols.vrf import (
@@ -85,9 +85,9 @@ def _get_vrfs_name(device: Device) -> List[str] | VpnResponse:
 
     response = get_gnmi_data(device, vrf_names_request)
 
-    if response.is_error():
-        logger.error(f"Error retrieving VRF names: {response.error}")
-        return VpnResponse.error_response(response.error)
+    if isinstance(response, ErrorResponse):
+        logger.error("Error retrieving VRF names: %s", response.message)
+        return VpnResponse(device_name=device.name, error=response)
 
     # Extract VRF names from the response
     vrf_names = []
@@ -138,9 +138,9 @@ def _get_vrf_details(
     # Get detailed VRF data
     response = get_gnmi_data(device, vrf_details_request)
 
-    if response.is_error():
-        logger.error(f"Error retrieving VRF details: {response.error}")
-        return VpnResponse.error_response(response.error)
+    if isinstance(response, ErrorResponse):
+        logger.error("Error retrieving VRF details: %s", response.message)
+        return VpnResponse(device_name=device.name, error=response)
 
     try:
         parsed_data = parse_vrf_data(response.to_dict())
@@ -148,20 +148,19 @@ def _get_vrf_details(
         summary = generate_vrf_summary(parsed_data)
 
         vpn_response = VpnResponse(
-            success=True,
             device_name=device.name,
-            vrfs=llm_data,
-            summary=summary,
+            vrfs=[llm_data] if isinstance(llm_data, dict) else llm_data,
+            summary=(
+                summary if isinstance(summary, dict) else {"summary": summary}
+            ),
             include_details=include_details,
-            raw_data=response.raw_data,
         )
 
         return vpn_response
     except Exception as e:
-        logger.error(f"Error parsing VRF data: {str(e)}")
-        return VpnResponse.error_response(
-            GnmiError(
-                type="PARSING_ERROR",
-                message=f"Error parsing VRF data: {str(e)}",
-            )
+        logger.error("Error parsing VRF data: %s", str(e))
+        error_response = ErrorResponse(
+            type="PARSING_ERROR",
+            message=f"Error parsing VRF data: {str(e)}",
         )
+        return VpnResponse(device_name=device.name, error=error_response)

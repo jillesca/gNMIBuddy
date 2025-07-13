@@ -21,9 +21,10 @@ from src.inventory.models import Device
 from src.inventory.file_handler import parse_json_file
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import (
-    GnmiDataResponse,
-    GnmiError,
-    GnmiFeatureNotFoundResponse,
+    SuccessResponse,
+    ErrorResponse,
+    FeatureNotFoundResponse,
+    NetworkResponse,
 )
 from src.gnmi.error_handlers import (
     handle_timeout_error,
@@ -36,7 +37,7 @@ from src.utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
+def get_gnmi_data(device: Device, request: GnmiRequest) -> NetworkResponse:
     """
     Get data from a gNMI target using the GnmiRequest parameter object.
 
@@ -45,9 +46,9 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
         request: GnmiRequest object containing the request parameters
 
     Returns:
-        GnmiDataResponse object containing either the retrieved data or error information
+        Union of SuccessResponse, ErrorResponse, or FeatureNotFoundResponse
     """
-    logger.debug(f"gNMI request parameters: {request}")
+    logger.debug("gNMI request parameters: %s", request)
     gnmi_params = {
         "target": (device.ip_address, device.port),
         "username": device.username,
@@ -66,28 +67,18 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
     try:
         with gNMIclient(**gnmi_params) as gc:
 
-            result = gc.get(**request)
-            raw_response = _extract_gnmi_data(response=result)
+            response_data = gc.get(**request)
+            raw_response = _extract_gnmi_data(response=response_data)
             return _create_response_from_raw_data(raw_response=raw_response)
 
     except grpc.FutureTimeoutError:
-        error = handle_timeout_error(device)
-        return GnmiDataResponse.error_response(error)
+        return handle_timeout_error(device)
     except grpc.RpcError as e:
-        result = handle_rpc_error(device, e)
-        # Special handling for feature not found
-        if isinstance(result, GnmiFeatureNotFoundResponse):
-            return result
-        return GnmiDataResponse.error_response(result)
+        return handle_rpc_error(device, e)
     except ConnectionRefusedError:
-        error = handle_connection_refused(device)
-        return GnmiDataResponse.error_response(error)
+        return handle_connection_refused(device)
     except Exception as e:
-        result = handle_generic_error(device, e)
-        # Special handling for feature not found
-        if isinstance(result, GnmiFeatureNotFoundResponse):
-            return result
-        return GnmiDataResponse.error_response(result)
+        return handle_generic_error(device, e)
 
 
 def _extract_gnmi_data(
@@ -117,12 +108,12 @@ def _extract_gnmi_data(
 
 def _create_response_from_raw_data(
     raw_response: Union[Dict[str, Any], None],
-) -> GnmiDataResponse:
+) -> Union[SuccessResponse, ErrorResponse]:
     if raw_response:
-        return GnmiDataResponse.from_raw_response(raw_response)
+        return SuccessResponse.from_raw_response(raw_response)
 
-    return GnmiDataResponse.error_response(
-        GnmiError(type="NO_DATA", message="No data returned from device")
+    return ErrorResponse(
+        type="NO_DATA", message="No data returned from device"
     )
 
 

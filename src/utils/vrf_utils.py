@@ -5,7 +5,7 @@ VRF utility functions for extracting non-default VRF names from gNMI responses.
 from typing import List
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.client import get_gnmi_data
-from src.gnmi.responses import GnmiError
+from src.gnmi.responses import ErrorResponse
 from src.network_tools.responses import VpnResponse
 from src.inventory.models import Device
 
@@ -24,11 +24,15 @@ def get_non_default_vrf_names(device: Device) -> List[str]:
     )
     response = get_gnmi_data(device, vrf_names_request)
     vrf_names = []
-    if hasattr(response, "data") and response.data:
-        for item in response.data:
-            if "val" in item:
-                if item["val"].lower() not in [
-                    vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS
-                ]:
-                    vrf_names.append(item["val"])
+
+    # Only process if we have a successful response (not an error)
+    if not isinstance(response, ErrorResponse):
+        response_data = response.to_dict()
+        if isinstance(response_data, list):
+            for item in response_data:
+                if isinstance(item, dict) and "val" in item:
+                    if item["val"].lower() not in [
+                        vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS
+                    ]:
+                        vrf_names.append(item["val"])
     return vrf_names

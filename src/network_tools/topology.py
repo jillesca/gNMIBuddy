@@ -11,7 +11,6 @@ from src.network_tools.topology.ip_adjacency_dump import ip_adjacency_dump
 from src.network_tools.responses import NetworkToolsResponse
 
 
-# === Adapter Functions for API/CLI (explicit signatures, no *args) ===
 def adjacency_dump_cmd(device):
     edges = adjacency_dump()
     return NetworkToolsResponse(

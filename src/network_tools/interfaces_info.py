@@ -8,7 +8,7 @@ import logging
 from typing import Dict, Any, Optional
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import GnmiError
+from src.gnmi.responses import ErrorResponse
 from src.inventory.models import Device
 from src.network_tools.responses import InterfaceResponse
 from src.parsers.interfaces.data_formatter import format_interface_data_for_llm
@@ -56,11 +56,12 @@ def _get_interface_brief(
     )
     response = get_gnmi_data(device, interface_brief_request)
 
-    if response.is_error():
+    if isinstance(response, ErrorResponse):
         logger.error(
-            f"Error retrieving interface brief information: {response.error}"
+            "Error retrieving interface brief information: %s",
+            response.message,
         )
-        return InterfaceResponse.error_response(response.error)
+        return InterfaceResponse.error_response(response)
 
     formatted_data = format_interface_data_for_llm(response.to_dict())
     return InterfaceResponse.interface_brief(
@@ -85,18 +86,20 @@ def _get_single_interface_info(
     request = _create_single_interface_request(interface_name)
     response = get_gnmi_data(device, request)
 
-    if response.is_error():
+    if isinstance(response, ErrorResponse):
         logger.error(
-            f"Error retrieving information for interface {interface_name}: {response.error}"
+            "Error retrieving information for interface %s: %s",
+            interface_name,
+            response.message,
         )
-        return InterfaceResponse.error_response(response.error)
+        return InterfaceResponse.error_response(response)
 
     # If no data was returned but no error occurred, the interface likely doesn't exist
     if not response.data:
         error_msg = f"Interface {interface_name} not found"
         logger.error(error_msg)
         return InterfaceResponse.error_response(
-            GnmiError(
+            ErrorResponse(
                 type="INTERFACE_NOT_FOUND",
                 message=error_msg,
                 details={"interface": interface_name, "status": "NOT_FOUND"},
@@ -110,7 +113,8 @@ def _get_single_interface_info(
 
     if _is_empty_interface(parsed_result):
         logger.info(
-            f"Interface {interface_name} exists but appears to be empty/unconfigured"
+            "Interface %s exists but appears to be empty/unconfigured",
+            interface_name,
         )
         if (
             interface_response.interfaces

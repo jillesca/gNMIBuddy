@@ -4,105 +4,82 @@ Response objects for network tools modules.
 Provides structured objects for representing network information responses.
 """
 
-
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Union, cast
+from typing import List, Dict, Any, Optional, Union
 from src.gnmi.responses import (
-    GnmiResponse,
-    GnmiError,
-    GnmiFeatureNotFoundResponse,
+    SuccessResponse,
+    ErrorResponse,
+    FeatureNotFoundResponse,
 )
 
 
 @dataclass
-class NetworkToolsResponse(GnmiResponse):
+class NetworkToolsResponse:
     """
     Base class for network tools responses.
 
-    This extends the GnmiResponse with features specific to network tools data.
+    This is a composition-based response that wraps the core response types.
     """
 
     device_name: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[ErrorResponse] = None
+    feature_not_found: Optional[FeatureNotFoundResponse] = None
 
     @classmethod
-    def from_gnmi_response(
-        cls, response: GnmiResponse, device_name: Optional[str] = None
+    def from_network_response(
+        cls,
+        response: Union[
+            SuccessResponse, ErrorResponse, FeatureNotFoundResponse
+        ],
+        device_name: Optional[str] = None,
     ) -> "NetworkToolsResponse":
-        """Create a NetworkToolsResponse from a GnmiResponse."""
-        # Regular error handling - keep is_error() check for backward compatibility
-        if response.is_error():
-            return cls(
-                success=False, error=response.error, device_name=device_name
-            )
+        """Create a NetworkToolsResponse from a network response."""
+        if isinstance(response, ErrorResponse):
+            return cls(device_name=device_name, error=response)
+        elif isinstance(response, FeatureNotFoundResponse):
+            return cls(device_name=device_name, feature_not_found=response)
+        else:  # SuccessResponse
+            return cls(device_name=device_name, data=response.to_dict())
 
-        # Special handling for GnmiFeatureNotFoundResponse
-        if isinstance(response, GnmiFeatureNotFoundResponse):
-            # Pass through the feature_not_found response directly without wrapping in error
-            result = cls(success=True, device_name=device_name)
-            result.raw_data = {
-                "feature_not_found": response.to_dict()["feature_not_found"]
-            }
-            return result
+    def is_error(self) -> bool:
+        """Check if this response represents an error."""
+        return self.error is not None
 
-        return cls(
-            success=True, raw_data=response.raw_data, device_name=device_name
-        )
+    def is_feature_not_found(self) -> bool:
+        """Check if this response represents a feature not found."""
+        return self.feature_not_found is not None
+
+    def is_success(self) -> bool:
+        """Check if this response represents success."""
+        return not self.is_error() and not self.is_feature_not_found()
 
     @classmethod
     def error_response(
-        cls,
-        error: Union[GnmiError, Dict[str, Any], GnmiFeatureNotFoundResponse],
-        device_name: Optional[str] = None,
+        cls, error: ErrorResponse, device_name: Optional[str] = None
     ) -> "NetworkToolsResponse":
-        """
-        Create an error response with the given error details.
+        """Create an error response."""
+        return cls(device_name=device_name, error=error)
 
-        This overrides the parent class method to include device_name.
-
-        Args:
-            error: Either a GnmiError object, a dictionary with error details,
-                  or a GnmiFeatureNotFoundResponse
-            device_name: Optional name of the device that generated the error
-
-        Returns:
-            A NetworkToolsResponse indicating an error condition or feature not found
-        """
-        # Handle feature not found responses
-        if isinstance(error, GnmiFeatureNotFoundResponse):
-            result = cls(success=True, device_name=device_name)
-            result.raw_data = error.to_dict()
-            return result
-
-        # Convert dictionary to GnmiError if needed
-        if isinstance(error, dict):
-            # Check if this is a feature not found dict
-            if "feature_not_found" in error:
-                result = cls(success=True, device_name=device_name)
-                result.raw_data = error
-                return result
-            error = GnmiError.from_dict(error)
-
-        return cls(success=False, error=error, device_name=device_name)
+    @classmethod
+    def success_response(
+        cls, data: Dict[str, Any], device_name: Optional[str] = None
+    ) -> "NetworkToolsResponse":
+        """Create a success response."""
+        return cls(device_name=device_name, data=data)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary representation."""
-        # If we have a feature_not_found response in raw_data, pass it through without wrapping in error
-        if (
-            self.raw_data
-            and isinstance(self.raw_data, dict)
-            and "feature_not_found" in self.raw_data
-        ):
-            return self.raw_data
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
+        else:
+            result = self.data or {}
 
-        if self.is_error():
-            return {"error": self.error.to_dict() if self.error else {}}
-
-        result = {}
         if self.device_name:
             result["device_name"] = self.device_name
-        # Include raw_data if present and not empty
-        if self.raw_data:
-            result.update(self.raw_data)
+
         return result
 
 
@@ -125,20 +102,12 @@ class InterfaceResponse(NetworkToolsResponse):
 
     @classmethod
     def single_interface(
-        cls, interface_data: Dict[str, Any], device_name: Optional[str] = None
+        cls,
+        interface: Optional[Dict[str, Any]],
+        device_name: Optional[str] = None,
     ) -> "InterfaceResponse":
         """Create a response for a single interface."""
-        if "error" in interface_data:
-            return cast(
-                "InterfaceResponse",
-                cls.error_response(interface_data["error"]),
-            )
-
-        # Extract interface data from the parsed result
-        interface = interface_data.get("interface", {})
-
         return cls(
-            success=True,
             device_name=device_name,
             interfaces=[interface] if interface else [],
             is_single_interface=True,
@@ -146,128 +115,78 @@ class InterfaceResponse(NetworkToolsResponse):
 
     @classmethod
     def interface_brief(
-        cls, interfaces_data: Dict[str, Any], device_name: Optional[str] = None
+        cls,
+        interfaces: List[Dict[str, Any]],
+        device_name: Optional[str] = None,
+        summary: Optional[Dict[str, Any]] = None,
     ) -> "InterfaceResponse":
-        """Create a response for a interface brief listing."""
-        if "error" in interfaces_data:
-            return cast(
-                "InterfaceResponse",
-                cls.error_response(interfaces_data["error"]),
-            )
-
-        interfaces = interfaces_data.get("interfaces", [])
-        summary = interfaces_data.get("summary", {})
-
+        """Create a response for interface brief information."""
         return cls(
-            success=True,
             device_name=device_name,
-            interfaces=interfaces,
+            interfaces=(
+                interfaces["interfaces"]
+                if isinstance(interfaces, dict)
+                else interfaces
+            ),
             summary=summary,
             is_single_interface=False,
         )
 
-    def is_empty(self) -> bool:
-        """Check if the response contains no interfaces."""
-        return len(self.interfaces) == 0
-
-    def interface_count(self) -> int:
-        """Get the number of interfaces in the response."""
-        return len(self.interfaces)
-
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary representation."""
-        if self.is_error():
-            return {"error": self.error.to_dict() if self.error else {}}
-
-        # For single interface, return the interface data directly
-        if self.is_single_interface and self.interfaces:
-            return {"interface": self.interfaces[0]}
+        # Check for error or feature not found first
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
         else:
-            # For interface brief, include both interfaces list and summary
-            result: Dict[str, Any] = {"interfaces": self.interfaces}
-            if self.summary is not None:
-                result["summary"] = self.summary
-            return result
+            result = {
+                "interfaces": self.interfaces,
+                "summary": self.summary or {},
+                "is_single_interface": self.is_single_interface,
+            }
 
-    @classmethod
-    def error_response(
-        cls,
-        error: Union[GnmiError, Dict[str, Any], GnmiFeatureNotFoundResponse],
-        device_name: Optional[str] = None,
-    ) -> "InterfaceResponse":
-        """
-        Create an error response with the given error details for InterfaceResponse.
-        """
-        # Handle feature not found responses
-        if isinstance(error, GnmiFeatureNotFoundResponse):
-            result = cls(success=True, device_name=device_name)
-            result.raw_data = error.to_dict()
-            return result
-        # Convert dictionary to GnmiError if needed
-        if isinstance(error, dict):
-            if "feature_not_found" in error:
-                result = cls(success=True, device_name=device_name)
-                result.raw_data = error
-                return result
-            error = GnmiError.from_dict(error)
-        return cls(success=False, error=error, device_name=device_name)
+        if self.device_name:
+            result["device_name"] = self.device_name
+
+        return result
 
 
 @dataclass
-class MplsResponse(NetworkToolsResponse):
+class VpnResponse(NetworkToolsResponse):
     """
-    Response object for MPLS information.
+    Response object for VPN/VRF information.
 
-    Contains structured MPLS data including LSPs, LDP info, and segment routing.
+    Contains structured VPN information optimized for consumption by other modules.
 
     Attributes:
-        mpls_data: Complete parsed MPLS data structure
-        summary: Summary information
-        include_details: Whether to include detailed data in output
+        vrfs: List of VRF data
+        summary: Optional summary information for brief reporting
+        include_details: Whether detailed information is included
     """
 
-    mpls_data: Dict[str, Any] = field(default_factory=dict)
+    vrfs: List[Dict[str, Any]] = field(default_factory=list)
     summary: Optional[Dict[str, Any]] = None
     include_details: bool = False
 
-    @classmethod
-    def from_dict(
-        cls,
-        data: Dict[str, Any],
-        device_name: Optional[str] = None,
-        include_details: bool = False,
-    ) -> "MplsResponse":
-        """Create an MplsResponse from a dictionary."""
-        if "error" in data:
-            return cast("MplsResponse", cls.error_response(data["error"]))
-
-        return cls(
-            success=True,
-            device_name=device_name,
-            mpls_data=data,
-            summary=data.get("summary"),
-            include_details=include_details,
-        )
-
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary representation."""
-        # First check if we have feature_not_found in raw_data
-        if (
-            self.raw_data
-            and isinstance(self.raw_data, dict)
-            and "feature_not_found" in self.raw_data
-        ):
-            return self.raw_data
-
-        if self.is_error():
-            return {"error": self.error.to_dict() if self.error else {}}
-
-        # Return different formats based on include_details flag
-        if self.include_details:
-            # Return the mpls_data which already includes the summary
-            return {"data": self.mpls_data}
+        # Check for error or feature not found first
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
         else:
-            return {"summary": self.summary}
+            result = {
+                "vrfs": self.vrfs,
+                "summary": self.summary or {},
+                "include_details": self.include_details,
+            }
+
+        if self.device_name:
+            result["device_name"] = self.device_name
+
+        return result
 
 
 @dataclass
@@ -275,118 +194,73 @@ class RoutingResponse(NetworkToolsResponse):
     """
     Response object for routing information.
 
-    Contains structured routing data including routing tables and protocol information.
+    Contains structured routing information optimized for consumption by other modules.
 
     Attributes:
-        protocols: Information about routing protocols
-        summary: Optional summary information
-        include_details: Whether to include detailed data in output
+        protocols: List of routing protocol data
+        summary: Optional summary information for brief reporting
+        include_details: Whether detailed information is included
     """
 
-    routes: List[Dict[str, Any]] = field(default_factory=list)
-    protocols: Dict[str, Any] = field(default_factory=dict)
+    protocols: List[Dict[str, Any]] = field(default_factory=list)
     summary: Optional[Dict[str, Any]] = None
     include_details: bool = False
 
-    @classmethod
-    def from_dict(
-        cls,
-        data: Dict[str, Any],
-        device_name: Optional[str] = None,
-        include_details: bool = False,
-    ) -> "RoutingResponse":
-        """Create a RoutingResponse from a dictionary."""
-        if "error" in data:
-            return cast("RoutingResponse", cls.error_response(data["error"]))
-
-        return cls(
-            success=True,
-            device_name=device_name,
-            routes=data.get("routes", []),
-            protocols=data.get("protocols", {}),
-            summary=data.get("summary"),
-            include_details=include_details,
-        )
-
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary representation."""
-        # First check if we have feature_not_found in raw_data
-        if (
-            self.raw_data
-            and isinstance(self.raw_data, dict)
-            and "feature_not_found" in self.raw_data
-        ):
-            return self.raw_data
-
-        if self.is_error():
-            return {"error": self.error.to_dict() if self.error else {}}
-
-        if self.include_details:
-            return {
-                "data": {"routes": self.routes, "protocols": self.protocols},
-                "summary": self.summary,
-            }
+        # Check for error or feature not found first
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
         else:
-            return {"summary": self.summary}
+            result = {
+                "protocols": self.protocols,
+                "summary": self.summary or {},
+                "include_details": self.include_details,
+            }
+
+        if self.device_name:
+            result["device_name"] = self.device_name
+
+        return result
 
 
 @dataclass
-class VpnResponse(NetworkToolsResponse):
+class MplsResponse(NetworkToolsResponse):
     """
-    Response object for VPN information.
+    Response object for MPLS information.
 
-    Contains structured VPN data including VRFs, imported/exported routes, and route targets.
+    Contains structured MPLS information optimized for consumption by other modules.
 
     Attributes:
-        vrfs: List of VRF information
-        summary: Summary information
-        include_details: Whether to include detailed data in output
+        mpls_data: MPLS configuration and operational data
+        summary: Optional summary information for brief reporting
+        include_details: Whether detailed information is included
     """
 
-    vrfs: List[Dict[str, Any]] = field(default_factory=list)
+    mpls_data: Optional[Dict[str, Any]] = None
     summary: Optional[Dict[str, Any]] = None
     include_details: bool = False
 
-    @classmethod
-    def from_dict(
-        cls,
-        data: Dict[str, Any],
-        device_name: Optional[str] = None,
-        include_details: bool = False,
-    ) -> "VpnResponse":
-        """Create a VpnResponse from a dictionary."""
-        if "error" in data:
-            return cast("VpnResponse", cls.error_response(data["error"]))
-
-        return cls(
-            success=True,
-            device_name=device_name,
-            vrfs=data.get("vrfs", []),
-            summary=data.get("summary"),
-            include_details=include_details,
-        )
-
-    def vrf_count(self) -> int:
-        """Get the number of VRFs in the response."""
-        return len(self.vrfs)
-
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary representation."""
-        # First check if we have feature_not_found in raw_data
-        if (
-            self.raw_data
-            and isinstance(self.raw_data, dict)
-            and "feature_not_found" in self.raw_data
-        ):
-            return self.raw_data
-
-        if self.is_error():
-            return {"error": self.error.to_dict() if self.error else {}}
-
-        if self.include_details:
-            return {"data": self.vrfs, "summary": self.summary}
+        # Check for error or feature not found first
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
         else:
-            return {"summary": self.summary}
+            result = {
+                "mpls_data": self.mpls_data or {},
+                "summary": self.summary or {},
+                "include_details": self.include_details,
+            }
+
+        if self.device_name:
+            result["device_name"] = self.device_name
+
+        return result
 
 
 @dataclass
@@ -394,60 +268,34 @@ class LogResponse(NetworkToolsResponse):
     """
     Response object for logging information.
 
-    Contains structured log data retrieved from network devices.
+    Contains structured log information optimized for consumption by other modules.
 
     Attributes:
         logs: List of log entries
-        summary: Optional summary information
-        filter_info: Information about the filters applied
+        summary: Optional summary information for brief reporting
+        filters_applied: Information about filters that were applied
     """
 
     logs: List[Dict[str, Any]] = field(default_factory=list)
     summary: Optional[Dict[str, Any]] = None
-    filter_info: Dict[str, Any] = field(default_factory=dict)
-
-    @classmethod
-    def from_logs(
-        cls,
-        logs_data: Dict[str, Any],
-        device_name: Optional[str] = None,
-        filter_info: Optional[Dict[str, Any]] = None,
-    ) -> "LogResponse":
-        """Create a LogResponse from filtered logs data."""
-        if "error" in logs_data:
-            return cast("LogResponse", cls.error_response(logs_data["error"]))
-
-        logs = logs_data.get("logs", [])
-        summary = logs_data.get("summary", {})
-
-        return cls(
-            success=True,
-            device_name=device_name,
-            logs=logs,
-            summary=summary,
-            filter_info=filter_info or {},
-        )
+    filters_applied: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary representation."""
-        # First check if we have feature_not_found in raw_data
-        if (
-            self.raw_data
-            and isinstance(self.raw_data, dict)
-            and "feature_not_found" in self.raw_data
-        ):
-            return self.raw_data
+        # Check for error or feature not found first
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
+        else:
+            result = {
+                "logs": self.logs,
+                "summary": self.summary or {},
+                "filters_applied": self.filters_applied or {},
+            }
 
-        if self.is_error():
-            return {"error": self.error.to_dict() if self.error else {}}
-
-        result: Dict[str, Any] = {"logs": self.logs}
-
-        if self.summary:
-            result["summary"] = self.summary
-
-        if self.filter_info:
-            result["filter_info"] = self.filter_info
+        if self.device_name:
+            result["device_name"] = self.device_name
 
         return result
 
@@ -460,41 +308,61 @@ class SystemInfoResponse(NetworkToolsResponse):
     Contains structured system information optimized for consumption by other modules.
 
     Attributes:
-        system_info: Parsed system information as a dictionary
-        summary: Optional summary information (for consistency)
+        system_info: System configuration and operational data
+        summary: Optional summary information for brief reporting
     """
 
     system_info: Optional[Dict[str, Any]] = None
-
-    @classmethod
-    def from_dict(
-        cls,
-        data: Dict[str, Any],
-        device_name: Optional[str] = None,
-    ) -> "SystemInfoResponse":
-        if "error" in data:
-            return cast(
-                "SystemInfoResponse",
-                cls.error_response(data["error"], device_name=device_name),
-            )
-        if "feature_not_found" in data:
-            return cast(
-                "SystemInfoResponse",
-                cls.error_response(
-                    {"feature_not_found": data["feature_not_found"]},
-                    device_name=device_name,
-                ),
-            )
-        return cls(success=True, device_name=device_name, system_info=data)
+    summary: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        if (
-            self.raw_data
-            and isinstance(self.raw_data, dict)
-            and "feature_not_found" in self.raw_data
-        ):
-            return self.raw_data
-        if self.is_error():
-            return {"error": self.error.to_dict() if self.error else {}}
-        # Return the parsed system info as the top-level dict
-        return self.system_info if self.system_info is not None else {}
+        """Convert to a dictionary representation."""
+        # Check for error or feature not found first
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
+        else:
+            result = {
+                "system_info": self.system_info or {},
+                "summary": self.summary or {},
+            }
+
+        if self.device_name:
+            result["device_name"] = self.device_name
+
+        return result
+
+
+@dataclass
+class DeviceProfileResponse(NetworkToolsResponse):
+    """
+    Response object for device profile information.
+
+    Contains structured device profile information optimized for consumption by other modules.
+
+    Attributes:
+        profile: Device profile data
+        summary: Optional summary information for brief reporting
+    """
+
+    profile: Optional[Dict[str, Any]] = None
+    summary: Optional[Dict[str, Any]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to a dictionary representation."""
+        # Check for error or feature not found first
+        if self.error:
+            result: Dict[str, Any] = {"error": self.error.to_dict()}
+        elif self.feature_not_found:
+            result = self.feature_not_found.to_dict()
+        else:
+            result = {
+                "profile": self.profile or {},
+                "summary": self.summary or {},
+            }
+
+        if self.device_name:
+            result["device_name"] = self.device_name
+
+        return result

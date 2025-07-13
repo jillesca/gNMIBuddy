@@ -9,7 +9,7 @@ from typing import Dict, Any, Protocol, runtime_checkable, Union, List
 
 import src.inventory
 from src.inventory.models import Device
-from src.gnmi.responses import GnmiResponse
+from src.gnmi.responses import NetworkResponse
 from src.network_tools.responses import NetworkToolsResponse
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class NetworkCommand(Protocol):
 
     def __call__(self, device: Device, *args: Any) -> Union[
         Dict[str, Any],
-        GnmiResponse,
+        NetworkResponse,
         NetworkToolsResponse,
         List[NetworkToolsResponse],
     ]: ...

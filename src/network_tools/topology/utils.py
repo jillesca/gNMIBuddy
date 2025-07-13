@@ -104,13 +104,13 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
 
     device_objs = InventoryManager.list_devices()["devices"]
     device_names = [d["name"] for d in device_objs]
-    interface_results = run_command_on_all_devices(
+    raw_interface_results = run_command_on_all_devices(
         _get_interface, max_workers=max_workers
     )
 
     interface_results = [
         dict(result, device=result.get("device_name", device_name))
-        for device_name, result in zip(device_names, interface_results)
+        for device_name, result in zip(device_names, raw_interface_results)
     ]
     return build_ip_only_graph_from_interface_results(interface_results)
 

@@ -100,30 +100,86 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
 
 
 def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
-    from src.inventory.manager import InventoryManager
+    import logging
 
+    logger = logging.getLogger(__name__)
+
+    logger.debug("Getting device list from inventory")
     device_objs = InventoryManager.list_devices()["devices"]
     device_names = [d["name"] for d in device_objs]
+    logger.debug("Found %d devices: %s", len(device_names), device_names)
+
+    logger.debug("Running interface commands on all devices")
     raw_interface_results = run_command_on_all_devices(
         _get_interface, max_workers=max_workers
     )
+    logger.debug("Got %d interface results", len(raw_interface_results))
 
     interface_results = [
         dict(result, device=result.get("device_name", device_name))
         for device_name, result in zip(device_names, raw_interface_results)
     ]
-    return build_ip_only_graph_from_interface_results(interface_results)
+
+    # Log some details about the results
+    for i, result in enumerate(interface_results):
+        logger.debug(
+            "Device %s: %s - keys: %s",
+            device_names[i],
+            type(result).__name__,
+            list(result.keys()) if isinstance(result, dict) else "not a dict",
+        )
+
+    logger.debug("Building graph from interface results")
+    graph = build_ip_only_graph_from_interface_results(interface_results)
+    logger.debug(
+        "Built graph with %d nodes and %d edges",
+        graph.number_of_nodes(),
+        graph.number_of_edges(),
+    )
+
+    return graph
 
 
 def _get_interface(device: str) -> dict:
     device_obj = _get_device_or_error_dict(device)
     if not isinstance(device_obj, Device):
         return device_obj
+
     interface_response = get_interface_information(device_obj)
-    # Since get_interface_information now returns dict directly, no need for to_dict()
-    if isinstance(interface_response, dict):
-        interface_response["device_name"] = device
-        return interface_response
+
+    # Handle NetworkOperationResult
+    if hasattr(interface_response, "status"):
+        if interface_response.status == "success":
+            # Return the data from NetworkOperationResult
+            result = interface_response.data.copy()
+            result["device_name"] = device
+            return result
+        elif interface_response.status == "feature_not_available":
+            feature_response = interface_response.feature_not_found_response
+            return {
+                "feature_not_found": (
+                    feature_response.feature_name
+                    if feature_response
+                    else "unknown"
+                ),
+                "message": (
+                    feature_response.message
+                    if feature_response
+                    else "Feature not available"
+                ),
+                "device_name": device,
+            }
+        else:  # failed
+            return {
+                "error": (
+                    interface_response.error_response.message
+                    if interface_response.error_response
+                    else "Unknown error"
+                ),
+                "device_name": device,
+            }
+
+    # Fallback for unexpected response type
     return {
         "error": "Unexpected response from get_interface_information",
         "device_name": device,

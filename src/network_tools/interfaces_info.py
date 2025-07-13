@@ -5,10 +5,14 @@ Provides functions for retrieving interface information from network devices usi
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Optional, Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse, SuccessResponse
+from src.gnmi.responses import (
+    ErrorResponse,
+    SuccessResponse,
+    NetworkOperationResult,
+)
 from src.inventory.models import Device
 from src.parsers.interfaces.data_formatter import format_interface_data_for_llm
 from src.parsers.interfaces.single_interface_parser import (
@@ -21,7 +25,7 @@ logger = logging.getLogger(__name__)
 def get_interface_information(
     device: Device,
     interface: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Retrieve interface information from the device.
 
@@ -30,7 +34,7 @@ def get_interface_information(
         interface: Optional interface name to filter results
 
     Returns:
-        Dict[str, Any]: Dictionary containing interface information
+        NetworkOperationResult: Response object containing interface information
     """
     if interface:
         return _get_single_interface_info(device, interface)
@@ -40,7 +44,7 @@ def get_interface_information(
 
 def _get_interface_brief(
     device: Device,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get a summary of all interfaces (similar to 'show ip int brief').
 
@@ -48,7 +52,7 @@ def _get_interface_brief(
         device: Target device
 
     Returns:
-        Dict[str, Any]: Dictionary containing structured summary information
+        NetworkOperationResult: Response object containing structured summary information
     """
     interface_brief_request = GnmiRequest(
         path=["openconfig-interfaces:interfaces"],
@@ -60,34 +64,57 @@ def _get_interface_brief(
             "Error retrieving interface brief information: %s",
             response.message,
         )
-        return {"device_name": device.name, "error": response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="interface_brief",
+            status="failed",
+            error_response=response,
+        )
 
-    data_to_format = {}
+    data_to_format = []
     if isinstance(response, SuccessResponse):
         if response.data:
             data_to_format = response.data
 
     formatted_data = format_interface_data_for_llm(data_to_format)
-    return {
-        "device_name": device.name,
-        "interfaces": (
-            formatted_data["interfaces"]
-            if isinstance(formatted_data, dict)
-            else formatted_data
+
+    interfaces = (
+        formatted_data["interfaces"]
+        if isinstance(formatted_data, dict)
+        else formatted_data
+    )
+    summary = (
+        formatted_data.get("summary", {})
+        if isinstance(formatted_data, dict)
+        else {}
+    )
+
+    result_data = {
+        "interfaces": interfaces,
+        "summary": summary,
+        "interface_count": (
+            len(interfaces) if isinstance(interfaces, list) else 0
         ),
-        "summary": (
-            formatted_data.get("summary", {})
-            if isinstance(formatted_data, dict)
-            else {}
-        ),
-        "is_single_interface": False,
     }
+
+    metadata = {
+        "is_single_interface": False,
+        "operation_details": "Retrieved summary of all interfaces",
+    }
+
+    return NetworkOperationResult(
+        device_name=device.name,
+        operation_type="interface_brief",
+        status="success",
+        data=result_data,
+        metadata=metadata,
+    )
 
 
 def _get_single_interface_info(
     device: Device,
     interface_name: str,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get detailed information for a single interface using OpenConfig model.
 
@@ -96,7 +123,7 @@ def _get_single_interface_info(
         interface_name: Name of the interface to query
 
     Returns:
-        Dict[str, Any]: Dictionary containing structured interface information
+        NetworkOperationResult: Response object containing structured interface information
     """
     request = _create_single_interface_request(interface_name)
     response = get_gnmi_data(device, request)
@@ -107,7 +134,12 @@ def _get_single_interface_info(
             interface_name,
             response.message,
         )
-        return {"device_name": device.name, "error": response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="interface_details",
+            status="failed",
+            error_response=response,
+        )
 
     data_for_parsing = {}
     if isinstance(response, SuccessResponse):
@@ -115,37 +147,49 @@ def _get_single_interface_info(
             data_for_parsing = {"response": response.data}
 
     if not data_for_parsing:
-        error_msg = f"Interface {interface_name} not found"
-        logger.error(error_msg)
-        error_response = ErrorResponse(
-            type="INTERFACE_NOT_FOUND",
-            message=error_msg,
-            details={"interface": interface_name, "status": "NOT_FOUND"},
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="interface_details",
+            status="failed",
+            metadata={
+                "interface": interface_name,
+                "issue_type": "INTERFACE_NOT_FOUND",
+                "message": f"Interface {interface_name} not found",
+            },
         )
-        return {"device_name": device.name, "error": error_response}
 
     parsed_result = parse_single_interface_data(data_for_parsing)
-    interface_result = {
-        "device_name": device.name,
-        "interfaces": [parsed_result] if parsed_result else [],
-        "is_single_interface": True,
-    }
+    interfaces = [parsed_result] if parsed_result else []
 
     if _is_empty_interface(parsed_result):
         logger.info(
             "Interface %s exists but appears to be empty/unconfigured",
             interface_name,
         )
-        if (
-            interface_result["interfaces"]
-            and len(interface_result["interfaces"]) > 0
-        ):
-            interface_result["interfaces"][0]["status"] = "EMPTY"
-            interface_result["interfaces"][0][
+        if interfaces and len(interfaces) > 0:
+            interfaces[0]["status"] = "EMPTY"
+            interfaces[0][
                 "notes"
             ] = "Interface exists but has no configuration"
 
-    return interface_result
+    result_data = {
+        "interfaces": interfaces,
+        "interface_count": len(interfaces),
+        "interface_name": interface_name,
+    }
+
+    metadata = {
+        "is_single_interface": True,
+        "operation_details": f"Retrieved details for interface {interface_name}",
+    }
+
+    return NetworkOperationResult(
+        device_name=device.name,
+        operation_type="interface_details",
+        status="success",
+        data=result_data,
+        metadata=metadata,
+    )
 
 
 def _create_single_interface_request(interface_name: str) -> GnmiRequest:

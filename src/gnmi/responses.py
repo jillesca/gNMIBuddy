@@ -77,7 +77,35 @@ class SuccessResponse:
         return f"SuccessResponse(data_count={data_count}{timestamp_str})"
 
 
+# Unified response object for all network tools
+@dataclass
+class NetworkOperationResult:
+    """
+    A clean, simple structure for all network tool responses.
+
+    Attributes:
+        device_name: Name of the target device
+        operation_type: Type of operation performed (interface, system, routing, etc.)
+        status: Operation result status ("success", "failed", "feature_not_available")
+        data: The parsed/structured data from the operation
+        metadata: Additional metadata about the operation and results
+        error_response: Optional ErrorResponse object for failed operations
+        feature_not_found_response: Optional FeatureNotFoundResponse for unavailable features
+    """
+
+    device_name: str
+    operation_type: str
+    status: str  # "success", "failed", "feature_not_available"
+    data: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    error_response: Optional[ErrorResponse] = None
+    feature_not_found_response: Optional[FeatureNotFoundResponse] = None
+
+
 # Type alias for return types - Go-like error handling pattern
 NetworkResponse = Union[
     SuccessResponse, ErrorResponse, FeatureNotFoundResponse
 ]
+
+# Type alias for the new unified network tool response
+NetworkToolResponse = NetworkOperationResult

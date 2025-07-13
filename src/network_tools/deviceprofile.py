@@ -5,12 +5,12 @@ Provides functions for retrieving device role/profile information from network d
 """
 
 import logging
-from typing import Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import (
     ErrorResponse,
     FeatureNotFoundResponse,
+    NetworkOperationResult,
 )
 from src.inventory.models import Device
 from src.parsers.deviceprofile_parser import DeviceProfileParser
@@ -31,17 +31,24 @@ def deviceprofile_request():
     )
 
 
-def get_device_profile(device: Device) -> Dict[str, Any]:
+def get_device_profile(device: Device) -> NetworkOperationResult:
     response = get_gnmi_data(device, deviceprofile_request())
 
     if isinstance(response, ErrorResponse):
-        return {"device_name": device.name, "error": response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="device_profile",
+            status="failed",
+            error_response=response,
+        )
 
     if isinstance(response, FeatureNotFoundResponse):
-        return {
-            "device_name": device.name,
-            "feature_not_found": response,
-        }
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="device_profile",
+            status="feature_not_available",
+            feature_not_found_response=response,
+        )
 
     # Get VPN info and BGP AFI-SAFI state for non-default VPNs
     vpn_info, vpn_bgp_afi_safi_states = _get_vpn_bgp_info(device)
@@ -51,22 +58,24 @@ def get_device_profile(device: Device) -> Dict[str, Any]:
         parsed_data = parser.parse(
             response.data, vpn_info, vpn_bgp_afi_safi_states
         )
-        return {
-            "device_name": device.name,
-            "profile": parsed_data,
-            "summary": (
-                parsed_data.get("summary", {})
-                if isinstance(parsed_data, dict)
-                else {}
-            ),
-        }
-    except Exception as e:
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="device_profile",
+            status="success",
+            data={"profile": parsed_data},
+        )
+    except (KeyError, ValueError, TypeError) as e:
         logger.error("Error parsing device profile: %s", str(e))
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing device profile: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="device_profile",
+            status="failed",
+            error_response=error_response,
+        )
 
 
 def _get_vpn_bgp_info(device: Device):

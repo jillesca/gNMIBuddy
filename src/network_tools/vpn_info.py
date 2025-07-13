@@ -5,10 +5,14 @@ Provides functions for retrieving VRF/VPN information from network devices using
 """
 
 import logging
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Union
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse, SuccessResponse
+from src.gnmi.responses import (
+    ErrorResponse,
+    SuccessResponse,
+    NetworkOperationResult,
+)
 from src.inventory.models import Device
 from src.parsers.protocols.vrf import (
     parse_vrf_data,
@@ -24,7 +28,7 @@ def get_vpn_information(
     device: Device,
     vrf: Optional[str] = None,
     include_details: bool = False,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get VRF/VPN information from a network device.
 
@@ -34,25 +38,30 @@ def get_vpn_information(
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
-        Dict[str, Any]: Dictionary containing structured VRF information
+        NetworkOperationResult: Response object containing structured VRF information
     """
 
     # First get all VRF names from the device
     vrf_names_result = _get_vrfs_name(device)
 
-    if isinstance(vrf_names_result, dict) and "error" in vrf_names_result:
+    if isinstance(vrf_names_result, NetworkOperationResult):
         return vrf_names_result
 
     vrf_names = vrf_names_result
 
     if not vrf_names:
-        logger.info(f"No VRFs found on device {device.name}")
-        return {
-            "device_name": device.name,
-            "vrfs": [],
-            "summary": {"message": "No VRFs found"},
-            "include_details": include_details,
-        }
+        logger.info("No VRFs found on device %s", device.name)
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="vpn_info",
+            status="success",
+            data={"vrfs": [], "vrf_count": 0},
+            metadata={
+                "vrf_filter": vrf,
+                "include_details": include_details,
+                "message": "No VRFs found",
+            },
+        )
 
     # If a specific VRF is requested, filter the list
     if isinstance(vrf_names, list) and vrf in vrf_names:
@@ -60,24 +69,29 @@ def get_vpn_information(
 
     # Get detailed information for each VRF
     if isinstance(vrf_names, list):
-        return _get_vrf_details(device, vrf_names, include_details)
+        return _get_vrf_details(device, vrf_names)
     else:
         # This case should not happen if _get_vrfs_name is working correctly
-        return {
-            "device_name": device.name,
-            "error": "Failed to retrieve VRF names",
-        }
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="vpn_info",
+            status="failed",
+            metadata={
+                "issue_type": "VRF_NAMES_ERROR",
+                "message": "Failed to retrieve VRF names",
+            },
+        )
 
 
 DEFAULT_INTERNAL_VRFS = ["default", "**iid"]
 
 
-def _get_vrfs_name(device: Device) -> Union[List[str], Dict[str, Any]]:
+def _get_vrfs_name(device: Device) -> Union[List[str], NetworkOperationResult]:
     """
     Get VRF names from a network device, excluding the DEFAULT VRF.
 
     Returns:
-        Either a list of VRF names or a dictionary with error information
+        Either a list of VRF names or a NetworkOperationResult with issue information
     """
     # Create a GnmiRequest for VRF names
     vrf_names_request = GnmiRequest(
@@ -90,7 +104,12 @@ def _get_vrfs_name(device: Device) -> Union[List[str], Dict[str, Any]]:
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving VRF names: %s", response.message)
-        return {"device_name": device.name, "error": response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="vpn_info",
+            status="failed",
+            error_response=response,
+        )
 
     # Extract VRF names from the response
     vrf_names = []
@@ -116,27 +135,29 @@ def _get_vrfs_name(device: Device) -> Union[List[str], Dict[str, Any]]:
 
 
 def _get_vrf_details(
-    device: Device, vrf_names: List[str], include_details: bool = False
-) -> Dict[str, Any]:
+    device: Device,
+    vrf_names: List[str],
+) -> NetworkOperationResult:
     """
     Get detailed information for specified VRFs.
 
     Args:
         device: Device object from inventory
         vrf_names: List of VRF names to query
+        vrf: Optional VRF name filter
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
-        Dictionary containing structured VRF information with parsed data and summary
+        VpnInfoResponse: Response object containing structured VRF information with parsed data and summary
     """
     # If no VRF names, return empty result
     if not vrf_names:
-        return {
-            "device_name": device.name,
-            "vrfs": [],
-            "summary": {"message": "No VRFs found"},
-            "include_details": include_details,
-        }
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="vpn_info",
+            status="success",
+            data={"vpn_data": {}, "summary": {"message": "No VRFs found"}},
+        )
 
     vrf_path_queries = []
     for vrf_name in vrf_names:
@@ -154,7 +175,12 @@ def _get_vrf_details(
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving VRF details: %s", response.message)
-        return {"device_name": device.name, "error": response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="vpn_info",
+            status="failed",
+            error_response=response,
+        )
 
     try:
         # Work directly with response data
@@ -167,18 +193,32 @@ def _get_vrf_details(
         llm_data = generate_llm_friendly_data(parsed_data)
         summary = generate_vrf_summary(parsed_data)
 
-        return {
-            "device_name": device.name,
-            "vrfs": [llm_data] if isinstance(llm_data, dict) else llm_data,
-            "summary": (
-                summary if isinstance(summary, dict) else {"summary": summary}
-            ),
-            "include_details": include_details,
+        vpn_data = {
+            "vrfs": [llm_data] if isinstance(llm_data, dict) else llm_data
         }
-    except Exception as e:
+
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="vpn_info",
+            status="success",
+            data={
+                "vpn_data": vpn_data,
+                "summary": (
+                    summary
+                    if isinstance(summary, dict)
+                    else {"summary": summary}
+                ),
+            },
+        )
+    except (KeyError, ValueError, TypeError) as e:
         logger.error("Error parsing VRF data: %s", str(e))
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing VRF data: {str(e)}",
         )
-        return {"device_name": device.name, "error": error_response}
+        return NetworkOperationResult(
+            device_name=device.name,
+            operation_type="vpn_info",
+            status="failed",
+            error_response=error_response,
+        )

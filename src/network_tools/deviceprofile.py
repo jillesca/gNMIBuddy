@@ -46,10 +46,8 @@ def get_device_profile(device: Device) -> Dict[str, Any]:
     # Get VPN info and BGP AFI-SAFI state for non-default VPNs
     vpn_info, vpn_bgp_afi_safi_states = _get_vpn_bgp_info(device)
 
-    # Create a data dict for parsing that includes both response data and VPN info
     data_for_parsing = {
         "response_data": response.data,
-        "raw_data": response.raw_data,
         "vpn_info": vpn_info,
         "vpn_bgp_afi_safi_states": vpn_bgp_afi_safi_states,
     }

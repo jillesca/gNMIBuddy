@@ -67,9 +67,7 @@ def get_logging_information(
         # Work directly with response data
         data_for_filter = {}
         if isinstance(response, SuccessResponse):
-            if response.raw_data:
-                data_for_filter = response.raw_data
-            elif response.data:
+            if response.data:
                 data_for_filter = {"response": response.data}
 
         # Process the logs through the filter

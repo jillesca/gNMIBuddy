@@ -87,33 +87,12 @@ class SuccessResponse:
     Represents a successful response containing network operation data.
 
     Attributes:
-        data: The structured data from the response
+        data: The structured data from the response (list of update dictionaries)
         timestamp: Optional timestamp from the notification
-        raw_data: The raw data returned by the operation
     """
 
     data: List[Dict[str, Any]] = field(default_factory=list)
     timestamp: Optional[str] = None
-    raw_data: Optional[Dict[str, Any]] = None
-
-    @classmethod
-    def from_raw_response(
-        cls, response: Dict[str, Any]
-    ) -> Union["SuccessResponse", ErrorResponse]:
-        """Create a SuccessResponse from a raw response dictionary."""
-        if not response or not isinstance(response, dict):
-            return ErrorResponse(
-                type="EMPTY_RESPONSE",
-                message="No data returned from request",
-            )
-
-        if "error" in response:
-            return ErrorResponse.from_dict(response["error"])
-
-        updates = response.get("response", [])
-        timestamp = response.get("timestamp")
-
-        return cls(raw_data=response, data=updates, timestamp=timestamp)
 
     def __str__(self) -> str:
         """String representation for debugging."""

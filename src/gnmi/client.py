@@ -110,7 +110,9 @@ def _create_response_from_raw_data(
     raw_response: Union[Dict[str, Any], None],
 ) -> Union[SuccessResponse, ErrorResponse]:
     if raw_response:
-        return SuccessResponse.from_raw_response(raw_response)
+        updates = raw_response.get("response", [])
+        timestamp = raw_response.get("timestamp")
+        return SuccessResponse(data=updates, timestamp=timestamp)
 
     return ErrorResponse(
         type="NO_DATA", message="No data returned from device"

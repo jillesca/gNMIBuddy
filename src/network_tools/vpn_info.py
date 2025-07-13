@@ -98,8 +98,6 @@ def _get_vrfs_name(device: Device) -> Union[List[str], Dict[str, Any]]:
         # Work directly with response data
         if response.data:
             response_data = response.data
-        elif response.raw_data:
-            response_data = response.raw_data.get("response", [])
         else:
             response_data = []
 
@@ -162,9 +160,7 @@ def _get_vrf_details(
         # Work directly with response data
         data_for_parsing = {}
         if isinstance(response, SuccessResponse):
-            if response.raw_data:
-                data_for_parsing = response.raw_data
-            elif response.data:
+            if response.data:
                 data_for_parsing = {"response": response.data}
 
         parsed_data = parse_vrf_data(data_for_parsing)

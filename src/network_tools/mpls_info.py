@@ -50,9 +50,7 @@ def get_mpls_information(
         # Work directly with response data
         data_for_parsing = {}
         if isinstance(response, SuccessResponse):
-            if response.raw_data:
-                data_for_parsing = response.raw_data
-            elif response.data:
+            if response.data:
                 data_for_parsing = {"response": response.data}
 
         mpls_data = parse_mpls_data(data_for_parsing)

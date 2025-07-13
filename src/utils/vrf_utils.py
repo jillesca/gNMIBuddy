@@ -31,8 +31,6 @@ def get_non_default_vrf_names(device: Device) -> List[str]:
         # Work directly with response data
         if response.data:
             response_data = response.data
-        elif response.raw_data:
-            response_data = response.raw_data.get("response", [])
         else:
             response_data = []
 

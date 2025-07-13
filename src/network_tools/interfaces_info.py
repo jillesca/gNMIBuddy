@@ -62,12 +62,9 @@ def _get_interface_brief(
         )
         return {"device_name": device.name, "error": response}
 
-    # Only SuccessResponse has raw_data and data attributes
     data_to_format = {}
     if isinstance(response, SuccessResponse):
-        if response.raw_data:
-            data_to_format = response.raw_data
-        elif response.data:
+        if response.data:
             data_to_format = {"response": response.data}
 
     formatted_data = format_interface_data_for_llm(data_to_format)
@@ -112,12 +109,9 @@ def _get_single_interface_info(
         )
         return {"device_name": device.name, "error": response}
 
-    # Check if response has data (SuccessResponse) or if it's empty
     data_for_parsing = {}
     if isinstance(response, SuccessResponse):
-        if response.raw_data:
-            data_for_parsing = response.raw_data
-        elif response.data:
+        if response.data:
             data_for_parsing = {"response": response.data}
 
     if not data_for_parsing:

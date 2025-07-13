@@ -102,9 +102,7 @@ def _get_isis_info(
         # Work directly with response data
         data_for_parsing = {}
         if isinstance(response, SuccessResponse):
-            if response.raw_data:
-                data_for_parsing = response.raw_data
-            elif response.data:
+            if response.data:
                 data_for_parsing = {"response": response.data}
 
         isis_data = parse_isis_data(data_for_parsing)
@@ -158,9 +156,7 @@ def _get_bgp_info(
         # Work directly with response data
         data_for_parsing = {}
         if isinstance(response, SuccessResponse):
-            if response.raw_data:
-                data_for_parsing = response.raw_data
-            elif response.data:
+            if response.data:
                 data_for_parsing = {"response": response.data}
 
         bgp_data = parse_bgp_data(data_for_parsing)

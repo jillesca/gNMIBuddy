@@ -38,29 +38,16 @@ from src.network_tools.topology.ip_adjacency_dump import ip_adjacency_dump
 
 
 def neighbors_cmd(device) -> NetworkOperationResult:
-    try:
-        neighbors_list = neighbors(device)
-        return NetworkOperationResult(
-            device_name=device.name,
-            ip_address=device.ip_address,
-            nos=device.nos,
-            operation_type="topology_info",
-            status="success",
-            data={"neighbors": neighbors_list},
-        )
-    except (KeyError, ValueError, TypeError) as e:
-        error_response = ErrorResponse(
-            type="TOPOLOGY_ERROR",
-            message=f"Error retrieving neighbors: {str(e)}",
-        )
-        return NetworkOperationResult(
-            device_name=device.name,
-            ip_address=device.ip_address,
-            nos=device.nos,
-            operation_type="topology_info",
-            status="failed",
-            error_response=error_response,
-        )
+    """
+    Get direct neighbors of a device using the topology graph.
+
+    Args:
+        device: Device object from inventory
+
+    Returns:
+        NetworkOperationResult: Response object containing neighbor information
+    """
+    return neighbors(device)
 
 
 def path_cmd(device, target_device_name) -> NetworkOperationResult:

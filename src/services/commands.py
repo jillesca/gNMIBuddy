@@ -6,10 +6,11 @@ Simplified network command service for executing commands with standardized erro
 import json
 import logging
 from dataclasses import is_dataclass, asdict
-from typing import Dict, Any, Protocol, runtime_checkable, Union, List
+from typing import Dict, Any, Protocol, runtime_checkable
 
 import src.inventory
 from src.inventory.models import Device
+from src.gnmi.responses import NetworkOperationResult
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +19,9 @@ logger = logging.getLogger(__name__)
 class NetworkCommand(Protocol):
     """Protocol defining what a network command function should look like"""
 
-    def __call__(self, device: Device, *args: Any) -> Union[
-        Dict[str, Any],
-        List[Dict[str, Any]],
-    ]: ...
+    def __call__(
+        self, device: Device, *args: Any
+    ) -> NetworkOperationResult: ...
 
 
 def run(
@@ -44,12 +44,19 @@ def run(
     device, success = src.inventory.get_device(device_name)
 
     if not success:
-        logger.warning(f"Failed to retrieve device: {device_name}")
+        logger.warning("Failed to retrieve device: %s", device_name)
         return device  # device is a dict with error info when success is False
 
-    logger.debug(f"Executing command on device: {device_name}")
+    logger.debug("Executing command on device: %s", device_name)
 
     command_result = command_func(device, *args)
+
+    # Assertion to ensure NetworkOperationResult is always returned
+    assert isinstance(command_result, NetworkOperationResult), (
+        f"Network command function must return NetworkOperationResult, "
+        f"but got {type(command_result).__name__}. "
+        f"Please ensure the network command function implements the NetworkOperationResult schema."
+    )
 
     serializable_result = _make_serializable(command_result)
     return json.loads(json.dumps(serializable_result))

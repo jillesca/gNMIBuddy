@@ -131,26 +131,16 @@ def segment_cmd(device, network) -> NetworkOperationResult:
 
 
 def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
-    try:
-        connections = ip_adjacency_dump(device)
-        return NetworkOperationResult(
-            device_name=device.name,
-            ip_address=device.ip_address,
-            nos=device.nos,
-            operation_type="topology_info",
-            status="success",
-            data={"direct_connections": connections},
-        )
-    except (KeyError, ValueError, TypeError) as e:
-        error_response = ErrorResponse(
-            type="TOPOLOGY_ERROR",
-            message=f"Error retrieving IP adjacencies: {str(e)}",
-        )
-        return NetworkOperationResult(
-            device_name=device.name,
-            ip_address=device.ip_address,
-            nos=device.nos,
-            operation_type="topology_info",
-            status="failed",
-            error_response=error_response,
-        )
+    """
+    Get the complete IP adjacency dump for the entire network topology.
+
+    This function returns all direct IP connections in the network, not just for
+    the specified device. The device parameter is used for interface compliance.
+
+    Args:
+        device: Device object (used for interface compliance, but operation is network-wide)
+
+    Returns:
+        NetworkOperationResult: Response object containing all IP adjacencies in the network
+    """
+    return ip_adjacency_dump(device)

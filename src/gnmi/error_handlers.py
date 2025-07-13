@@ -56,14 +56,12 @@ def handle_rpc_error(
     if feature_name:
         # Return feature not found response instead of error
         _log_error(device.name, error_msg, level="info")
-        return FeatureNotFoundResponse.create(
+        return FeatureNotFoundResponse(
             feature_name=feature_name,
             message=f"Feature '{feature_name}' not found on device {device.name}",
             details={
                 "code": code_name,
                 "code_value": code_value,
-                "device": device.name,
-                "device_ip": device.ip_address,
                 "full_details": details,
             },
         )
@@ -112,13 +110,9 @@ def handle_generic_error(
 
     if feature_name or "not found" in error_message.lower():
         # Return feature not found response instead of error
-        return FeatureNotFoundResponse.create(
+        return FeatureNotFoundResponse(
             feature_name=feature_name or "unknown",
             message=f"Feature not found on device {device.name}: {error_message}",
-            details={
-                "device": device.name,
-                "device_ip": device.ip_address,
-            },
         )
 
     error_msg = f"{error_type} - {error_message}"

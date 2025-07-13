@@ -62,20 +62,6 @@ class FeatureNotFoundResponse:
     message: str
     details: Dict[str, Any] = field(default_factory=dict)
 
-    @classmethod
-    def create(
-        cls,
-        feature_name: str,
-        message: str,
-        details: Optional[Dict[str, Any]] = None,
-    ) -> "FeatureNotFoundResponse":
-        """Create a feature not found response."""
-        return cls(
-            feature_name=feature_name,
-            message=message,
-            details=details or {},
-        )
-
     def __str__(self) -> str:
         """String representation for debugging."""
         return f"FeatureNotFoundResponse(feature='{self.feature_name}', message='{self.message}')"

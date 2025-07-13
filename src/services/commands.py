@@ -5,6 +5,7 @@ Simplified network command service for executing commands with standardized erro
 
 import json
 import logging
+from dataclasses import is_dataclass, asdict
 from typing import Dict, Any, Protocol, runtime_checkable, Union, List
 
 import src.inventory
@@ -57,4 +58,19 @@ def run(
         "response": command_result,
     }
 
-    return json.loads(json.dumps(result))
+    serializable_result = _make_serializable(result)
+    return json.loads(json.dumps(serializable_result))
+
+
+def _make_serializable(obj: Any) -> Any:
+    """
+    Convert dataclass objects to dictionaries for JSON serialization.
+    """
+    if is_dataclass(obj) and not isinstance(obj, type):
+        return asdict(obj)
+    elif isinstance(obj, dict):
+        return {key: _make_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_make_serializable(item) for item in obj]
+    else:
+        return obj

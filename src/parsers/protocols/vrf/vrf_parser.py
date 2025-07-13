@@ -26,30 +26,31 @@ def parse_vrf_data(gnmi_response: Dict[str, Any]) -> Dict[str, Any]:
 
     # Initialize the result structure
     result = {
-        "timestamp": gnmi_response.get("timestamp", int(time.time() * 1e9)),
+        "timestamp": int(time.time() * 1e9),
         "timestamp_readable": time.strftime(
             "%Y-%m-%d %H:%M:%S",
-            time.localtime(
-                gnmi_response.get("timestamp", int(time.time() * 1e9)) / 1e9
-            ),
+            time.localtime(int(time.time())),
         ),
         "vrfs": [],
     }
 
     # Check if we have a valid response
-    if "response" not in gnmi_response:
-        logger.error("Invalid gNMI response format: 'response' key missing")
+    if not gnmi_response:
+        logger.error("Empty gNMI response")
         return result
 
     # Track VRF names to avoid duplicates
     processed_vrfs = set()
 
     # Process each VRF in the response
-    for item in gnmi_response["response"]:
-        if "val" not in item:
+    for item in gnmi_response:
+        if not isinstance(item, dict) or "val" not in item:
             continue
 
         vrf_data = item["val"]
+        if not isinstance(vrf_data, dict):
+            continue
+
         vrf_name = vrf_data.get("name")
 
         # Skip DEFAULT VRF

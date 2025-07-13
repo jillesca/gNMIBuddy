@@ -12,17 +12,17 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger(__name__)
 
 
-def parse_isis_data(response: Dict[str, Any]) -> Dict[str, Any]:
+def parse_isis_data(response: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Parse ISIS data from gNMI response.
 
     Args:
-        response: The gNMI response containing ISIS data
+        response: The gNMI response data (list of update dictionaries)
 
     Returns:
         Dict containing structured ISIS information formatted for LLM consumption
     """
-    if not response or "response" not in response:
+    if not response:
         return {"error": "No ISIS data found in response"}
 
     isis_data = {
@@ -35,8 +35,8 @@ def parse_isis_data(response: Dict[str, Any]) -> Dict[str, Any]:
         "adjacencies": [],
     }
 
-    # Process each part of the response
-    for item in response.get("response", []):
+    # Process each update in the response
+    for item in response:
         path = item.get("path", "")
 
         # Process ISIS global configuration

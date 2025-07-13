@@ -48,12 +48,10 @@ def get_mpls_information(
 
     try:
         # Work directly with response data
-        data_for_parsing = {}
         if isinstance(response, SuccessResponse):
-            if response.data:
-                data_for_parsing = {"response": response.data}
-
-        mpls_data = parse_mpls_data(data_for_parsing)
+            mpls_data = parse_mpls_data(response.data)
+        else:
+            mpls_data = parse_mpls_data([])
         summary = generate_mpls_summary(mpls_data)
 
         # Add summary to the mpls_data for consistent return format

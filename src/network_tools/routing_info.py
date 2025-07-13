@@ -100,12 +100,10 @@ def _get_isis_info(
 
     try:
         # Work directly with response data
-        data_for_parsing = {}
         if isinstance(response, SuccessResponse):
-            if response.data:
-                data_for_parsing = {"response": response.data}
-
-        isis_data = parse_isis_data(data_for_parsing)
+            isis_data = parse_isis_data(response.data)
+        else:
+            isis_data = parse_isis_data([])
         summary = generate_isis_summary(isis_data)
 
         return {

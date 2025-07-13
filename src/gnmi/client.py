@@ -98,7 +98,7 @@ def _extract_gnmi_data(
         return None
 
     result = {}
-    result["response"] = updates
+    result["data"] = updates
 
     if "timestamp" in notifications[0]:
         result["timestamp"] = notifications[0]["timestamp"]
@@ -110,9 +110,9 @@ def _create_response_from_raw_data(
     raw_response: Union[Dict[str, Any], None],
 ) -> Union[SuccessResponse, ErrorResponse]:
     if raw_response:
-        updates = raw_response.get("response", [])
+        data = raw_response.get("data", [])
         timestamp = raw_response.get("timestamp")
-        return SuccessResponse(data=updates, timestamp=timestamp)
+        return SuccessResponse(data=data, timestamp=timestamp)
 
     return ErrorResponse(
         type="NO_DATA", message="No data returned from device"

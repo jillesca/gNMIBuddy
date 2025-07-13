@@ -65,7 +65,7 @@ def _get_interface_brief(
     data_to_format = {}
     if isinstance(response, SuccessResponse):
         if response.data:
-            data_to_format = {"response": response.data}
+            data_to_format = response.data
 
     formatted_data = format_interface_data_for_llm(data_to_format)
     return {

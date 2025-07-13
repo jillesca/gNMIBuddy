@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional
 
 
 def format_interface_data_for_llm(
-    raw_interface_data: Dict[str, Any],
+    raw_interface_data: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """
     Process raw gNMI interface data from OpenConfig model into a simplified format better suited for LLM consumption.
@@ -32,11 +32,20 @@ def format_interface_data_for_llm(
             "with_ip": 0,
             "with_vrf": 0,
         },
-        "timestamp": raw_interface_data.get("timestamp", ""),
+        "timestamp": "",
     }
 
+    if not raw_interface_data:
+        return result
+
     # Extract interfaces from the raw data
-    interfaces = extract_interfaces(raw_interface_data)
+    interfaces = []
+    for update in raw_interface_data:
+        if "val" in update:
+            # Wrap in the expected format for extract_interfaces
+            wrapped_data = {"response": [{"val": update["val"]}]}
+            extracted = extract_interfaces(wrapped_data)
+            interfaces.extend(extracted)
 
     # Calculate summary statistics
     result["interfaces"] = interfaces

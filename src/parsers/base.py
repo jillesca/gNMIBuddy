@@ -9,11 +9,10 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, TypeVar, Generic, List
 
 # Define type variables for input and output types
-T_Input = TypeVar("T_Input", bound=Dict[str, Any])
 T_Output = TypeVar("T_Output", bound=Dict[str, Any])
 
 
-class BaseParser(Generic[T_Input, T_Output], ABC):
+class BaseParser(Generic[T_Output], ABC):
     """
     Abstract base class for all data parsers.
 
@@ -22,41 +21,43 @@ class BaseParser(Generic[T_Input, T_Output], ABC):
     """
 
     @abstractmethod
-    def parse(self, data: T_Input) -> T_Output:
+    def parse(self, data: List[Dict[str, Any]]) -> T_Output:
         """
         Parse the input data and return structured output data.
 
         Args:
-            data: Input data to parse
+            data: Raw gNMI response data (list of update dictionaries)
 
         Returns:
             Parsed and structured output data
         """
         pass
 
-    @abstractmethod
-    def extract_data(self, data: T_Input) -> Dict[str, Any]:
+    def extract_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Extract relevant data from the input structure.
 
-        This method handles the common pattern of extracting data from
-        a "response" field or other standardized location in the input.
+        This method now accepts the raw gNMI data directly from response.data.
+        Subclasses can override this if they need special extraction logic.
 
         Args:
-            data: Input data to extract from
+            data: Raw gNMI response data (list of update dictionaries)
 
         Returns:
             Extracted data ready for processing
         """
-        pass
+        return data if data else []
 
     @abstractmethod
-    def transform_data(self, extracted_data: Dict[str, Any]) -> T_Output:
+    def transform_data(
+        self, extracted_data: List[Dict[str, Any]], **kwargs
+    ) -> T_Output:
         """
         Transform extracted data into the final output format.
 
         Args:
             extracted_data: Data extracted from the input
+            **kwargs: Additional parameters that specific parsers might need
 
         Returns:
             Transformed data in the expected output format
@@ -64,17 +65,19 @@ class BaseParser(Generic[T_Input, T_Output], ABC):
         pass
 
     @staticmethod
-    def get_timestamp(data: Dict[str, Any]) -> Optional[int]:
+    def get_timestamp(data: List[Dict[str, Any]]) -> Optional[int]:
         """
         Extract the timestamp from the input data.
 
         Args:
-            data: Input data containing a possible timestamp
+            data: Raw gNMI response data
 
         Returns:
             Extracted timestamp or None if not available
         """
-        return data.get("timestamp")
+        # Timestamp is now passed separately via SuccessResponse.timestamp
+        # This method is kept for backward compatibility but may be deprecated
+        return None
 
 
 class NotFoundError(Exception):

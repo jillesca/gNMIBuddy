@@ -4,7 +4,7 @@ Device profile parser module.
 Parses device profile data from gNMI responses into a structured format.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 from src.parsers.base import BaseParser
 
 
@@ -13,20 +13,30 @@ class DeviceProfileParser(BaseParser):
     Parser for device profile data from gNMI responses.
     """
 
-    def parse(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def parse(
+        self,
+        data: List[Dict[str, Any]],
+        vpn_info: Any = None,
+        vpn_bgp_afi_safi_states: Any = None,
+    ) -> Dict[str, Any]:
         extracted = self.extract_data(data)
-        return self.transform_data(extracted)
-
-    def extract_data(self, data):
-        # For compatibility with BaseParser, just return the input data
-        return data
-
-    def transform_data(self, extracted_data):
-        responses = extracted_data.get("response", [])
-        all_entries = responses if isinstance(responses, list) else []
-        vpn_bgp_afi_safi_states = extracted_data.get(
-            "vpn_bgp_afi_safi_states", []
+        return self.transform_data(
+            extracted,
+            vpn_info=vpn_info,
+            vpn_bgp_afi_safi_states=vpn_bgp_afi_safi_states,
         )
+
+    def extract_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        # Return the raw data directly
+        return data if data else []
+
+    def transform_data(
+        self, extracted_data: List[Dict[str, Any]], **kwargs
+    ) -> Dict[str, Any]:
+        all_entries = (
+            extracted_data if isinstance(extracted_data, list) else []
+        )
+        vpn_bgp_afi_safi_states = kwargs.get("vpn_bgp_afi_safi_states", [])
 
         features = {
             "is_mpls_enabled": self._is_mpls_enabled(all_entries),

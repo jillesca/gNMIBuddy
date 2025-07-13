@@ -53,14 +53,9 @@ def get_system_information(device: Device) -> Dict[str, Any]:
         }
 
     # Work directly with response data
-    data_for_parsing = {}
-    if isinstance(response, SuccessResponse):
-        if response.data:
-            data_for_parsing = {"response": response.data}
-
     parser = SystemInfoParser()
     try:
-        parsed_data = parser.parse(data_for_parsing)
+        parsed_data = parser.parse(response.data)
         return {
             "device_name": device.name,
             "system_info": parsed_data,

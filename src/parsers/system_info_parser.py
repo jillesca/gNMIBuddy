@@ -4,7 +4,7 @@ System information parser module.
 Parses system information data from gNMI responses into a structured format.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 from src.parsers.base import BaseParser
 import datetime
 
@@ -14,27 +14,31 @@ class SystemInfoParser(BaseParser):
     Parser for system information data from gNMI responses.
     """
 
-    def parse(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def parse(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
         extracted = self.extract_data(data)
         return self.transform_data(extracted)
 
-    def extract_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        # Extract the first system response if present
-        responses = data.get("response", [])
-        if not responses:
-            return {}
-        val = responses[0].get("val", {})
-        return val
+    def extract_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        # Return the raw data since system info parsing handles the list directly
+        return data if data else []
 
-    def transform_data(self, extracted_data: Dict[str, Any]) -> Dict[str, Any]:
+    def transform_data(
+        self, extracted_data: List[Dict[str, Any]], **kwargs
+    ) -> Dict[str, Any]:
+        # Extract the first system response if present
+        if not extracted_data:
+            return {"error": "No system data available"}
+
+        val = extracted_data[0].get("val", {})
+
         # Parse only selected fields for clarity and usability
-        state = extracted_data.get("state", {})
-        clock = extracted_data.get("clock", {}).get("state", {})
-        memory = extracted_data.get("memory", {}).get("state", {})
-        grpc_servers = self._parse_grpc_servers(extracted_data)
-        logging = self._parse_logging_selectors(extracted_data)
-        message_summary = self._parse_message_summary(extracted_data)
-        users = self._parse_users(extracted_data)
+        state = val.get("state", {})
+        clock = val.get("clock", {}).get("state", {})
+        memory = val.get("memory", {}).get("state", {})
+        grpc_servers = self._parse_grpc_servers(val)
+        logging = self._parse_logging_selectors(val)
+        message_summary = self._parse_message_summary(val)
+        users = self._parse_users(val)
         boot_time_ns = state.get("boot-time")
         boot_time_human = self._parse_boot_time(boot_time_ns)
         uptime = self._calculate_uptime(boot_time_ns)

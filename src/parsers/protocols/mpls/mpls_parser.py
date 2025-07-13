@@ -10,12 +10,12 @@ from typing import Dict, Any, List
 logger = logging.getLogger(__name__)
 
 
-def parse_mpls_data(gnmi_response: Dict[str, Any]) -> Dict[str, Any]:
+def parse_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Parse MPLS data from gNMI response.
 
     Args:
-        gnmi_response: The gNMI response containing MPLS data
+        gnmi_response: The gNMI response data (list of update dictionaries)
 
     Returns:
         Dictionary containing the parsed MPLS data in a simplified format for LLMs
@@ -32,13 +32,10 @@ def parse_mpls_data(gnmi_response: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     try:
-        if "response" not in gnmi_response:
-            logger.error(
-                "Invalid gNMI response format: 'response' key missing"
-            )
+        if not gnmi_response:
             return parsed_data
 
-        for item in gnmi_response["response"]:
+        for item in gnmi_response:
             if "val" not in item:
                 continue
 

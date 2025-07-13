@@ -5,11 +5,11 @@ Provides functions for retrieving MPLS information from network devices using gN
 """
 
 import logging
+from typing import Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import ErrorResponse
 from src.inventory.models import Device
-from src.network_tools.responses import MplsResponse
 from src.parsers.protocols.mpls.mpls_parser import (
     parse_mpls_data,
     generate_mpls_summary,
@@ -29,7 +29,7 @@ def mpls_request():
 def get_mpls_information(
     device: Device,
     include_details: bool = False,
-) -> MplsResponse:
+) -> Dict[str, Any]:
     """
     Get MPLS information from a network device.
 
@@ -38,13 +38,13 @@ def get_mpls_information(
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
-        MplsResponse object containing structured MPLS information
+        Dict[str, Any]: Dictionary containing structured MPLS information
     """
     response = get_gnmi_data(device, mpls_request())
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving MPLS information: %s", response.message)
-        return MplsResponse(device_name=device.name, error=response)
+        return {"device_name": device.name, "error": response.to_dict()}
 
     try:
         mpls_data = parse_mpls_data(response.to_dict())
@@ -53,20 +53,18 @@ def get_mpls_information(
         # Add summary to the mpls_data for consistent return format
         mpls_data["summary"] = summary
 
-        mpls_response = MplsResponse(
-            device_name=device.name,
-            mpls_data=mpls_data,
-            summary=(
+        return {
+            "device_name": device.name,
+            "mpls_data": mpls_data,
+            "summary": (
                 summary if isinstance(summary, dict) else {"summary": summary}
             ),
-            include_details=include_details,
-        )
-
-        return mpls_response
+            "include_details": include_details,
+        }
     except Exception as e:
         logger.error("Error parsing MPLS data: %s", str(e))
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing MPLS data: {str(e)}",
         )
-        return MplsResponse(device_name=device.name, error=error_response)
+        return {"device_name": device.name, "error": error_response.to_dict()}

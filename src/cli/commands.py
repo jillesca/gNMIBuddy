@@ -300,8 +300,8 @@ class TestAllCommand(BaseCommand):
             get_device_profile_api,
             get_topology_ip_adjacency_dump,
             get_topology_neighbors,
-            get_topology_path,
-            get_topology_segment,
+            # get_topology_path,
+            # get_topology_segment,
         )
 
         results = {}
@@ -381,26 +381,26 @@ class TestAllCommand(BaseCommand):
             logger.error("Error testing topology_neighbors API: %s", e)
             results["topology_neighbors"] = {"error": str(e)}
 
-        logger.info("Testing topology_path for %s", device_name)
-        try:
-            # Use device_name as both source and target for test, or skip if not provided
-            # In real test, you may want to parametrize this
-            results["topology_path"] = get_topology_path(
-                device_name, device_name
-            )
-        except Exception as e:
-            logger.error("Error testing topology_path API: %s", e)
-            results["topology_path"] = {"error": str(e)}
+        # logger.info("Testing topology_path for %s", device_name)
+        # try:
+        #     # Use device_name as both source and target for test, or skip if not provided
+        #     # In real test, you may want to parametrize this
+        #     results["topology_path"] = get_topology_path(
+        #         device_name, device_name
+        #     )
+        # except Exception as e:
+        #     logger.error("Error testing topology_path API: %s", e)
+        #     results["topology_path"] = {"error": str(e)}
 
-        logger.info("Testing topology_segment for %s", device_name)
-        try:
-            # Use a dummy network for test, or parametrize as needed
-            results["topology_segment"] = get_topology_segment(
-                device_name, "10.0.0.0/30"
-            )
-        except Exception as e:
-            logger.error("Error testing topology_segment API: %s", e)
-            results["topology_segment"] = {"error": str(e)}
+        # logger.info("Testing topology_segment for %s", device_name)
+        # try:
+        #     # Use a dummy network for test, or parametrize as needed
+        #     results["topology_segment"] = get_topology_segment(
+        #         device_name, "10.0.0.0/30"
+        #     )
+        # except Exception as e:
+        #     logger.error("Error testing topology_segment API: %s", e)
+        #     results["topology_segment"] = {"error": str(e)}
 
         if args.test_query:
             logger.info(

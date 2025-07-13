@@ -5,12 +5,11 @@ Provides functions for retrieving logging information from network devices using
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import ErrorResponse
 from src.inventory.models import Device
-from src.network_tools.responses import LogResponse
 from src.parsers.logs.filter import filter_logs
 
 
@@ -22,7 +21,7 @@ def get_logging_information(
     keywords: Optional[str] = None,
     minutes: Optional[int] = 5,
     show_all_logs: bool = False,
-) -> LogResponse:
+) -> Dict[str, Any]:
     """
     Get logging information from a network device.
 
@@ -33,7 +32,7 @@ def get_logging_information(
         show_all_logs: If True, return all logs without time filtering (default: False)
 
     Returns:
-        LogResponse object containing logs or error information
+        Dict[str, Any]: Dictionary containing logs or error information
     """
     # Prepare filter information for inclusion in the response
     filter_info = {
@@ -62,7 +61,7 @@ def get_logging_information(
         logger.error(
             "Failed to get logs from %s: %s", device.name, response.message
         )
-        return LogResponse(device_name=device.name, error=response)
+        return {"device_name": device.name, "error": response.to_dict()}
 
     try:
         # Process the logs through the filter
@@ -74,21 +73,25 @@ def get_logging_information(
             error_response = ErrorResponse(
                 type="LOG_PROCESSING_ERROR", message=filtered_logs["error"]
             )
-            return LogResponse(device_name=device.name, error=error_response)
+            return {
+                "device_name": device.name,
+                "error": error_response.to_dict(),
+            }
 
         # Create a response with the filtered logs
-        return LogResponse(
-            device_name=device.name,
-            logs=filtered_logs.get("logs", []),
-            summary={
+        return {
+            "device_name": device.name,
+            "logs": filtered_logs.get("logs", []),
+            "summary": {
                 "count": len(filtered_logs.get("logs", [])),
                 "filter_info": filter_info,
             },
-        )
+            "filters_applied": filter_info,
+        }
     except Exception as e:
         logger.error("Error processing logs from %s: %s", device.name, str(e))
         error_response = ErrorResponse(
             type="LOG_PROCESSING_ERROR",
             message=f"Error processing logs: {str(e)}",
         )
-        return LogResponse(device_name=device.name, error=error_response)
+        return {"device_name": device.name, "error": error_response.to_dict()}

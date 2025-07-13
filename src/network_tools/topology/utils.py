@@ -120,10 +120,10 @@ def _get_interface(device: str) -> dict:
     if not isinstance(device_obj, Device):
         return device_obj
     interface_response = get_interface_information(device_obj)
-    if hasattr(interface_response, "to_dict"):
-        response_dict = interface_response.to_dict()
-        response_dict["device_name"] = device
-        return response_dict
+    # Since get_interface_information now returns dict directly, no need for to_dict()
+    if isinstance(interface_response, dict):
+        interface_response["device_name"] = device
+        return interface_response
     return {
         "error": "Unexpected response from get_interface_information",
         "device_name": device,
@@ -150,7 +150,8 @@ def _get_isis(device) -> dict:
     )
     if isinstance(routing_responses, list) and routing_responses:
         first_response = routing_responses[0]
-        if hasattr(first_response, "to_dict"):
-            return first_response.to_dict()
-        return {"error": "Unexpected RoutingResponse object"}
+        # Since get_routing_information now returns dict directly, no need for to_dict()
+        if isinstance(first_response, dict):
+            return first_response
+        return {"error": "Unexpected routing response format"}
     return {"error": "No ISIS routing information found"}

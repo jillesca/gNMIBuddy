@@ -6,7 +6,6 @@ from typing import List
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.responses import ErrorResponse
-from src.network_tools.responses import VpnResponse
 from src.inventory.models import Device
 
 DEFAULT_INTERNAL_VRFS = ["default", "**iid"]
@@ -31,8 +30,12 @@ def get_non_default_vrf_names(device: Device) -> List[str]:
         if isinstance(response_data, list):
             for item in response_data:
                 if isinstance(item, dict) and "val" in item:
-                    if item["val"].lower() not in [
-                        vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS
-                    ]:
-                        vrf_names.append(item["val"])
+                    val = item.get("val")
+                    if (
+                        val
+                        and isinstance(val, str)
+                        and val.lower()
+                        not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
+                    ):
+                        vrf_names.append(val)
     return vrf_names

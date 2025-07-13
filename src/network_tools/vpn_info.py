@@ -5,12 +5,11 @@ Provides functions for retrieving VRF/VPN information from network devices using
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Union
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import ErrorResponse
 from src.inventory.models import Device
-from src.network_tools.responses import VpnResponse
 from src.parsers.protocols.vrf import (
     parse_vrf_data,
     generate_vrf_summary,
@@ -25,7 +24,7 @@ def get_vpn_information(
     device: Device,
     vrf: Optional[str] = None,
     include_details: bool = False,
-) -> VpnResponse:
+) -> Dict[str, Any]:
     """
     Get VRF/VPN information from a network device.
 
@@ -35,46 +34,50 @@ def get_vpn_information(
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
-        VpnResponse object containing structured VRF information
+        Dict[str, Any]: Dictionary containing structured VRF information
     """
 
     # First get all VRF names from the device
     vrf_names_result = _get_vrfs_name(device)
 
-    if (
-        isinstance(vrf_names_result, VpnResponse)
-        and vrf_names_result.is_error()
-    ):
+    if isinstance(vrf_names_result, dict) and "error" in vrf_names_result:
         return vrf_names_result
 
     vrf_names = vrf_names_result
 
     if not vrf_names:
         logger.info(f"No VRFs found on device {device.name}")
-        return VpnResponse(
-            success=True,
-            device_name=device.name,
-            vrfs=[],
-            summary={"message": "No VRFs found"},
-        )
+        return {
+            "device_name": device.name,
+            "vrfs": [],
+            "summary": {"message": "No VRFs found"},
+            "include_details": include_details,
+        }
 
     # If a specific VRF is requested, filter the list
-    if vrf in vrf_names:
+    if isinstance(vrf_names, list) and vrf in vrf_names:
         vrf_names = [vrf]
 
     # Get detailed information for each VRF
-    return _get_vrf_details(device, vrf_names, include_details)
+    if isinstance(vrf_names, list):
+        return _get_vrf_details(device, vrf_names, include_details)
+    else:
+        # This case should not happen if _get_vrfs_name is working correctly
+        return {
+            "device_name": device.name,
+            "error": "Failed to retrieve VRF names",
+        }
 
 
 DEFAULT_INTERNAL_VRFS = ["default", "**iid"]
 
 
-def _get_vrfs_name(device: Device) -> List[str] | VpnResponse:
+def _get_vrfs_name(device: Device) -> Union[List[str], Dict[str, Any]]:
     """
     Get VRF names from a network device, excluding the DEFAULT VRF.
 
     Returns:
-        Either a list of VRF names or a VpnResponse with error information
+        Either a list of VRF names or a dictionary with error information
     """
     # Create a GnmiRequest for VRF names
     vrf_names_request = GnmiRequest(
@@ -87,23 +90,28 @@ def _get_vrfs_name(device: Device) -> List[str] | VpnResponse:
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving VRF names: %s", response.message)
-        return VpnResponse(device_name=device.name, error=response)
+        return {"device_name": device.name, "error": response.to_dict()}
 
     # Extract VRF names from the response
     vrf_names = []
-    if response.data:
-        for item in response.data:
-            if "val" in item:
-                if item["val"].lower() not in [
-                    vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS
-                ]:
-                    vrf_names.append(item["val"])
+    response_dict = response.to_dict()
+    if response_dict and isinstance(response_dict, list):
+        for item in response_dict:
+            if isinstance(item, dict) and "val" in item:
+                val = item.get("val")
+                if (
+                    val
+                    and isinstance(val, str)
+                    and val.lower()
+                    not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
+                ):
+                    vrf_names.append(val)
     return vrf_names
 
 
 def _get_vrf_details(
     device: Device, vrf_names: List[str], include_details: bool = False
-) -> VpnResponse:
+) -> Dict[str, Any]:
     """
     Get detailed information for specified VRFs.
 
@@ -113,16 +121,16 @@ def _get_vrf_details(
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
-        VpnResponse containing structured VRF information with parsed data and summary
+        Dictionary containing structured VRF information with parsed data and summary
     """
     # If no VRF names, return empty result
     if not vrf_names:
-        return VpnResponse(
-            success=True,
-            device_name=device.name,
-            vrfs=[],
-            summary={"message": "No VRFs found"},
-        )
+        return {
+            "device_name": device.name,
+            "vrfs": [],
+            "summary": {"message": "No VRFs found"},
+            "include_details": include_details,
+        }
 
     vrf_path_queries = []
     for vrf_name in vrf_names:
@@ -140,27 +148,25 @@ def _get_vrf_details(
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving VRF details: %s", response.message)
-        return VpnResponse(device_name=device.name, error=response)
+        return {"device_name": device.name, "error": response.to_dict()}
 
     try:
         parsed_data = parse_vrf_data(response.to_dict())
         llm_data = generate_llm_friendly_data(parsed_data)
         summary = generate_vrf_summary(parsed_data)
 
-        vpn_response = VpnResponse(
-            device_name=device.name,
-            vrfs=[llm_data] if isinstance(llm_data, dict) else llm_data,
-            summary=(
+        return {
+            "device_name": device.name,
+            "vrfs": [llm_data] if isinstance(llm_data, dict) else llm_data,
+            "summary": (
                 summary if isinstance(summary, dict) else {"summary": summary}
             ),
-            include_details=include_details,
-        )
-
-        return vpn_response
+            "include_details": include_details,
+        }
     except Exception as e:
         logger.error("Error parsing VRF data: %s", str(e))
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing VRF data: {str(e)}",
         )
-        return VpnResponse(device_name=device.name, error=error_response)
+        return {"device_name": device.name, "error": error_response.to_dict()}

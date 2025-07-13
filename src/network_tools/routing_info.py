@@ -5,12 +5,11 @@ Provides functions for retrieving routing protocol information from network devi
 """
 
 import logging
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import ErrorResponse, FeatureNotFoundResponse
 from src.inventory.models import Device
-from src.network_tools.responses import RoutingResponse
 from src.parsers.protocols.bgp.config_parser import (
     parse_bgp_data,
     generate_bgp_summary,
@@ -46,7 +45,7 @@ def get_routing_information(
     device: Device,
     protocol: Optional[str] = None,
     include_details: bool = False,
-) -> List[RoutingResponse]:
+) -> List[Dict[str, Any]]:
     """
     Get routing information from a network device.
 
@@ -56,7 +55,7 @@ def get_routing_information(
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
-        List of RoutingResponse objects containing structured routing information
+        List of dictionaries containing structured routing information
     """
     result = []
 
@@ -70,7 +69,7 @@ def get_routing_information(
 
 def _get_isis_info(
     device: Device, include_details: bool = False
-) -> RoutingResponse:
+) -> Dict[str, Any]:
     """
     Get ISIS routing information from a device.
 
@@ -79,45 +78,46 @@ def _get_isis_info(
         include_details: Whether to include detailed information
 
     Returns:
-        RoutingResponse containing ISIS information
+        Dictionary containing ISIS information
     """
     response = get_gnmi_data(device, isis_request())
 
     # Handle feature not found responses
     if isinstance(response, FeatureNotFoundResponse):
         logger.info("No ISIS configuration found: %s", response.to_dict())
-        return RoutingResponse(
-            device_name=device.name, feature_not_found=response
-        )
+        return {
+            "device_name": device.name,
+            "feature_not_found": response.to_dict(),
+        }
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving ISIS information: %s", response.message)
-        return RoutingResponse(device_name=device.name, error=response)
+        return {"device_name": device.name, "error": response.to_dict()}
 
     try:
         isis_data = parse_isis_data(response.to_dict())
         summary = generate_isis_summary(isis_data)
 
-        return RoutingResponse(
-            device_name=device.name,
-            protocols=[{"isis": isis_data}],
-            summary=(
+        return {
+            "device_name": device.name,
+            "protocols": [{"isis": isis_data}],
+            "summary": (
                 summary if isinstance(summary, dict) else {"summary": summary}
             ),
-            include_details=include_details,
-        )
+            "include_details": include_details,
+        }
     except Exception as e:
         logger.error("Error parsing ISIS data: %s", str(e))
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing ISIS data: {str(e)}",
         )
-        return RoutingResponse(device_name=device.name, error=error_response)
+        return {"device_name": device.name, "error": error_response.to_dict()}
 
 
 def _get_bgp_info(
     device: Device, include_details: bool = False
-) -> RoutingResponse:
+) -> Dict[str, Any]:
     """
     Get BGP routing information from a device.
 
@@ -126,37 +126,38 @@ def _get_bgp_info(
         include_details: Whether to include detailed information
 
     Returns:
-        RoutingResponse containing BGP information
+        Dictionary containing BGP information
     """
     response = get_gnmi_data(device, bgp_request())
 
     # Handle feature not found responses
     if isinstance(response, FeatureNotFoundResponse):
         logger.info("No BGP configuration found: %s", response.to_dict())
-        return RoutingResponse(
-            device_name=device.name, feature_not_found=response
-        )
+        return {
+            "device_name": device.name,
+            "feature_not_found": response.to_dict(),
+        }
 
     if isinstance(response, ErrorResponse):
         logger.error("Error retrieving BGP information: %s", response.message)
-        return RoutingResponse(device_name=device.name, error=response)
+        return {"device_name": device.name, "error": response.to_dict()}
 
     try:
         bgp_data = parse_bgp_data(response.to_dict())
         summary = generate_bgp_summary(bgp_data)
 
-        return RoutingResponse(
-            device_name=device.name,
-            protocols=[{"bgp": bgp_data}],
-            summary=(
+        return {
+            "device_name": device.name,
+            "protocols": [{"bgp": bgp_data}],
+            "summary": (
                 summary if isinstance(summary, dict) else {"summary": summary}
             ),
-            include_details=include_details,
-        )
+            "include_details": include_details,
+        }
     except Exception as e:
         logger.error("Error parsing BGP data: %s", str(e))
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing BGP data: {str(e)}",
         )
-        return RoutingResponse(device_name=device.name, error=error_response)
+        return {"device_name": device.name, "error": error_response.to_dict()}

@@ -48,8 +48,8 @@ def get_device_profile_api(device_name: str) -> Dict[str, Any]:
             "role": "PE"
         }
 
-    :param device: Device object from inventory
-    :return: SystemInfoResponse containing the device profile and role
+    :param device_name: Name of the device in inventory
+    :return: Dictionary containing the device profile and role information
     """
     return run(device_name, get_device_profile)
 

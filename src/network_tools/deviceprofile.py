@@ -5,6 +5,7 @@ Provides functions for retrieving device role/profile information from network d
 """
 
 import logging
+from typing import Dict, Any
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.gnmi.responses import (
@@ -13,7 +14,6 @@ from src.gnmi.responses import (
 )
 from src.inventory.models import Device
 from src.parsers.deviceprofile_parser import DeviceProfileParser
-from src.network_tools.responses import DeviceProfileResponse
 from src.utils.vrf_utils import get_non_default_vrf_names
 
 logger = logging.getLogger(__name__)
@@ -31,16 +31,17 @@ def deviceprofile_request():
     )
 
 
-def get_device_profile(device: Device):
+def get_device_profile(device: Device) -> Dict[str, Any]:
     response = get_gnmi_data(device, deviceprofile_request())
 
     if isinstance(response, ErrorResponse):
-        return DeviceProfileResponse(device_name=device.name, error=response)
+        return {"device_name": device.name, "error": response.to_dict()}
 
     if isinstance(response, FeatureNotFoundResponse):
-        return DeviceProfileResponse(
-            device_name=device.name, feature_not_found=response
-        )
+        return {
+            "device_name": device.name,
+            "feature_not_found": response.to_dict(),
+        }
 
     response_dict = response.to_dict()
 
@@ -52,19 +53,22 @@ def get_device_profile(device: Device):
     parser = DeviceProfileParser()
     try:
         parsed_data = parser.parse(response_dict)
-        return DeviceProfileResponse(
-            device_name=device.name,
-            profile=parsed_data,
-        )
+        return {
+            "device_name": device.name,
+            "profile": parsed_data,
+            "summary": (
+                parsed_data.get("summary", {})
+                if isinstance(parsed_data, dict)
+                else {}
+            ),
+        }
     except Exception as e:
         logger.error("Error parsing device profile: %s", str(e))
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing device profile: {str(e)}",
         )
-        return DeviceProfileResponse(
-            device_name=device.name, error=error_response
-        )
+        return {"device_name": device.name, "error": error_response.to_dict()}
 
 
 def _get_vpn_bgp_info(device: Device):

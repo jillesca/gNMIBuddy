@@ -37,6 +37,8 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
     if isinstance(response, ErrorResponse):
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="device_profile",
             status="failed",
             error_response=response,
@@ -45,6 +47,8 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
     if isinstance(response, FeatureNotFoundResponse):
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="device_profile",
             status="feature_not_available",
             feature_not_found_response=response,
@@ -60,6 +64,8 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="device_profile",
             status="success",
             data={"profile": parsed_data},
@@ -72,6 +78,8 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="device_profile",
             status="failed",
             error_response=error_response,

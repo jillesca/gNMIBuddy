@@ -51,14 +51,7 @@ def run(
 
     command_result = command_func(device, *args)
 
-    result = {
-        "device": device.name,
-        "ip_address": device.ip_address,
-        "nos": device.nos,
-        "response": command_result,
-    }
-
-    serializable_result = _make_serializable(result)
+    serializable_result = _make_serializable(command_result)
     return json.loads(json.dumps(serializable_result))
 
 

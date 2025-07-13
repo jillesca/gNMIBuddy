@@ -53,6 +53,8 @@ def get_vpn_information(
         logger.info("No VRFs found on device %s", device.name)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="vpn_info",
             status="success",
             data={"vrfs": [], "vrf_count": 0},
@@ -74,6 +76,8 @@ def get_vpn_information(
         # This case should not happen if _get_vrfs_name is working correctly
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="vpn_info",
             status="failed",
             metadata={
@@ -106,6 +110,8 @@ def _get_vrfs_name(device: Device) -> Union[List[str], NetworkOperationResult]:
         logger.error("Error retrieving VRF names: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="vpn_info",
             status="failed",
             error_response=response,
@@ -154,6 +160,8 @@ def _get_vrf_details(
     if not vrf_names:
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="vpn_info",
             status="success",
             data={"vpn_data": {}, "summary": {"message": "No VRFs found"}},
@@ -177,6 +185,8 @@ def _get_vrf_details(
         logger.error("Error retrieving VRF details: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="vpn_info",
             status="failed",
             error_response=response,
@@ -199,6 +209,8 @@ def _get_vrf_details(
 
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="vpn_info",
             status="success",
             data={
@@ -218,6 +230,8 @@ def _get_vrf_details(
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="vpn_info",
             status="failed",
             error_response=error_response,

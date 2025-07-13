@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 """
-MPLS functions m    if isinstance(response, ErrorResponse):
-        logger.error("Error retrieving MPLS information: %s", response.message)
-        return NetworkOperationResult(
-            device_name=device.name,
-            operation_type="mpls_info",
-            status="failed",
-            error_response=response
-        )Provides functions for retrieving MPLS information from network devices using gNMI.
+Provides functions for retrieving MPLS information from network devices using gNMI.
 """
 
 import logging
@@ -51,6 +44,8 @@ def get_mpls_information(device: Device) -> NetworkOperationResult:
         logger.error("Error retrieving MPLS information: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="mpls_info",
             status="failed",
             error_response=response,
@@ -69,6 +64,8 @@ def get_mpls_information(device: Device) -> NetworkOperationResult:
 
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="mpls_info",
             status="success",
             data={
@@ -88,6 +85,8 @@ def get_mpls_information(device: Device) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="mpls_info",
             status="failed",
             error_response=error_response,

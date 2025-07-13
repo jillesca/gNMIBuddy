@@ -42,6 +42,8 @@ def neighbors_cmd(device) -> NetworkOperationResult:
         neighbors_list = neighbors(device)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="success",
             data={"neighbors": neighbors_list},
@@ -53,6 +55,8 @@ def neighbors_cmd(device) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="failed",
             error_response=error_response,
@@ -67,6 +71,8 @@ def path_cmd(device, target_device_name) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="failed",
             error_response=error_response,
@@ -76,6 +82,8 @@ def path_cmd(device, target_device_name) -> NetworkOperationResult:
         path_result = path(device, target_device_name)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="success",
             data={"path": path_result},
@@ -87,6 +95,8 @@ def path_cmd(device, target_device_name) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="failed",
             error_response=error_response,
@@ -101,6 +111,8 @@ def segment_cmd(device, network) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="failed",
             error_response=error_response,
@@ -110,6 +122,8 @@ def segment_cmd(device, network) -> NetworkOperationResult:
         segment_result = segment(network)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="success",
             data={"segment": segment_result},
@@ -121,6 +135,8 @@ def segment_cmd(device, network) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="failed",
             error_response=error_response,
@@ -132,6 +148,8 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
         connections = ip_adjacency_dump(device)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="success",
             data={"direct_connections": connections},
@@ -143,6 +161,8 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="topology_info",
             status="failed",
             error_response=error_response,

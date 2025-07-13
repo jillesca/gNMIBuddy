@@ -66,6 +66,8 @@ def _get_interface_brief(
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="interface_brief",
             status="failed",
             error_response=response,
@@ -104,6 +106,8 @@ def _get_interface_brief(
 
     return NetworkOperationResult(
         device_name=device.name,
+        ip_address=device.ip_address,
+        nos=device.nos,
         operation_type="interface_brief",
         status="success",
         data=result_data,
@@ -136,6 +140,8 @@ def _get_single_interface_info(
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="interface_details",
             status="failed",
             error_response=response,
@@ -149,6 +155,8 @@ def _get_single_interface_info(
     if not data_for_parsing:
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="interface_details",
             status="failed",
             metadata={
@@ -185,6 +193,8 @@ def _get_single_interface_info(
 
     return NetworkOperationResult(
         device_name=device.name,
+        ip_address=device.ip_address,
+        nos=device.nos,
         operation_type="interface_details",
         status="success",
         data=result_data,

@@ -85,6 +85,8 @@ class NetworkOperationResult:
 
     Attributes:
         device_name: Name of the target device
+        ip_address: IP address of the target device
+        nos: Network Operating System of the target device
         operation_type: Type of operation performed (interface, system, routing, etc.)
         status: Operation result status ("success", "failed", "feature_not_available")
         data: The parsed/structured data from the operation
@@ -94,6 +96,8 @@ class NetworkOperationResult:
     """
 
     device_name: str
+    ip_address: str
+    nos: str
     operation_type: str
     status: str  # "success", "failed", "feature_not_available"
     data: Dict[str, Any] = field(default_factory=dict)

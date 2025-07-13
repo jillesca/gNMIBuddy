@@ -88,6 +88,8 @@ def get_routing_information(
 
     return NetworkOperationResult(
         device_name=device.name,
+        ip_address=device.ip_address,
+        nos=device.nos,
         operation_type="routing_info",
         status="success",
         data={"routing_data": routing_data, "summary": combined_summary},
@@ -115,6 +117,8 @@ def _get_isis_info(
         logger.info("No ISIS configuration found: %s", response)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="feature_not_available",
             feature_not_found_response=response,
@@ -124,6 +128,8 @@ def _get_isis_info(
         logger.error("Error retrieving ISIS information: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="failed",
             error_response=response,
@@ -139,6 +145,8 @@ def _get_isis_info(
 
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="success",
             data={
@@ -159,6 +167,8 @@ def _get_isis_info(
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="failed",
             error_response=error_response,
@@ -185,6 +195,8 @@ def _get_bgp_info(
         logger.info("No BGP configuration found: %s", response)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="feature_not_available",
             feature_not_found_response=response,
@@ -194,6 +206,8 @@ def _get_bgp_info(
         logger.error("Error retrieving BGP information: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="failed",
             error_response=response,
@@ -211,6 +225,8 @@ def _get_bgp_info(
 
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="success",
             data={
@@ -231,6 +247,8 @@ def _get_bgp_info(
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="routing_info",
             status="failed",
             error_response=error_response,

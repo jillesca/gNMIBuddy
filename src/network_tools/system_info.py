@@ -45,6 +45,8 @@ def get_system_information(device: Device) -> NetworkOperationResult:
     if isinstance(response, ErrorResponse):
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="system_info",
             status="failed",
             error_response=response,
@@ -53,6 +55,8 @@ def get_system_information(device: Device) -> NetworkOperationResult:
     if isinstance(response, FeatureNotFoundResponse):
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="system_info",
             status="feature_not_available",
             feature_not_found_response=response,
@@ -74,6 +78,8 @@ def get_system_information(device: Device) -> NetworkOperationResult:
 
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="system_info",
             status="success",
             data={
@@ -90,6 +96,8 @@ def get_system_information(device: Device) -> NetworkOperationResult:
         )
         return NetworkOperationResult(
             device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos,
             operation_type="system_info",
             status="failed",
             error_response=error_response,

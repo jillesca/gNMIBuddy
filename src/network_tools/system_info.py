@@ -5,14 +5,14 @@ Provides functions for retrieving system information from network devices using 
 """
 
 import logging
-from src.gnmi.client import get_gnmi_data
-from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import (
+from src.schemas.responses import (
     ErrorResponse,
     FeatureNotFoundResponse,
     NetworkOperationResult,
 )
-from src.inventory.models import Device
+from src.schemas.models import Device
+from src.gnmi.client import get_gnmi_data
+from src.gnmi.parameters import GnmiRequest
 from src.parsers.system_info_parser import SystemInfoParser
 
 

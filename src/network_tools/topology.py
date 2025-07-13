@@ -3,16 +3,16 @@
 Topology discovery module.
 Provides functions for building and querying network topology graph.
 """
-from src.gnmi.responses import (
+from src.schemas.responses import (
     NetworkOperationResult,
     ErrorResponse,
 )
 
 # Note: adjacency_dump import is commented out due to missing module
 # from src.network_tools.topology.adjacency_dump import adjacency_dump
-from src.network_tools.topology.neighbors import neighbors
 from src.network_tools.topology.path import path
 from src.network_tools.topology.segment import segment
+from src.network_tools.topology.neighbors import neighbors
 from src.network_tools.topology.ip_adjacency_dump import ip_adjacency_dump
 
 

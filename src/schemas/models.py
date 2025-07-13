@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Models module for inventory items.
-Contains dataclasses for representing network devices.
+Device and inventory models for gNMIBuddy.
+
+Contains data models for representing network devices and related
+inventory structures used throughout the application.
 """
 
 from dataclasses import dataclass

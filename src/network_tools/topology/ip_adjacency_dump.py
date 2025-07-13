@@ -1,7 +1,7 @@
 import logging
+from src.schemas.models import Device
+from src.schemas.responses import NetworkOperationResult, ErrorResponse
 from .utils import _build_graph_ip_only
-from src.gnmi.responses import NetworkOperationResult, ErrorResponse
-from src.inventory.models import Device
 
 logger = logging.getLogger(__name__)
 

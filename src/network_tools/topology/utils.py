@@ -1,12 +1,12 @@
 from collections import defaultdict
 from typing import Dict, Any, List, Union
 import networkx as nx
-from src.utils.parallel_execution import run_command_on_all_devices
-from src.parsers.topology_parser import extract_interface_subnets
-from src.network_tools.interfaces_info import get_interface_information
-from src.network_tools.routing_info import get_routing_information
-from src.inventory.models import Device
+from src.schemas.models import Device
 from src.inventory.manager import InventoryManager
+from src.parsers.topology_parser import extract_interface_subnets
+from src.network_tools.routing_info import get_routing_information
+from src.utils.parallel_execution import run_command_on_all_devices
+from src.network_tools.interfaces_info import get_interface_information
 
 
 # In-memory cache for the topology graph

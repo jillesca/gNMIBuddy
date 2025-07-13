@@ -10,7 +10,7 @@ import sys
 import logging
 from typing import Dict, List, Any, Optional, cast
 
-from .models import Device
+from src.schemas.models import Device
 
 # Type alias for device inventory data from JSON
 DeviceData = Dict[str, Any]

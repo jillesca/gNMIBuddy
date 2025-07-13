@@ -173,11 +173,28 @@ uv run cli_app.py --device xrd-2 logging --keywords "bgp|error"
 uv run cli_app.py --all-devices interface
 ```
 
+## 🏗️ Architecture
+
+### Schema Organization
+
+gNMIBuddy uses a centralized schema approach for data contracts:
+
+- **`src/schemas/`**: Contains all shared data models and response contracts
+  - `models.py`: Device and inventory data models
+  - `responses.py`: Network operation response schemas
+  - `__init__.py`: Unified imports for all schemas
+
+These schemas serve as contracts between different parts of the system, ensuring consistency across:
+
+- CLI and API interfaces
+- Network operation responses
+- Error handling and status reporting
+- MCP tool integration
+
 ## 🚧 Development Notes
 
 **Planned Improvements:**
 
 - [ ] Capability check for minimum OpenConfig model support
 - [ ] Standardized parser interfaces and output formats
-- [ ] Enhanced error handling for missing gNMI features
 - [ ] Device compatibility validation

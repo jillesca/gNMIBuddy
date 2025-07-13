@@ -17,13 +17,12 @@ if __name__ == "__main__":
     )
 
 
-from src.inventory.models import Device
+from src.schemas.models import Device
 from src.inventory.file_handler import parse_json_file
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import (
+from src.schemas.responses import (
     SuccessResponse,
     ErrorResponse,
-    FeatureNotFoundResponse,
     NetworkResponse,
 )
 from src.gnmi.error_handlers import (

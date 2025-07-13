@@ -4,18 +4,18 @@ Provides functions for retrieving MPLS information from network devices using gN
 """
 
 import logging
-from src.gnmi.client import get_gnmi_data
-from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import (
+from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
     NetworkOperationResult,
 )
-from src.inventory.models import Device
+from src.schemas.models import Device
 from src.parsers.protocols.mpls.mpls_parser import (
     parse_mpls_data,
     generate_mpls_summary,
 )
+from src.gnmi.client import get_gnmi_data
+from src.gnmi.parameters import GnmiRequest
 
 logger = logging.getLogger(__name__)
 

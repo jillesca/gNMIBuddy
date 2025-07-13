@@ -9,8 +9,8 @@ from dataclasses import is_dataclass, asdict
 from typing import Dict, Any, Protocol, runtime_checkable
 
 import src.inventory
-from src.inventory.models import Device
-from src.gnmi.responses import NetworkOperationResult
+from src.schemas.models import Device
+from src.schemas.responses import NetworkOperationResult
 
 logger = logging.getLogger(__name__)
 

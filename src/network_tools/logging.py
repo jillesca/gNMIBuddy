@@ -6,11 +6,11 @@ Provides functions for retrieving logging information from network devices using
 
 import logging
 from typing import Optional, Dict, Any
+from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import ErrorResponse, SuccessResponse
-from src.inventory.models import Device
 from src.parsers.logs.filter import filter_logs
+from src.schemas.responses import ErrorResponse, SuccessResponse
 
 
 logger = logging.getLogger(__name__)

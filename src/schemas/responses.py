@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Response objects for network operations.
-Provides structured objects for representing operation responses.
+Response schemas for network operations.
+
+Contains structured response objects and data contracts used throughout
+the gNMIBuddy application for representing operation results.
 """
 
 from dataclasses import dataclass, field
@@ -110,6 +112,3 @@ class NetworkOperationResult:
 NetworkResponse = Union[
     SuccessResponse, ErrorResponse, FeatureNotFoundResponse
 ]
-
-# Type alias for the new unified network tool response
-NetworkToolResponse = NetworkOperationResult

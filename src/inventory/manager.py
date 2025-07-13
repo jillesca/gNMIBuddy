@@ -7,8 +7,8 @@ Manages device inventory with a singleton pattern.
 import logging
 from typing import Dict, Optional, Tuple, Union
 
-from .models import Device, DeviceListResult, DeviceErrorResult
 from .file_handler import get_inventory_path, load_inventory
+from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
 
 # Setup module logger
 logger = logging.getLogger(__name__)

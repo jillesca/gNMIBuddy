@@ -6,19 +6,19 @@ Provides functions for retrieving VRF/VPN information from network devices using
 
 import logging
 from typing import List, Optional, Union
-from src.gnmi.client import get_gnmi_data
-from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import (
+from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
     NetworkOperationResult,
 )
-from src.inventory.models import Device
+from src.schemas.models import Device
 from src.parsers.protocols.vrf import (
     parse_vrf_data,
     generate_vrf_summary,
     generate_llm_friendly_data,
 )
+from src.gnmi.client import get_gnmi_data
+from src.gnmi.parameters import GnmiRequest
 
 
 logger = logging.getLogger(__name__)

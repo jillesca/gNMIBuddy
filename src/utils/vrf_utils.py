@@ -3,10 +3,10 @@ VRF utility functions for extracting non-default VRF names from gNMI responses.
 """
 
 from typing import List
-from src.gnmi.parameters import GnmiRequest
+from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
-from src.gnmi.responses import ErrorResponse, SuccessResponse
-from src.inventory.models import Device
+from src.gnmi.parameters import GnmiRequest
+from src.schemas.responses import ErrorResponse, SuccessResponse
 
 DEFAULT_INTERNAL_VRFS = ["default", "**iid"]
 

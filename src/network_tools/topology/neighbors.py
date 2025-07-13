@@ -1,6 +1,6 @@
+from src.schemas.models import Device
+from src.schemas.responses import NetworkOperationResult, ErrorResponse
 from .utils import _build_graph_ip_only
-from src.inventory.models import Device
-from src.gnmi.responses import NetworkOperationResult, ErrorResponse
 
 
 def neighbors(device: Device) -> NetworkOperationResult:

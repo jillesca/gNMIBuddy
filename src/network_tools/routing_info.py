@@ -8,13 +8,13 @@ import logging
 from typing import Optional
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import (
+from src.schemas.responses import (
     ErrorResponse,
     FeatureNotFoundResponse,
     SuccessResponse,
     NetworkOperationResult,
 )
-from src.inventory.models import Device
+from src.schemas.models import Device
 from src.parsers.protocols.bgp.config_parser import (
     parse_bgp_data,
     generate_bgp_summary,

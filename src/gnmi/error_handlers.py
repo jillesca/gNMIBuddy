@@ -3,9 +3,9 @@
 from typing import Optional, Union
 import re
 import grpc
-from src.inventory.models import Device
-from src.gnmi.responses import ErrorResponse, FeatureNotFoundResponse
+from src.schemas.models import Device
 from src.utils.logging_config import get_logger
+from src.schemas.responses import ErrorResponse, FeatureNotFoundResponse
 
 logger = get_logger(__name__)
 

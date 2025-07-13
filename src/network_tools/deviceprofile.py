@@ -5,16 +5,16 @@ Provides functions for retrieving device role/profile information from network d
 """
 
 import logging
-from src.gnmi.client import get_gnmi_data
-from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import (
+from src.schemas.responses import (
     ErrorResponse,
     FeatureNotFoundResponse,
     NetworkOperationResult,
 )
-from src.inventory.models import Device
-from src.parsers.deviceprofile_parser import DeviceProfileParser
+from src.schemas.models import Device
+from src.gnmi.client import get_gnmi_data
+from src.gnmi.parameters import GnmiRequest
 from src.utils.vrf_utils import get_non_default_vrf_names
+from src.parsers.deviceprofile_parser import DeviceProfileParser
 
 logger = logging.getLogger(__name__)
 

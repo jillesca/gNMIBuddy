@@ -23,18 +23,6 @@ class ErrorResponse:
     message: Optional[str] = None
     details: Dict[str, Any] = field(default_factory=dict)
 
-    @classmethod
-    def from_dict(cls, error_dict: Dict[str, Any]) -> "ErrorResponse":
-        """Create an ErrorResponse object from a dictionary."""
-        error_type = error_dict.get("type", "UNKNOWN_ERROR")
-        message = error_dict.get("message")
-
-        details = {
-            k: v for k, v in error_dict.items() if k not in ["type", "message"]
-        }
-
-        return cls(type=error_type, message=message, details=details)
-
     def __str__(self) -> str:
         """String representation for debugging."""
         if self.message:

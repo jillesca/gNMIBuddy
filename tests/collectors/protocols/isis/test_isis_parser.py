@@ -15,7 +15,7 @@ sys.path.insert(
 )
 
 from src.processors.protocols.isis.isis_processor import (
-    parse_isis_data,
+    process_isis_data,
     generate_isis_summary,
 )
 
@@ -136,11 +136,11 @@ ISIS Adjacencies:
   GigabitEthernet0/0/0/1 -> 0100.0100.0105 (100.101.105.105)
     Level: 1, State: UP"""
 
-    def test_parse_isis_data(self):
+    def test_process_isis_data(self):
         """Test parsing ISIS data from gNMI response."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_isis_data(gnmi_data)
+        parsed_data = process_isis_data(gnmi_data)
 
         # Verify basic structure
         self.assertIsInstance(parsed_data, dict)
@@ -205,7 +205,7 @@ ISIS Adjacencies:
         """Test generating a human-readable summary of ISIS status."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_isis_data(gnmi_data)
+        parsed_data = process_isis_data(gnmi_data)
         summary = generate_isis_summary(parsed_data)
 
         # Check if summary matches the expected format
@@ -234,7 +234,7 @@ ISIS Adjacencies:
     def test_empty_response(self):
         """Test handling of an empty response."""
         empty_data = []  # Empty list instead of empty dict
-        parsed_data = parse_isis_data(empty_data)
+        parsed_data = process_isis_data(empty_data)
 
         self.assertIn("error", parsed_data)
 

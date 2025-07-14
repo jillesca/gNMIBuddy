@@ -138,7 +138,7 @@ class LogProcessor(BaseProcessor):
             log
             for log in logs
             if "timestamp" in log
-            and self.parse_log_timestamp(log["timestamp"]) >= time_threshold
+            and self.extract_log_timestamp(log["timestamp"]) >= time_threshold
         ]
 
     def filter_by_keywords(
@@ -169,7 +169,7 @@ class LogProcessor(BaseProcessor):
 
         return filtered_logs
 
-    def parse_log_timestamp(self, timestamp_str: str) -> datetime:
+    def extract_log_timestamp(self, timestamp_str: str) -> datetime:
         """
         Parse a timestamp string into a datetime object.
 

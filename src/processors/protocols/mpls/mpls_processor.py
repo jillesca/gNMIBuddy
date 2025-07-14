@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-MPLS Parser module.
-Parses MPLS data from gNMI responses and formats it for easier consumption by small LLMs.
+MPLS Processor module.
+Processes MPLS data from gNMI responses and formats it for easier consumption by small LLMs.
 """
 
 import logging
@@ -10,7 +10,17 @@ from typing import Dict, Any, List
 logger = logging.getLogger(__name__)
 
 
-def parse_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
+def process_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Process MPLS data from gNMI response.
+
+    Args:
+        gnmi_response: List of gNMI response items containing MPLS configuration
+
+    Returns:
+        Dictionary containing the processed MPLS data in a simplified format for LLMs
+    """
+    logger.debug("Processing MPLS data from gNMI response")
     """
     Parse MPLS data from gNMI response.
 
@@ -22,7 +32,7 @@ def parse_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     logger.debug("Parsing MPLS data from gNMI response")
 
-    parsed_data = {
+    processed_data = {
         "enabled": False,
         "label_blocks": [],
         "interfaces": [
@@ -33,7 +43,7 @@ def parse_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     try:
         if not gnmi_response:
-            return parsed_data
+            return processed_data
 
         for item in gnmi_response:
             if "val" not in item:
@@ -42,40 +52,40 @@ def parse_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
             mpls_data = item["val"]
             if "global" in mpls_data:
                 global_data = mpls_data["global"]
-                parsed_data["global_settings"] = _parse_global_settings(
+                processed_data["global_settings"] = _process_global_settings(
                     global_data
                 )
 
-                # Parse interfaces with MPLS enabled
+                # Process interfaces with MPLS enabled
                 interface_list = []
                 if (
                     "interface-attributes" in global_data
                     and "interface" in global_data["interface-attributes"]
                 ):
-                    interface_list = _parse_interfaces(
+                    interface_list = _process_interfaces(
                         global_data["interface-attributes"]
                     )
 
                 # Replace default message only if we actually have interfaces
                 if interface_list:
-                    parsed_data["interfaces"] = interface_list
+                    processed_data["interfaces"] = interface_list
 
-                # Parse label blocks
+                # Process label blocks
                 label_blocks = []
                 if (
                     "reserved-label-blocks" in global_data
                     and "reserved-label-block"
                     in global_data["reserved-label-blocks"]
                 ):
-                    label_blocks = _parse_label_blocks(
+                    label_blocks = _process_label_blocks(
                         global_data["reserved-label-blocks"]
                     )
 
                 # If we have label blocks, update them, otherwise keep the default empty list
                 if label_blocks:
-                    parsed_data["label_blocks"] = label_blocks
+                    processed_data["label_blocks"] = label_blocks
                 else:
-                    parsed_data["label_blocks"] = [
+                    processed_data["label_blocks"] = [
                         "NO_LABEL_BLOCKS_CONFIGURED"
                     ]
 
@@ -96,17 +106,19 @@ def parse_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
                     and isinstance(label_blocks, list)
                     and len(label_blocks) == 0
                 ):
-                    parsed_data["enabled"] = False
+                    processed_data["enabled"] = False
                 else:
-                    parsed_data["enabled"] = has_interfaces or has_label_blocks
+                    processed_data["enabled"] = (
+                        has_interfaces or has_label_blocks
+                    )
     except (KeyError, ValueError, TypeError) as e:
-        logger.error("Error parsing MPLS data: %s", str(e))
+        logger.error("Error processing MPLS data: %s", str(e))
 
-    return parsed_data
+    return processed_data
 
 
-def _parse_global_settings(global_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Parse global MPLS settings."""
+def _process_global_settings(global_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Process global MPLS settings."""
     settings = {}
 
     if "state" in global_data:
@@ -119,10 +131,10 @@ def _parse_global_settings(global_data: Dict[str, Any]) -> Dict[str, Any]:
     return settings
 
 
-def _parse_interfaces(
+def _process_interfaces(
     interface_attributes: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
-    """Parse MPLS-enabled interfaces."""
+    """Process MPLS-enabled interfaces."""
     interfaces = []
 
     if "interface" in interface_attributes:
@@ -142,10 +154,10 @@ def _parse_interfaces(
     return interfaces
 
 
-def _parse_label_blocks(
+def _process_label_blocks(
     label_blocks_data: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
-    """Parse MPLS label blocks."""
+    """Process MPLS label blocks."""
     label_blocks = []
 
     if "reserved-label-block" in label_blocks_data:

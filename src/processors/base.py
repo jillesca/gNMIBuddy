@@ -85,14 +85,6 @@ class BaseProcessor(Generic[T_Output], ABC):
                 return first_item.get("timestamp")
         return None
 
-    # Backward compatibility - maintain parse method but delegate to process_data
-    def parse(self, gnmi_data: List[Dict[str, Any]]) -> T_Output:
-        """
-        Legacy method name for backward compatibility.
-        Delegates to process_data method.
-        """
-        return self.process_data(gnmi_data)
-
 
 class NotFoundError(Exception):
     """Exception raised when a requested feature is not found in the data."""

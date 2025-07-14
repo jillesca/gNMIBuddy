@@ -7,7 +7,7 @@ import json
 import os
 import unittest
 from src.processors.protocols.mpls.mpls_processor import (
-    parse_mpls_data,
+    process_mpls_data,
     generate_mpls_summary,
 )
 
@@ -41,11 +41,11 @@ class TestMPLSParser(unittest.TestCase):
         with open(expected_summary_file, "r") as f:
             self.expected_summary = f.read().strip()
 
-    def test_parse_mpls_data(self):
+    def test_process_mpls_data(self):
         """Test parsing MPLS data from gNMI response."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(gnmi_data)
+        parsed_data = process_mpls_data(gnmi_data)
 
         # Verify the parser correctly identified MPLS is enabled
         self.assertEqual(
@@ -89,7 +89,7 @@ class TestMPLSParser(unittest.TestCase):
         """Test generating a human-readable summary of MPLS data."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(gnmi_data)
+        parsed_data = process_mpls_data(gnmi_data)
         summary = generate_mpls_summary(parsed_data)
 
         # Verify the summary matches the expected output
@@ -142,7 +142,7 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
         """Test parsing MPLS data when MPLS is not effectively configured."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(gnmi_data)
+        parsed_data = process_mpls_data(gnmi_data)
 
         # Verify the parser correctly identified MPLS is not effectively enabled
         self.assertEqual(
@@ -169,7 +169,7 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
         """Test generating a summary for non-configured MPLS."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(gnmi_data)
+        parsed_data = process_mpls_data(gnmi_data)
         summary = generate_mpls_summary(parsed_data)
 
         # Verify the summary matches the expected output

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-BGP Parser Module
+BGP Processor Module
 
-This module parses BGP configuration and state data from network devices and formats it in a way
+This module processes BGP configuration and state data from network devices and formats it in a way
 that is easier for smaller LLMs to understand. It supports the OpenConfig YANG model.
 """
 
@@ -11,9 +11,9 @@ import re
 import time
 
 
-def parse_bgp_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+def process_bgp_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Parse BGP configuration and state data from GNMI responses.
+    Process BGP configuration and state data from GNMI responses.
 
     Args:
         gnmi_data: The gNMI response data (list of update dictionaries) containing BGP configuration and state data in OpenConfig format
@@ -24,15 +24,15 @@ def parse_bgp_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     try:
         # Check for valid gNMI data
         if gnmi_data:
-            return _parse_openconfig_bgp(gnmi_data)
+            return _process_openconfig_bgp(gnmi_data)
         return {"parse_error": "No BGP data provided"}
     except (KeyError, ValueError, TypeError) as e:
         return {"parse_error": str(e)}
 
 
-def _parse_openconfig_bgp(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _process_openconfig_bgp(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Parse BGP configuration and state data from OpenConfig YANG model.
+    Process BGP configuration and state data from OpenConfig YANG model.
 
     Args:
         gnmi_data: The gNMI response data (list of update dictionaries) containing BGP configuration and state data
@@ -72,7 +72,9 @@ def _parse_openconfig_bgp(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
             default_bgp, vrf_bgp_data, timestamp
         )
     except (KeyError, IndexError) as e:
-        return {"parse_error": f"Error parsing OpenConfig BGP data: {str(e)}"}
+        return {
+            "parse_error": f"Error processing OpenConfig BGP data: {str(e)}"
+        }
 
 
 def generate_bgp_summary(bgp_config: Dict[str, Any]) -> str:
@@ -86,7 +88,9 @@ def generate_bgp_summary(bgp_config: Dict[str, Any]) -> str:
         A string containing a summary of the BGP configuration and state
     """
     if "parse_error" in bgp_config:
-        return f"Error parsing BGP configuration: {bgp_config['parse_error']}"
+        return (
+            f"Error processing BGP configuration: {bgp_config['parse_error']}"
+        )
 
     summary_lines = []
 
@@ -443,7 +447,7 @@ def generate_simple_bgp_state_summary(bgp_config: Dict[str, Any]) -> str:
         A string containing a simplified summary focused on operational state
     """
     if "parse_error" in bgp_config:
-        return f"Error parsing BGP data: {bgp_config['parse_error']}"
+        return f"Error processing BGP data: {bgp_config['parse_error']}"
 
     lines = []
 

@@ -5,7 +5,7 @@ Test case for MPLS parser - Testing non-configured MPLS scenario
 
 import unittest
 from src.processors.protocols.mpls.mpls_processor import (
-    parse_mpls_data,
+    process_mpls_data,
     generate_mpls_summary,
 )
 
@@ -31,7 +31,7 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
         """Test parsing MPLS data when MPLS is not effectively configured."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(gnmi_data)
+        parsed_data = process_mpls_data(gnmi_data)
 
         # Verify the parser correctly identified MPLS is not effectively enabled
         self.assertFalse(parsed_data["enabled"])
@@ -56,7 +56,7 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
         """Test generating a summary for non-configured MPLS."""
         # Pass gNMI data directly to parser
         gnmi_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(gnmi_data)
+        parsed_data = process_mpls_data(gnmi_data)
         summary = generate_mpls_summary(parsed_data)
 
         # Verify the summary indicates MPLS is not effectively configured

@@ -93,7 +93,7 @@ class TestMplsInfoFunctions:
         summary = {"total_lsps": 1, "ldp_enabled": True, "ldp_neighbors": 0}
 
         with patch(
-            "src.collectors.mpls.parse_mpls_data",
+            "src.collectors.mpls.process_mpls_data",
             return_value=mpls_data,
         ):
             with patch(
@@ -164,9 +164,9 @@ class TestMplsInfoFunctions:
         # Configure the mock to return our response
         mock_get_gnmi_data.return_value = mock_response
 
-        # Mock the parse_mpls_data function to raise an exception
+        # Mock the process_mpls_data function to raise an exception
         with patch(
-            "src.collectors.mpls.parse_mpls_data",
+            "src.collectors.mpls.process_mpls_data",
             side_effect=ValueError("Parsing error"),
         ):
             # Call the function with our mock device

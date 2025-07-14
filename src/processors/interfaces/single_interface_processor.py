@@ -9,7 +9,7 @@ Uses exclusively OpenConfig models.
 from typing import Dict, Any, List
 
 
-def parse_single_interface_data(
+def process_single_interface_data(
     gnmi_data: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """

@@ -69,12 +69,12 @@ class SystemInfoProcessor(BaseProcessor):
         state = val.get("state", {})
         clock = val.get("clock", {}).get("state", {})
         memory = val.get("memory", {}).get("state", {})
-        grpc_servers = self._parse_grpc_servers(val)
-        logging = self._parse_logging_selectors(val)
-        message_summary = self._parse_message_summary(val)
-        users = self._parse_users(val)
+        grpc_servers = self._extract_grpc_servers(val)
+        logging = self._extract_logging_selectors(val)
+        message_summary = self._extract_message_summary(val)
+        users = self._extract_users(val)
         boot_time_ns = state.get("boot-time")
-        boot_time_human = self._parse_boot_time(boot_time_ns)
+        boot_time_human = self._convert_boot_time(boot_time_ns)
         uptime = self._calculate_uptime(boot_time_ns)
 
         return {
@@ -108,7 +108,7 @@ class SystemInfoProcessor(BaseProcessor):
         except (ValueError, TypeError, OSError):
             return None
 
-    def _parse_users(self, extracted_data: Dict[str, Any]):
+    def _extract_users(self, extracted_data: Dict[str, Any]):
         aaa_users = (
             extracted_data.get("aaa", {})
             .get("authentication", {})
@@ -124,7 +124,7 @@ class SystemInfoProcessor(BaseProcessor):
             if u.get("state")
         ]
 
-    def _parse_grpc_servers(self, extracted_data: Dict[str, Any]):
+    def _extract_grpc_servers(self, extracted_data: Dict[str, Any]):
         grpc_servers = extracted_data.get(
             "openconfig-system-grpc:grpc-servers", {}
         ).get("grpc-server", [])
@@ -143,7 +143,7 @@ class SystemInfoProcessor(BaseProcessor):
             for s in grpc_servers
         ]
 
-    def _parse_logging_selectors(self, extracted_data: Dict[str, Any]):
+    def _extract_logging_selectors(self, extracted_data: Dict[str, Any]):
         logging_console = (
             extracted_data.get("logging", {})
             .get("console", {})
@@ -155,7 +155,7 @@ class SystemInfoProcessor(BaseProcessor):
             for sel in logging_console
         ]
 
-    def _parse_message_summary(self, extracted_data: Dict[str, Any]):
+    def _extract_message_summary(self, extracted_data: Dict[str, Any]):
         messages = extracted_data.get("messages", {}).get("state", {})
         message = messages.get("message", {})
         if not message:
@@ -166,7 +166,7 @@ class SystemInfoProcessor(BaseProcessor):
             "app_name": message.get("app-name"),
         }
 
-    def _parse_boot_time(self, boot_time_ns):
+    def _convert_boot_time(self, boot_time_ns):
         # boot_time_ns is a string representing nanoseconds since epoch
         try:
             if boot_time_ns is None:

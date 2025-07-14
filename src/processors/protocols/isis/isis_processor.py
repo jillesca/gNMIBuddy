@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ISIS Parser module.
+ISIS Processor module.
 
-This module provides functions to parse ISIS data received from gNMI queries
+This module provides functions to process ISIS data received from gNMI queries
 and format it in a way that's easier for small LLMs to understand.
 """
 
@@ -12,9 +12,9 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger(__name__)
 
 
-def parse_isis_data(response: List[Dict[str, Any]]) -> Dict[str, Any]:
+def process_isis_data(response: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Parse ISIS data from gNMI response.
+    Process ISIS data from gNMI response.
 
     Args:
         response: The gNMI response data (list of update dictionaries)
@@ -63,7 +63,7 @@ def parse_isis_data(response: List[Dict[str, Any]]) -> Dict[str, Any]:
             adjacencies = []
 
             for interface in interfaces:
-                interface_info = _parse_interface(interface)
+                interface_info = _process_interface(interface)
                 isis_data["interfaces"].append(interface_info)
 
                 # Extract adjacencies from interface
@@ -79,7 +79,7 @@ def parse_isis_data(response: List[Dict[str, Any]]) -> Dict[str, Any]:
     return isis_data
 
 
-def _parse_interface(interface: Dict[str, Any]) -> Dict[str, Any]:
+def _process_interface(interface: Dict[str, Any]) -> Dict[str, Any]:
     """Parse interface data from ISIS response."""
     state = interface.get("state", {})
 
@@ -99,14 +99,14 @@ def _parse_interface(interface: Dict[str, Any]) -> Dict[str, Any]:
 
     # Parse levels
     for level in interface.get("levels", {}).get("level", []):
-        level_info = _parse_level(level)
+        level_info = _process_level(level)
         if level_info:
             interface_info["levels"].append(level_info)
 
     return interface_info
 
 
-def _parse_level(level: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def _process_level(level: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Parse level data from interface."""
     state = level.get("state", {})
     if not state.get("enabled", False):

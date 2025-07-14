@@ -226,7 +226,7 @@ class TestRoutingInfoFunctions:
         }
 
         with patch(
-            "src.collectors.routing.parse_bgp_data",
+            "src.collectors.routing.process_bgp_data",
             return_value=bgp_data,
         ):
             with patch(
@@ -356,7 +356,7 @@ class TestRoutingInfoFunctions:
         }
 
         with patch(
-            "src.collectors.routing.parse_isis_data",
+            "src.collectors.routing.process_isis_data",
             return_value=isis_data,
         ):
             with patch(

@@ -12,7 +12,7 @@ from src.schemas.responses import (
 )
 from src.schemas.models import Device
 from src.processors.protocols.mpls.mpls_processor import (
-    parse_mpls_data,
+    process_mpls_data,
     generate_mpls_summary,
 )
 from src.gnmi.client import get_gnmi_data
@@ -58,9 +58,9 @@ def get_mpls_info(
     try:
         # Work directly with response data
         if isinstance(response, SuccessResponse):
-            mpls_data = parse_mpls_data(response.data)
+            mpls_data = process_mpls_data(response.data)
         else:
-            mpls_data = parse_mpls_data([])
+            mpls_data = process_mpls_data([])
         summary = generate_mpls_summary(mpls_data)
 
         # Add summary to the mpls_data for consistent return format

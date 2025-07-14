@@ -6,7 +6,7 @@ import json
 import os
 import pytest
 from src.processors.interfaces.single_interface_processor import (
-    parse_single_interface_data,
+    process_single_interface_data,
     extract_interface_data,
     extract_single_interface,
     extract_ip_and_vrf,
@@ -97,11 +97,11 @@ def expected_output(test_data_dir):
         return data
 
 
-def test_parse_single_interface_data(openconfig_data, expected_output):
+def test_process_single_interface_data(openconfig_data, expected_output):
     """Test the full interface parsing function with OpenConfig data."""
     # Extract the response data (which is the List[Dict[str, Any]])
     gnmi_data = openconfig_data["response"]
-    result = parse_single_interface_data(gnmi_data)
+    result = process_single_interface_data(gnmi_data)
 
     # Verify the overall structure
     assert "interface" in result
@@ -337,7 +337,7 @@ def test_interface_brief_data_compatibility(test_data_dir):
     gnmi_data = oc_data["response"]
 
     # Process the data through our parser
-    result = parse_single_interface_data(gnmi_data)
+    result = process_single_interface_data(gnmi_data)
 
     # Basic verification - we should get some kind of interface data
     assert "interface" in result

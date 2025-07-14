@@ -19,7 +19,7 @@ from src.processors.interfaces.data_processor import (
     format_interface_data_for_llm,
 )
 from src.processors.interfaces.single_interface_processor import (
-    parse_single_interface_data,
+    process_single_interface_data,
 )
 
 logger = logging.getLogger(__name__)
@@ -169,10 +169,10 @@ def _get_single_interface_info(
             },
         )
 
-    parsed_result = parse_single_interface_data(gnmi_data)
-    interfaces = [parsed_result] if parsed_result else []
+    processed_result = process_single_interface_data(gnmi_data)
+    interfaces = [processed_result] if processed_result else []
 
-    if _is_empty_interface(parsed_result):
+    if _is_empty_interface(processed_result):
         logger.info(
             "Interface %s exists but appears to be empty/unconfigured",
             interface_name,

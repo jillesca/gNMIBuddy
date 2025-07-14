@@ -6,7 +6,7 @@ import json
 import os
 import pytest
 from src.processors.interfaces.single_interface_processor import (
-    parse_single_interface_data,
+    process_single_interface_data,
 )
 
 
@@ -233,7 +233,7 @@ def test_parse_interface_brief_data(brief_input_data, brief_output_data):
 
     # Process the data through our updated parser
     gnmi_data = interface_data["response"]
-    result = parse_single_interface_data(gnmi_data)
+    result = process_single_interface_data(gnmi_data)
 
     # Find the expected interface in the output data
     expected_interface = None

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-VRF Parser module.
-Parses VRF configuration and state data from gNMI responses and formats it
+VRF Processor module.
+Processes VRF configuration and state data from gNMI responses and formats it
 in a simplified way for easier consumption by small LLMs.
 """
 
@@ -12,7 +12,7 @@ from typing import Dict, Any, List
 logger = logging.getLogger(__name__)
 
 
-def parse_vrf_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+def process_vrf_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Parse VRF data from a gNMI response.
 

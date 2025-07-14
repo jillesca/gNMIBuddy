@@ -17,11 +17,11 @@ from src.schemas.responses import (
 )
 from src.schemas.models import Device
 from src.processors.protocols.bgp.config_processor import (
-    parse_bgp_data,
+    process_bgp_data,
     generate_bgp_summary,
 )
 from src.processors.protocols.isis.isis_processor import (
-    parse_isis_data,
+    process_isis_data,
     generate_isis_summary,
 )
 
@@ -139,9 +139,9 @@ def _get_isis_info(
     try:
         # Work directly with response data
         if isinstance(response, SuccessResponse):
-            isis_data = parse_isis_data(response.data)
+            isis_data = process_isis_data(response.data)
         else:
-            isis_data = parse_isis_data([])
+            isis_data = process_isis_data([])
         summary = generate_isis_summary(isis_data)
 
         return NetworkOperationResult(
@@ -221,7 +221,7 @@ def _get_bgp_info(
             if response.data:
                 gnmi_data = response.data
 
-        bgp_data = parse_bgp_data(gnmi_data or [])
+        bgp_data = process_bgp_data(gnmi_data or [])
         summary = generate_bgp_summary(bgp_data)
 
         return NetworkOperationResult(

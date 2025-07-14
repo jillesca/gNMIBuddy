@@ -14,7 +14,7 @@ from src.schemas.responses import (
 )
 from src.schemas.models import Device
 from src.processors.protocols.vrf import (
-    parse_vrf_data,
+    process_vrf_data,
     generate_vrf_summary,
     generate_llm_friendly_data,
 )
@@ -175,9 +175,9 @@ def _get_vrf_details(
             response.data if isinstance(response, SuccessResponse) else []
         )
 
-        parsed_data = parse_vrf_data(gnmi_data or [])
-        llm_data = generate_llm_friendly_data(parsed_data)
-        summary = generate_vrf_summary(parsed_data)
+        processed_data = process_vrf_data(gnmi_data or [])
+        llm_data = generate_llm_friendly_data(processed_data)
+        summary = generate_vrf_summary(processed_data)
 
         vpn_data = {
             "vrfs": [llm_data] if isinstance(llm_data, dict) else llm_data
@@ -199,10 +199,10 @@ def _get_vrf_details(
             },
         )
     except (KeyError, ValueError, TypeError) as e:
-        logger.error("Error parsing VRF data: %s", str(e))
+        logger.error("Error processing VRF data: %s", str(e))
         error_response = ErrorResponse(
-            type="PARSING_ERROR",
-            message=f"Error parsing VRF data: {str(e)}",
+            type="PROCESSING_ERROR",
+            message=f"Error processing VRF data: {str(e)}",
         )
         return NetworkOperationResult(
             device_name=device.name,

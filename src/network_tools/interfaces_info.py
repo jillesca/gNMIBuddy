@@ -74,12 +74,12 @@ def _get_interface_brief(
             error_response=response,
         )
 
-    data_to_format = []
+    gnmi_data = []
     if isinstance(response, SuccessResponse):
         if response.data:
-            data_to_format = response.data
+            gnmi_data = response.data
 
-    formatted_data = format_interface_data_for_llm(data_to_format)
+    formatted_data = format_interface_data_for_llm(gnmi_data)
 
     interfaces = (
         formatted_data["interfaces"]
@@ -148,12 +148,12 @@ def _get_single_interface_info(
             error_response=response,
         )
 
-    data_for_parsing = {}
+    gnmi_data = []
     if isinstance(response, SuccessResponse):
         if response.data:
-            data_for_parsing = {"response": response.data}
+            gnmi_data = response.data
 
-    if not data_for_parsing:
+    if not gnmi_data:
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
@@ -167,7 +167,7 @@ def _get_single_interface_info(
             },
         )
 
-    parsed_result = parse_single_interface_data(data_for_parsing)
+    parsed_result = parse_single_interface_data(gnmi_data)
     interfaces = [parsed_result] if parsed_result else []
 
     if _is_empty_interface(parsed_result):

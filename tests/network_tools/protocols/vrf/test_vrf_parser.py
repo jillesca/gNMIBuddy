@@ -88,7 +88,9 @@ def expected_vrf_summary():
 
 def test_parse_vrf_data(vrf_test_data, expected_parsed_data):
     """Test that parse_vrf_data correctly parses VRF data from gNMI response."""
-    parsed_data = parse_vrf_data(vrf_test_data)
+    # Pass gNMI data directly to parser
+    gnmi_data = vrf_test_data["response"]
+    parsed_data = parse_vrf_data(gnmi_data)
 
     # Update the timestamp in the expected data to match the current test run
     # This is needed because the timestamp is generated at runtime
@@ -146,7 +148,9 @@ def test_parse_vrf_data(vrf_test_data, expected_parsed_data):
 
 def test_generate_vrf_summary(vrf_test_data, expected_vrf_summary):
     """Test that generate_vrf_summary correctly creates a human-readable summary."""
-    parsed_data = parse_vrf_data(vrf_test_data)
+    # Extract the response array from the wrapped format
+    gnmi_data = vrf_test_data["response"]
+    parsed_data = parse_vrf_data(gnmi_data)
     summary = generate_vrf_summary(parsed_data)
 
     # Replace the timestamp in the expected summary with the current timestamp
@@ -172,7 +176,9 @@ def test_generate_vrf_summary(vrf_test_data, expected_vrf_summary):
 
 def test_generate_llm_friendly_data(vrf_test_data, expected_llm_friendly_data):
     """Test that generate_llm_friendly_data creates a simplified structure for LLMs."""
-    parsed_data = parse_vrf_data(vrf_test_data)
+    # Extract the response array from the wrapped format
+    gnmi_data = vrf_test_data["response"]
+    parsed_data = parse_vrf_data(gnmi_data)
     llm_data = generate_llm_friendly_data(parsed_data)
 
     # Update the timestamp in the expected data to match the current test run

@@ -194,13 +194,13 @@ def _get_vrf_details(
         )
 
     try:
-        # Work directly with response data
-        data_for_parsing = {}
+        # Extract gNMI data from response
+        gnmi_data = []
         if isinstance(response, SuccessResponse):
             if response.data:
-                data_for_parsing = {"response": response.data}
+                gnmi_data = response.data
 
-        parsed_data = parse_vrf_data(data_for_parsing)
+        parsed_data = parse_vrf_data(gnmi_data or [])
         llm_data = generate_llm_friendly_data(parsed_data)
         summary = generate_vrf_summary(parsed_data)
 

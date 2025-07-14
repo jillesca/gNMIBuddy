@@ -62,6 +62,9 @@ def openconfig_data(test_data_dir):
                 {
                     "path": "interfaces/interface[name=GigabitEthernet0/0/0/2]",
                     "val": interface_data,
+                    "timestamp": data[
+                        "timestamp"
+                    ],  # Add timestamp to the gNMI update
                 }
             ],
             "timestamp": data["timestamp"],
@@ -96,7 +99,9 @@ def expected_output(test_data_dir):
 
 def test_parse_single_interface_data(openconfig_data, expected_output):
     """Test the full interface parsing function with OpenConfig data."""
-    result = parse_single_interface_data(openconfig_data)
+    # Extract the response data (which is the List[Dict[str, Any]])
+    gnmi_data = openconfig_data["response"]
+    result = parse_single_interface_data(gnmi_data)
 
     # Verify the overall structure
     assert "interface" in result
@@ -166,7 +171,8 @@ def test_extract_interface_data(openconfig_data):
     }
 
     # Extract the interface data
-    extract_interface_data(openconfig_data, result)
+    gnmi_data = openconfig_data["response"]
+    extract_interface_data(gnmi_data, result)
 
     # Verify key fields were extracted
     assert result["interface"]["name"] == "GigabitEthernet0/0/0/2"
@@ -327,8 +333,11 @@ def test_interface_brief_data_compatibility(test_data_dir):
     ) as f:
         oc_data = json.load(f)
 
+    # Extract the response data (which is the List[Dict[str, Any]])
+    gnmi_data = oc_data["response"]
+
     # Process the data through our parser
-    result = parse_single_interface_data(oc_data)
+    result = parse_single_interface_data(gnmi_data)
 
     # Basic verification - we should get some kind of interface data
     assert "interface" in result

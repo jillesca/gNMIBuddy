@@ -79,7 +79,9 @@ class TestFilterLogs:
     def test_filter_logs_no_time_filter(self, input_logs):
         """Test filter_logs when show_all_logs is True."""
         # When show_all_logs is True, the logs should be processed but not time filtered
-        result = filter_logs(input_logs, True, 5)
+        # Extract gnmi_data from the fixture
+        gnmi_data = input_logs["response"]
+        result = filter_logs(gnmi_data, True, 5)
         # Check that the result has the expected structure
         assert "logs" in result
         assert "summary" in result
@@ -108,7 +110,9 @@ class TestFilterLogs:
         )
 
         # Call with time filter enabled
-        result = filter_logs(input_logs, False, 10)
+        # Extract gnmi_data from the fixture
+        gnmi_data = input_logs["response"]
+        result = filter_logs(gnmi_data, False, 10)
 
         # Verify the mock was called
         assert mock_called
@@ -121,7 +125,7 @@ class TestFilterLogs:
 
     def test_filter_logs_empty_response(self):
         """Test filter_logs with an empty response."""
-        result = filter_logs({"response": []}, False, 5)
+        result = filter_logs([], False, 5)
         assert "logs" in result
         assert "summary" in result
         assert result["summary"]["log_count"] == 0
@@ -129,7 +133,7 @@ class TestFilterLogs:
 
     def test_filter_logs_missing_val(self):
         """Test filter_logs when 'val' is missing from the response."""
-        result = filter_logs({"response": [{"path": "some/path"}]}, False, 5)
+        result = filter_logs([{"path": "some/path"}], False, 5)
         assert "logs" in result
         assert "summary" in result
         assert result["summary"]["log_count"] == 0

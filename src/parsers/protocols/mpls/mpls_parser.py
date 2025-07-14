@@ -99,8 +99,8 @@ def parse_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:
                     parsed_data["enabled"] = False
                 else:
                     parsed_data["enabled"] = has_interfaces or has_label_blocks
-    except Exception as e:
-        logger.error(f"Error parsing MPLS data: {str(e)}")
+    except (KeyError, ValueError, TypeError) as e:
+        logger.error("Error parsing MPLS data: %s", str(e))
 
     return parsed_data
 

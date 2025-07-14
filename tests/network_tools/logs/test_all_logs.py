@@ -16,20 +16,18 @@ class TestShowAllLogs:
     def test_filter_logs_with_show_all_logs(self):
         """Test that logs are properly formatted when show_all_logs is True."""
         # Sample raw log data from device
-        sample_data = {
-            "response": [
-                {
-                    "val": """
+        gnmi_data = [
+            {
+                "val": """
 RP/0/RP0/CPU0:Apr 23 12:52:06.929 UTC: ISIS-6-ADJCHANGE : Adjacency to pe2 (GigabitEthernet0/0/0/0) (L2) Up, Adjacency to pe2 (GigabitEthernet0/0/0/0) (L2) Up
 RP/0/RP0/CPU0:Apr 24 10:15:30.123 UTC: BGP-5-ADJCHANGE: neighbor 10.1.1.1 Up
 RP/0/RP0/CPU0:Apr 24 11:22:45.789 UTC: MPLS-3-LDP_NEIGHBOR: LDP neighbor 192.168.1.1 is up
 """
-                }
-            ]
-        }
+            }
+        ]
 
         # Call the filter_logs function with show_all_logs=True
-        result = filter_logs(sample_data, show_all_logs=True, filter_minutes=5)
+        result = filter_logs(gnmi_data, show_all_logs=True, filter_minutes=5)
 
         # Verify the result structure
         assert "logs" in result
@@ -58,16 +56,14 @@ RP/0/RP0/CPU0:Apr 24 11:22:45.789 UTC: MPLS-3-LDP_NEIGHBOR: LDP neighbor 192.168
         recent_log = "RP/0/RP0/CPU0:Apr 24 12:30:06.929 UTC: BGP-5-ADJCHANGE: neighbor 10.1.1.1 Up"
         old_log = "RP/0/RP0/CPU0:Apr 24 08:15:45.123 UTC: MPLS-3-LDP_NEIGHBOR: LDP neighbor 192.168.1.1 is up"
 
-        sample_data = {
-            "response": [
-                {
-                    "val": f"""
+        gnmi_data = [
+            {
+                "val": f"""
 {recent_log}
 {old_log}
 """
-                }
-            ]
-        }
+            }
+        ]
 
         # Mock the filter_logs_by_time function to simulate time filtering
         # This is necessary because our test might run at any time and the actual
@@ -84,7 +80,7 @@ RP/0/RP0/CPU0:Apr 24 11:22:45.789 UTC: MPLS-3-LDP_NEIGHBOR: LDP neighbor 192.168
         ):
             # Filter logs with 5 minutes threshold and show_all_logs=False
             result = filter_logs(
-                sample_data, show_all_logs=False, filter_minutes=5
+                gnmi_data, show_all_logs=False, filter_minutes=5
             )
 
             # Should contain only the recent log
@@ -96,9 +92,9 @@ RP/0/RP0/CPU0:Apr 24 11:22:45.789 UTC: MPLS-3-LDP_NEIGHBOR: LDP neighbor 192.168
 
     def test_empty_logs_handling(self):
         """Test that empty logs are handled properly."""
-        sample_data = {"response": [{"val": ""}]}
+        gnmi_data = [{"val": ""}]
 
-        result = filter_logs(sample_data, show_all_logs=True, filter_minutes=5)
+        result = filter_logs(gnmi_data, show_all_logs=True, filter_minutes=5)
 
         assert "logs" in result
         assert "summary" in result

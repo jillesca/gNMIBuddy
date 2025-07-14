@@ -232,7 +232,8 @@ def test_parse_interface_brief_data(brief_input_data, brief_output_data):
     }
 
     # Process the data through our updated parser
-    result = parse_single_interface_data(interface_data)
+    gnmi_data = interface_data["response"]
+    result = parse_single_interface_data(gnmi_data)
 
     # Find the expected interface in the output data
     expected_interface = None

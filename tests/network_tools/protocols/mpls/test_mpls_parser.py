@@ -43,9 +43,9 @@ class TestMPLSParser(unittest.TestCase):
 
     def test_parse_mpls_data(self):
         """Test parsing MPLS data from gNMI response."""
-        # Extract the response data from test_data
-        response_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(response_data)
+        # Pass gNMI data directly to parser
+        gnmi_data = self.test_data["response"]
+        parsed_data = parse_mpls_data(gnmi_data)
 
         # Verify the parser correctly identified MPLS is enabled
         self.assertEqual(
@@ -87,9 +87,9 @@ class TestMPLSParser(unittest.TestCase):
 
     def test_generate_mpls_summary(self):
         """Test generating a human-readable summary of MPLS data."""
-        # Extract the response data from test_data
-        response_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(response_data)
+        # Pass gNMI data directly to parser
+        gnmi_data = self.test_data["response"]
+        parsed_data = parse_mpls_data(gnmi_data)
         summary = generate_mpls_summary(parsed_data)
 
         # Verify the summary matches the expected output
@@ -140,9 +140,9 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
 
     def test_parse_non_configured_mpls_data(self):
         """Test parsing MPLS data when MPLS is not effectively configured."""
-        # Extract the response data from test_data
-        response_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(response_data)
+        # Pass gNMI data directly to parser
+        gnmi_data = self.test_data["response"]
+        parsed_data = parse_mpls_data(gnmi_data)
 
         # Verify the parser correctly identified MPLS is not effectively enabled
         self.assertEqual(
@@ -167,9 +167,9 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
 
     def test_generate_summary_non_configured_mpls(self):
         """Test generating a summary for non-configured MPLS."""
-        # Extract the response data from test_data
-        response_data = self.test_data["response"]
-        parsed_data = parse_mpls_data(response_data)
+        # Pass gNMI data directly to parser
+        gnmi_data = self.test_data["response"]
+        parsed_data = parse_mpls_data(gnmi_data)
         summary = generate_mpls_summary(parsed_data)
 
         # Verify the summary matches the expected output

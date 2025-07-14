@@ -215,13 +215,13 @@ def _get_bgp_info(
         )
 
     try:
-        # Work directly with response data
-        data_for_parsing = {}
+        # Extract gNMI data from response
+        gnmi_data = []
         if isinstance(response, SuccessResponse):
             if response.data:
-                data_for_parsing = {"response": response.data}
+                gnmi_data = response.data
 
-        bgp_data = parse_bgp_data(data_for_parsing)
+        bgp_data = parse_bgp_data(gnmi_data or [])
         summary = generate_bgp_summary(bgp_data)
 
         return NetworkOperationResult(

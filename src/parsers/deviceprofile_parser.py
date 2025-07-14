@@ -11,28 +11,64 @@ from src.parsers.base import BaseParser
 class DeviceProfileParser(BaseParser):
     """
     Parser for device profile data from gNMI responses.
+
+    Accepts raw gNMI data (List[Dict[str, Any]]) directly and determines
+    device role and capabilities including MPLS, ISIS, BGP L3VPN,
+    route reflector status, and VPN BGP configuration.
     """
 
     def parse(
         self,
-        data: List[Dict[str, Any]],
+        gnmi_data: List[Dict[str, Any]],
         vpn_info: Any = None,
         vpn_bgp_afi_safi_states: Any = None,
     ) -> Dict[str, Any]:
-        extracted = self.extract_data(data)
+        """
+        Parse device profile information from gNMI data.
+
+        Args:
+            gnmi_data: Raw gNMI response data (list of update dictionaries)
+            vpn_info: Optional VPN information for enhanced analysis
+            vpn_bgp_afi_safi_states: Optional BGP AFI/SAFI states for VPN analysis
+
+        Returns:
+            Device profile dictionary with capabilities and role
+        """
+        extracted = self.extract_data(gnmi_data)
         return self.transform_data(
             extracted,
             vpn_info=vpn_info,
             vpn_bgp_afi_safi_states=vpn_bgp_afi_safi_states,
         )
 
-    def extract_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def extract_data(
+        self, gnmi_data: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Extract device profile data from gNMI response.
+
+        Args:
+            gnmi_data: Raw gNMI response data (list of update dictionaries)
+
+        Returns:
+            Extracted device profile data ready for processing
+        """
         # Return the raw data directly
-        return data if data else []
+        return gnmi_data if gnmi_data else []
 
     def transform_data(
         self, extracted_data: List[Dict[str, Any]], **kwargs
     ) -> Dict[str, Any]:
+        """
+        Transform extracted device profile data into structured format.
+
+        Args:
+            extracted_data: Device profile data extracted from gNMI response
+            **kwargs: Additional parameters including vpn_info and vpn_bgp_afi_safi_states
+
+        Returns:
+            Device profile dictionary with capabilities and determined role
+        """
         all_entries = (
             extracted_data if isinstance(extracted_data, list) else []
         )

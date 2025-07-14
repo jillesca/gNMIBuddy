@@ -4,7 +4,7 @@ Log parser interfaces.
 Defines standard interfaces for parsers that work with log data.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime, timedelta
 from src.parsers.base import BaseParser  # Changed GnmiDataParser to BaseParser
 
@@ -17,7 +17,9 @@ class LogParser(BaseParser):  # Changed GnmiDataParser to BaseParser
     log data from network devices.
     """
 
-    def transform_data(self, extracted_data: Dict[str, Any]) -> Dict[str, Any]:
+    def transform_data(
+        self, extracted_data: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """
         Transform extracted log data into the final output format.
 
@@ -48,31 +50,24 @@ class LogParser(BaseParser):  # Changed GnmiDataParser to BaseParser
 
         return result
 
-    def extract_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_data(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Extract data from gNMI response structure.
+        Extract data from raw gNMI response data.
 
-        This method handles the common pattern of working with gNMI responses
-        that contain a "response" array of path/value pairs.
+        This method processes the raw gNMI response data directly.
+        Log data may come in different formats, so we handle both cases.
 
         Args:
-            data: Input data to extract from, expected to have a "response" key.
+            gnmi_data: Raw gNMI response data (list of update dictionaries)
 
         Returns:
-            Extracted data from the "response" field.
-
-        Raises:
-            ValueError: If "response" key is not found in data.
+            Structured data ready for log processing with 'items' key
         """
-        # Logs might not always come in a 'response' structure,
-        # so we handle both cases.
-        if "response" in data:
-            return {"response": data["response"]}
-        return data  # Return data as is if 'response' key is not present
+        return {"items": gnmi_data if gnmi_data else []}
 
-    def parse(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def parse(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Parse gNMI data through extraction and transformation."""
-        extracted_data = self.extract_data(data)
+        extracted_data = self.extract_data(gnmi_data)
         return self.transform_data(extracted_data)
 
     def process_logs(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -89,10 +84,9 @@ class LogParser(BaseParser):  # Changed GnmiDataParser to BaseParser
 
         # Process each item in the extracted data
         for item in data.get("items", []):
-            val = item.get("val", {})
-
             # Extract log entries based on the format
             # Implementation details should be provided by concrete classes
+            _ = item  # Placeholder for processing item data
 
         return logs
 

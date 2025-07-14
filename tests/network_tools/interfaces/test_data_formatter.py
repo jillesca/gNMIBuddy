@@ -81,9 +81,9 @@ def expected_output(test_data_dir):
 
 def test_format_interface_data_for_llm(openconfig_data, expected_output):
     """Test the full formatting pipeline with OpenConfig data."""
-    # Extract the response data from the openconfig_data
-    response_data = openconfig_data["response"]
-    result = format_interface_data_for_llm(response_data)
+    # Pass gNMI data directly to formatter
+    gnmi_data = openconfig_data["response"]
+    result = format_interface_data_for_llm(gnmi_data)
 
     # Sort interfaces by name for comparison, as order might differ
     result["interfaces"] = sorted(
@@ -129,7 +129,8 @@ def test_format_interface_data_for_llm(openconfig_data, expected_output):
 
 def test_extract_interfaces(openconfig_data):
     """Test extraction of interfaces from OpenConfig data."""
-    interfaces = extract_interfaces(openconfig_data)
+    gnmi_data = openconfig_data["response"]
+    interfaces = extract_interfaces(gnmi_data)
 
     # Verify we extracted interfaces
     assert len(interfaces) > 0

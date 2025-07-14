@@ -12,12 +12,12 @@ from typing import Dict, Any, List
 logger = logging.getLogger(__name__)
 
 
-def parse_vrf_data(gnmi_response: Dict[str, Any]) -> Dict[str, Any]:
+def parse_vrf_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Parse VRF data from a gNMI response.
 
     Args:
-        gnmi_response: The gNMI response containing VRF data
+        gnmi_data: The gNMI response data (list of update dictionaries) containing VRF data
 
     Returns:
         Dict containing parsed VRF data in a simplified format for small LLMs
@@ -34,15 +34,15 @@ def parse_vrf_data(gnmi_response: Dict[str, Any]) -> Dict[str, Any]:
         "vrfs": [],
     }
 
-    # Check if we have a valid response
-    if not gnmi_response:
-        logger.error("Empty gNMI response")
+    # Check if we have valid gNMI data
+    if not gnmi_data:
+        logger.error("Empty gNMI data")
         return result
 
-    # Extract the response data list
-    response_data = gnmi_response.get("response", [])
+    # Work directly with the gNMI response data
+    response_data = gnmi_data
     if not response_data:
-        logger.warning("No response data found in gNMI response")
+        logger.warning("No response data found in gNMI data")
         return result
 
     # Track VRF names to avoid duplicates
@@ -66,7 +66,7 @@ def parse_vrf_data(gnmi_response: Dict[str, Any]) -> Dict[str, Any]:
 
         # Skip if this VRF was already processed (avoid duplicates)
         if vrf_name in processed_vrfs:
-            logger.debug(f"Skipping duplicate VRF: {vrf_name}")
+            logger.debug("Skipping duplicate VRF: %s", vrf_name)
             continue
 
         # Mark this VRF as processed
@@ -110,7 +110,7 @@ def _extract_route_distinguisher(vrf_data: Dict[str, Any]) -> str:
     ):
         return vrf_data["route-distinguisher"]["state"].get("rd")
 
-    return None
+    return ""
 
 
 def _extract_interfaces(vrf_data: Dict[str, Any]) -> List[Dict[str, Any]]:

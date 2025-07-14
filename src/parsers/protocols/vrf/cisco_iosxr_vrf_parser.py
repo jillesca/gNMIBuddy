@@ -48,7 +48,7 @@ class CiscoIosXrVrfParser(VrfParser):
 
             # Skip if this VRF was already processed (avoid duplicates)
             if vrf_name in processed_vrfs:
-                logger.debug(f"Skipping duplicate VRF: {vrf_name}")
+                logger.debug("Skipping duplicate VRF: %s", vrf_name)
                 continue
 
             # Mark this VRF as processed
@@ -91,7 +91,7 @@ class CiscoIosXrVrfParser(VrfParser):
         ):
             return vrf_data["route-distinguisher"]["state"].get("rd")
 
-        return None
+        return ""
 
     def _extract_interfaces(
         self, vrf_data: Dict[str, Any]

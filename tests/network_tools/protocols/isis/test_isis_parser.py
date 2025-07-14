@@ -138,9 +138,9 @@ ISIS Adjacencies:
 
     def test_parse_isis_data(self):
         """Test parsing ISIS data from gNMI response."""
-        # Extract the response data from test_data
-        response_data = self.test_data["response"]
-        parsed_data = parse_isis_data(response_data)
+        # Pass gNMI data directly to parser
+        gnmi_data = self.test_data["response"]
+        parsed_data = parse_isis_data(gnmi_data)
 
         # Verify basic structure
         self.assertIsInstance(parsed_data, dict)
@@ -203,9 +203,9 @@ ISIS Adjacencies:
 
     def test_generate_isis_summary(self):
         """Test generating a human-readable summary of ISIS status."""
-        # Extract the response data from test_data
-        response_data = self.test_data["response"]
-        parsed_data = parse_isis_data(response_data)
+        # Pass gNMI data directly to parser
+        gnmi_data = self.test_data["response"]
+        parsed_data = parse_isis_data(gnmi_data)
         summary = generate_isis_summary(parsed_data)
 
         # Check if summary matches the expected format

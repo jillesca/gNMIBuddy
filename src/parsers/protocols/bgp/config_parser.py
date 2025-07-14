@@ -11,31 +11,31 @@ import re
 import time
 
 
-def parse_bgp_data(data: Dict[str, Any]) -> Dict[str, Any]:
+def parse_bgp_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Parse BGP configuration and state data from GNMI responses.
 
     Args:
-        data: GNMI response containing BGP configuration and state data in OpenConfig format
+        gnmi_data: The gNMI response data (list of update dictionaries) containing BGP configuration and state data in OpenConfig format
 
     Returns:
         Dict containing BGP configuration and state information optimized for small LLMs
     """
     try:
-        # Check for valid response data
-        if "response" in data and data["response"]:
-            return _parse_openconfig_bgp(data)
-        return {"parse_error": "Unsupported BGP data format"}
-    except Exception as e:
+        # Check for valid gNMI data
+        if gnmi_data:
+            return _parse_openconfig_bgp(gnmi_data)
+        return {"parse_error": "No BGP data provided"}
+    except (KeyError, ValueError, TypeError) as e:
         return {"parse_error": str(e)}
 
 
-def _parse_openconfig_bgp(data: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_openconfig_bgp(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Parse BGP configuration and state data from OpenConfig YANG model.
 
     Args:
-        data: GNMI response containing BGP configuration and state data
+        gnmi_data: The gNMI response data (list of update dictionaries) containing BGP configuration and state data
 
     Returns:
         Dict containing BGP configuration and state information
@@ -45,7 +45,7 @@ def _parse_openconfig_bgp(data: Dict[str, Any]) -> Dict[str, Any]:
         default_bgp = None
         vrf_bgp_data = []
 
-        for response in data["response"]:
+        for response in gnmi_data:
             path = response.get("path", "")
             if (
                 "network-instance[name=DEFAULT]" in path
@@ -64,8 +64,8 @@ def _parse_openconfig_bgp(data: Dict[str, Any]) -> Dict[str, Any]:
                 "parse_error": "No DEFAULT BGP instance found in OpenConfig data"
             }
 
-        # Get timestamp from the data if available
-        timestamp = data.get("timestamp", int(time.time() * 1e9))
+        # Generate timestamp since we don't have it in gNMI data
+        timestamp = int(time.time() * 1e9)
 
         # Extract only LLM-friendly information
         return _extract_llm_friendly_bgp_data(

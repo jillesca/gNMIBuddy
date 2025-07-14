@@ -45,7 +45,7 @@
       "enabled": true,
       "type": "openconfig-network-instance-types:L3VRF",
       "router_id": null,
-      "route_distinguisher": null,
+      "route_distinguisher": "",
       "interfaces": [
         {
           "name": "MgmtEth0/RP0/CPU0/0",

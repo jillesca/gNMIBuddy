@@ -43,7 +43,9 @@ def test_parse_openconfig_bgp_data(sample_openconfig_bgp_data):
     """
     Test that the OpenConfig BGP data is correctly parsed with the LLM-friendly format.
     """
-    parsed_data = parse_bgp_data(sample_openconfig_bgp_data)
+    # Pass gNMI data directly to parser
+    gnmi_data = sample_openconfig_bgp_data["response"]
+    parsed_data = parse_bgp_data(gnmi_data)
 
     # Test basic structure
     assert isinstance(parsed_data, dict)
@@ -129,7 +131,9 @@ def test_generate_openconfig_bgp_summary(sample_openconfig_bgp_data):
     """
     Test that the OpenConfig BGP summary is correctly generated.
     """
-    parsed_data = parse_bgp_data(sample_openconfig_bgp_data)
+    # Pass gNMI data directly to parser
+    gnmi_data = sample_openconfig_bgp_data["response"]
+    parsed_data = parse_bgp_data(gnmi_data)
     summary = generate_bgp_summary(parsed_data)
 
     # Test that the summary is a non-empty string
@@ -164,12 +168,12 @@ def test_parse_error_handling():
     Test that the parser handles errors gracefully.
     """
     # Test with empty data
-    empty_result = parse_bgp_data({})
+    empty_result = parse_bgp_data([])
     assert isinstance(empty_result, dict)
     assert "parse_error" in empty_result
 
     # Test with invalid data structure
-    invalid_data = {"response": [{"invalid": "structure"}]}
+    invalid_data = [{"invalid": "structure"}]
     invalid_result = parse_bgp_data(invalid_data)
     assert isinstance(invalid_result, dict)
     assert "parse_error" in invalid_result
@@ -179,7 +183,9 @@ def test_neighbor_state_extraction(sample_openconfig_bgp_data):
     """
     Test that neighbor state information is correctly extracted from OpenConfig data.
     """
-    parsed_data = parse_bgp_data(sample_openconfig_bgp_data)
+    # Pass gNMI data directly to parser
+    gnmi_data = sample_openconfig_bgp_data["response"]
+    parsed_data = parse_bgp_data(gnmi_data)
 
     # Ensure we have neighbors
     assert "neighbors" in parsed_data
@@ -205,7 +211,9 @@ def test_simplified_bgp_state_summary(sample_openconfig_bgp_data):
     """
     Test that the simplified BGP state summary for small LLMs is correctly generated.
     """
-    parsed_data = parse_bgp_data(sample_openconfig_bgp_data)
+    # Pass gNMI data directly to parser
+    gnmi_data = sample_openconfig_bgp_data["response"]
+    parsed_data = parse_bgp_data(gnmi_data)
     summary = generate_simple_bgp_state_summary(parsed_data)
 
     # Test that the summary is a non-empty string
@@ -248,7 +256,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Parse the BGP data
-    parsed_data = parse_bgp_data(sample_data)
+    gnmi_data = sample_data["response"]
+    parsed_data = parse_bgp_data(gnmi_data)
 
     # Generate a readable summary
     summary = generate_bgp_summary(parsed_data)

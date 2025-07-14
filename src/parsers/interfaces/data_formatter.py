@@ -8,14 +8,14 @@ from typing import Dict, Any, List, Optional
 
 
 def format_interface_data_for_llm(
-    raw_interface_data: List[Dict[str, Any]],
+    gnmi_data: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """
     Process raw gNMI interface data from OpenConfig model into a simplified format better suited for LLM consumption.
     This function transforms a complete OpenConfig interfaces structure into an interface brief output.
 
     Args:
-        raw_interface_data: Raw interface data from gNMI query using OpenConfig model
+        gnmi_data: Raw gNMI response data containing interface information
 
     Returns:
         A dictionary with simplified interface information and summary statistics
@@ -35,17 +35,11 @@ def format_interface_data_for_llm(
         "timestamp": "",
     }
 
-    if not raw_interface_data:
+    if not gnmi_data:
         return result
 
     # Extract interfaces from the raw data
-    interfaces = []
-    for update in raw_interface_data:
-        if "val" in update:
-            # Wrap in the expected format for extract_interfaces
-            wrapped_data = {"response": [{"val": update["val"]}]}
-            extracted = extract_interfaces(wrapped_data)
-            interfaces.extend(extracted)
+    interfaces = extract_interfaces(gnmi_data)
 
     # Calculate summary statistics
     result["interfaces"] = interfaces
@@ -54,22 +48,24 @@ def format_interface_data_for_llm(
     return result
 
 
-def extract_interfaces(raw_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+def extract_interfaces(
+    gnmi_data: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
     """
     Extract interface information from the OpenConfig interfaces model.
 
     Args:
-        raw_data: Raw interface data from gNMI query
+        gnmi_data: Raw gNMI response data containing interface information
 
     Returns:
         List of interface dictionaries with key information
     """
     interfaces = []
 
-    if "response" not in raw_data:
+    if not gnmi_data:
         return interfaces
 
-    for item in raw_data["response"]:
+    for item in gnmi_data:
         if "val" not in item:
             continue
 

@@ -76,15 +76,15 @@ def get_logging_information(
         )
 
     try:
-        # Work directly with response data
-        data_for_filter = {}
+        # Extract gNMI data from response
+        gnmi_data = []
         if isinstance(response, SuccessResponse):
             if response.data:
-                data_for_filter = {"response": response.data}
+                gnmi_data = response.data
 
         # Process the logs through the filter
         filtered_logs = filter_logs(
-            data_for_filter, show_all_logs, minutes or 5
+            gnmi_data or [], show_all_logs, minutes or 5
         )
 
         if "error" in filtered_logs:

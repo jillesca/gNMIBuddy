@@ -12,20 +12,54 @@ import datetime
 class SystemInfoParser(BaseParser):
     """
     Parser for system information data from gNMI responses.
+
+    Accepts raw gNMI data (List[Dict[str, Any]]) directly and transforms it
+    into structured system information including hostname, software version,
+    memory, gRPC servers, logging, users, and uptime details.
     """
 
-    def parse(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        extracted = self.extract_data(data)
+    def parse(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Parse system information from gNMI data.
+
+        Args:
+            gnmi_data: Raw gNMI response data (list of update dictionaries)
+
+        Returns:
+            Structured system information dictionary
+        """
+        extracted = self.extract_data(gnmi_data)
         return self.transform_data(extracted)
 
-    def extract_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def extract_data(
+        self, gnmi_data: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Extract system data from gNMI response.
+
+        Args:
+            gnmi_data: Raw gNMI response data (list of update dictionaries)
+
+        Returns:
+            Extracted system data ready for processing
+        """
         # Return the raw data since system info parsing handles the list directly
-        return data if data else []
+        return gnmi_data if gnmi_data else []
 
     def transform_data(
         self, extracted_data: List[Dict[str, Any]], **kwargs
     ) -> Dict[str, Any]:
-        # Extract the first system response if present
+        """
+        Transform extracted system data into structured format.
+
+        Args:
+            extracted_data: System data extracted from gNMI response
+            **kwargs: Additional parameters (unused for system info)
+
+        Returns:
+            Structured system information dictionary
+        """
+        # Extract the first system data entry if present
         if not extracted_data:
             return {"error": "No system data available"}
 

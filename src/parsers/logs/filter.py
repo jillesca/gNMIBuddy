@@ -7,19 +7,19 @@ Provides functions for filtering logs based on time and other criteria.
 import logging
 import re
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger(__name__)
 
 
 def filter_logs(
-    result: Dict[str, Any], show_all_logs: bool, filter_minutes: int
+    gnmi_data: List[Dict[str, Any]], show_all_logs: bool, filter_minutes: int
 ) -> Dict[str, Any]:
     """
     Filter logs based on time criteria and format them for display.
 
     Args:
-        result: Dictionary containing log data
+        gnmi_data: List of gNMI response dictionaries containing log data
         show_all_logs: If True, return all logs without time filtering
         filter_minutes: Number of minutes to filter logs
 
@@ -28,34 +28,33 @@ def filter_logs(
     """
     logs = []
 
-    if "response" in result:
-        for response in result["response"]:
-            if "val" in response:
-                log_content = response["val"]
+    for response in gnmi_data:
+        if "val" in response:
+            log_content = response["val"]
 
-                # Apply time filter if needed
-                if not show_all_logs:
-                    log_content = filter_logs_by_time(
-                        logs=log_content, minutes=filter_minutes
-                    )
-                    logger.debug(
-                        f"Applied time filter: last {filter_minutes} minutes"
-                    )
+            # Apply time filter if needed
+            if not show_all_logs:
+                log_content = filter_logs_by_time(
+                    logs=log_content, minutes=filter_minutes
+                )
+                logger.debug(
+                    f"Applied time filter: last {filter_minutes} minutes"
+                )
 
-                # Always process the logs into the right format, even when not time-filtered
-                if log_content.strip():
-                    # Split logs into lines for easier processing
-                    log_lines = log_content.strip().split("\n")
+            # Always process the logs into the right format, even when not time-filtered
+            if log_content.strip():
+                # Split logs into lines for easier processing
+                log_lines = log_content.strip().split("\n")
 
-                    # Add each log line to the list
-                    for line in log_lines:
-                        if (
-                            line
-                            and not line.startswith("---")
-                            and not line.startswith("===")
-                            and "show logging" not in line
-                        ):
-                            logs.append({"message": line})
+                # Add each log line to the list
+                for line in log_lines:
+                    if (
+                        line
+                        and not line.startswith("---")
+                        and not line.startswith("===")
+                        and "show logging" not in line
+                    ):
+                        logs.append({"message": line})
 
     # Create summary of log count
     summary = {"log_count": len(logs)}

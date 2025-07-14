@@ -21,32 +21,34 @@ class BaseParser(Generic[T_Output], ABC):
     """
 
     @abstractmethod
-    def parse(self, data: List[Dict[str, Any]]) -> T_Output:
+    def parse(self, gnmi_data: List[Dict[str, Any]]) -> T_Output:
         """
         Parse the input data and return structured output data.
 
         Args:
-            data: Raw gNMI response data (list of update dictionaries)
+            gnmi_data: Raw gNMI response data (list of update dictionaries)
 
         Returns:
             Parsed and structured output data
         """
-        pass
+        ...
 
-    def extract_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def extract_data(
+        self, gnmi_data: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """
         Extract relevant data from the input structure.
 
-        This method now accepts the raw gNMI data directly from response.data.
+        This method accepts the raw gNMI data directly from response.data.
         Subclasses can override this if they need special extraction logic.
 
         Args:
-            data: Raw gNMI response data (list of update dictionaries)
+            gnmi_data: Raw gNMI response data (list of update dictionaries)
 
         Returns:
             Extracted data ready for processing
         """
-        return data if data else []
+        return gnmi_data if gnmi_data else []
 
     @abstractmethod
     def transform_data(
@@ -62,25 +64,28 @@ class BaseParser(Generic[T_Output], ABC):
         Returns:
             Transformed data in the expected output format
         """
-        pass
+        ...
 
     @staticmethod
-    def get_timestamp(data: List[Dict[str, Any]]) -> Optional[int]:
+    def get_timestamp(gnmi_data: List[Dict[str, Any]]) -> Optional[int]:
         """
         Extract the timestamp from the input data.
 
         Args:
-            data: Raw gNMI response data
+            gnmi_data: Raw gNMI response data
 
         Returns:
             Extracted timestamp or None if not available
         """
         # Timestamp is now passed separately via SuccessResponse.timestamp
         # This method is kept for backward compatibility but may be deprecated
+        _ = gnmi_data  # Suppress unused parameter warning
         return None
 
 
 class NotFoundError(Exception):
     """Exception raised when a requested feature is not found in the data."""
 
-    pass
+    def __init__(self, message: str = "Feature not found in data") -> None:
+        self.message = message
+        super().__init__(self.message)

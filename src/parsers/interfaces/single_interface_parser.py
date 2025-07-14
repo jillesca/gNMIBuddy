@@ -6,18 +6,18 @@ optimized for smaller LLMs to understand network interface state.
 Uses exclusively OpenConfig models.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 
 def parse_single_interface_data(
-    raw_interface_data: Dict[str, Any],
+    gnmi_data: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """
     Process raw gNMI data for a single interface into a simplified format better suited for LLM consumption.
     This function is specifically designed for smaller offline LLMs, focusing on the most important information.
 
     Args:
-        raw_interface_data: Raw interface data from gNMI query using OpenConfig model
+        gnmi_data: Raw gNMI response data containing interface information
 
     Returns:
         A dictionary with simplified interface information focused on key attributes
@@ -43,30 +43,35 @@ def parse_single_interface_data(
                 "out_errors": None,
             },
         },
-        "timestamp": raw_interface_data.get("timestamp"),
-    }
+        "timestamp": None,
+    }  # Process the interface data from OpenConfig model
+    extract_interface_data(gnmi_data, result)
 
-    # Process the interface data from OpenConfig model
-    extract_interface_data(raw_interface_data, result)
+    # Try to extract timestamp from gNMI data if available
+    if gnmi_data:
+        for item in gnmi_data:
+            if isinstance(item, dict) and "timestamp" in item:
+                result["timestamp"] = item["timestamp"]
+                break
 
     return result
 
 
 def extract_interface_data(
-    interface_data: Dict[str, Any], result: Dict[str, Any]
+    gnmi_data: List[Dict[str, Any]], result: Dict[str, Any]
 ) -> None:
     """
     Extract interface data from the gNMI response using OpenConfig model.
 
     Args:
-        interface_data: Interface data from gNMI query
+        gnmi_data: List of gNMI response updates containing interface information
         result: Result dictionary to update
     """
-    if "response" not in interface_data:
+    if not gnmi_data:
         return
 
     # Handle the case where we have a complete interfaces structure
-    for item in interface_data["response"]:
+    for item in gnmi_data:
         if "val" not in item:
             continue
 

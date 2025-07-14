@@ -476,7 +476,7 @@ flowchart LR
    logger = logging.getLogger(__name__)
 
    def extract_interface(self, item):
-       logger.debug(f"Extracting interface from item: {item}")
+       logger.debug("Extracting interface from item: %s", item)
        # ...
    ```
 

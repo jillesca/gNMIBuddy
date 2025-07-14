@@ -41,7 +41,7 @@ def get_device(
         If device is found, returns (device_info, True)
         If device is not found, returns ({"error": error_message}, False)
     """
-    # logger.debug(f"Getting device from inventory: {device_name}")
+    # logger.debug("Getting device from inventory: %s", device_name)
     return InventoryManager.get_device(device_name)
 
 

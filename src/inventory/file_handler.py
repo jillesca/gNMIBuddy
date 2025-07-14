@@ -41,7 +41,7 @@ def get_inventory_path(cli_path: Optional[str] = None) -> str:
         # Get absolute path for clarity in error messages
         abs_path = os.path.abspath(cli_path)
         logger.debug(
-            f"Using inventory file from command-line argument: {abs_path}"
+            "Using inventory file from command-line argument: %s", abs_path
         )
         return abs_path
 
@@ -50,7 +50,8 @@ def get_inventory_path(cli_path: Optional[str] = None) -> str:
         # Get absolute path for clarity in error messages
         abs_path = os.path.abspath(env_path)
         logger.debug(
-            f"Using inventory file from NETWORK_INVENTORY environment variable: {abs_path}"
+            "Using inventory file from NETWORK_INVENTORY environment variable: %s",
+            abs_path,
         )
         return abs_path
 
@@ -82,7 +83,7 @@ def resolve_inventory_path(file_path: str) -> str:
 
     # Check if file exists
     if os.path.exists(abs_path):
-        logger.debug(f"Found inventory file: {abs_path}")
+        logger.debug("Found inventory file: %s", abs_path)
         return abs_path
 
     # File doesn't exist - provide helpful error message
@@ -142,7 +143,7 @@ def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
         try:
             inventory_file = get_inventory_path()
         except FileNotFoundError as e:
-            logger.error(f"{e}")
+            logger.error("%s", e)
             sys.exit(1)  # Exit with error code
 
     try:
@@ -151,7 +152,9 @@ def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
             device["name"]: Device(**device) for device in device_inventory
         }
         logger.debug(
-            f"Successfully loaded {len(devices)} devices from inventory {inventory_file}"
+            "Successfully loaded %d devices from inventory %s",
+            len(devices),
+            inventory_file,
         )
         return devices
     except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
@@ -185,7 +188,7 @@ def parse_json_file(json_file_path: str) -> DeviceInventory:
         with open(abs_path, "r", encoding="utf-8") as file:
             data = json.load(file)
 
-        logger.debug(f"Successfully parsed JSON file: {abs_path}")
+        logger.debug("Successfully parsed JSON file: %s", abs_path)
         return cast(DeviceInventory, data)
     except json.JSONDecodeError as e:
         # Re-resolve path for error message (in case of symlinks, etc.)

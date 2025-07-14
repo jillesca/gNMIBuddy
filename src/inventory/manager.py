@@ -35,14 +35,14 @@ class InventoryManager:
         instance = cls.get_instance()
         if not instance.is_initialized() or cli_path is not None:
             inventory_path = get_inventory_path(cli_path)
-            logger.info(f"Initializing inventory from path: {inventory_path}")
+            logger.info("Initializing inventory from path: %s", inventory_path)
             instance.set_devices(load_inventory(inventory_path))
             instance.set_initialized(True)
             device_count = len(instance.get_devices())
-            logger.debug(f"Initialized inventory with {device_count} devices")
+            logger.debug("Initialized inventory with %s devices", device_count)
             if logger.isEnabledFor(logging.DEBUG):
                 device_names = list(instance.get_devices().keys())
-                logger.debug(f"Loaded devices: {device_names}")
+                logger.debug("Loaded devices: %s", device_names)
 
     @classmethod
     def get_device(
@@ -58,7 +58,7 @@ class InventoryManager:
             Tuple containing either the Device object or an error dict,
             along with a boolean indicating success
         """
-        # logger.debug(f"Looking up device: {device_name}")
+        # logger.debug("Looking up device: %s", device_name)
         instance = cls.get_instance()
         if not instance.is_initialized():
             logger.debug("Inventory not initialized, initializing now")
@@ -74,7 +74,7 @@ class InventoryManager:
             )
 
         if device_name not in devices:
-            logger.warning(f"Device '{device_name}' not found in inventory")
+            logger.warning("Device '%s' not found in inventory", device_name)
             return (
                 DeviceErrorResult(
                     error=f"Device '{device_name}' not found in inventory",
@@ -108,7 +108,7 @@ class InventoryManager:
             return DeviceListResult(devices=[])
 
         device_list = [device.to_device_info() for device in devices.values()]
-        # logger.info(f"Listed {len(device_list)} devices from inventory")
+        # logger.info("Listed %s devices from inventory", len(device_list))
         return DeviceListResult(devices=device_list)
 
     def is_initialized(self) -> bool:

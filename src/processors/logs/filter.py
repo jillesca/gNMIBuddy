@@ -38,7 +38,7 @@ def filter_logs(
                     logs=log_content, minutes=filter_minutes
                 )
                 logger.debug(
-                    f"Applied time filter: last {filter_minutes} minutes"
+                    "Applied time filter: last %s minutes", filter_minutes
                 )
 
             # Always process the logs into the right format, even when not time-filtered
@@ -169,7 +169,7 @@ def filter_logs_by_time(
                     filtered_lines.append(line)
             except Exception as e:
                 # If there are issues parsing, include the line and log the error
-                logger.warning(f"Error parsing timestamp in log: {e}")
+                logger.warning("Error parsing timestamp in log: %s", e)
                 filtered_lines.append(line)
         else:
             # If no timestamp found, include the line

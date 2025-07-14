@@ -75,7 +75,7 @@ def parse_args(
     # Debug: Print arguments that will be parsed
     if args is None:
         args = sys.argv[1:]
-    logger.debug(f"DEBUG: Parsing arguments: {args}")
+    logger.debug("DEBUG: Parsing arguments: %s", args)
 
     try:
         # Parse arguments
@@ -83,7 +83,7 @@ def parse_args(
 
         # Debug: Print parsed arguments
         logger.debug(
-            f"DEBUG: Successfully parsed arguments: {vars(parsed_args)}"
+            "DEBUG: Successfully parsed arguments: %s", vars(parsed_args)
         )
 
         # Configure logging with the specified log level
@@ -98,13 +98,15 @@ def parse_args(
                 else ""
             )
             logger.debug(
-                f"Command line arguments parsed: command={parsed_args.command}{device_info}"
+                "Command line arguments parsed: command=%s%s",
+                parsed_args.command,
+                device_info,
             )
-            logger.debug(f"All parsed arguments: {vars(parsed_args)}")
+            logger.debug("All parsed arguments: %s", vars(parsed_args))
 
         return parsed_args, parser
     except Exception as e:
-        logger.error(f"DEBUG: Error parsing arguments: {e}")
+        logger.error("DEBUG: Error parsing arguments: %s", e)
         raise
 
 
@@ -193,6 +195,6 @@ def execute_command(args: argparse.Namespace) -> Optional[Dict[str, Any]]:
     if args.command in COMMANDS:
         return COMMANDS[args.command].execute(args)
     else:
-        logger.error(f"Unknown command: {args.command}")
+        logger.error("Unknown command: %s", args.command)
         print(f"Error: Unknown command '{args.command}'")
         sys.exit(1)

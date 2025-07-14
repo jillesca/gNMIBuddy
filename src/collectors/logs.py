@@ -60,7 +60,7 @@ def get_logs(
 
     response = get_gnmi_data(device=device, request=log_request)
 
-    # logger.debug(f"Raw log response: {response}")
+    # logger.debug("Raw log response: %s", response)
 
     if isinstance(response, ErrorResponse):
         logger.error(

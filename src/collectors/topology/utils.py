@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Dict, Any, List, Union
+import logging
 import networkx as nx
 from src.schemas.models import Device
 from src.schemas.responses import OperationStatus
@@ -9,6 +10,8 @@ from src.collectors.routing import get_routing_info
 from src.utils.parallel_execution import run_command_on_all_devices
 from src.collectors.interfaces import get_interfaces
 
+
+logger = logging.getLogger(__name__)
 
 # In-memory cache for the topology graph
 _cached_graph = None
@@ -101,9 +104,6 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
 
 
 def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
-    import logging
-
-    logger = logging.getLogger(__name__)
 
     logger.debug("Getting device list from inventory")
     device_objs = InventoryManager.list_devices()["devices"]

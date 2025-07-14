@@ -44,7 +44,7 @@ def main():
             result = get_devices()
 
         if result is not None:
-            # logger.debug(f"Command result: {json.dumps(result)[:1000]}...")
+            # logger.debug("Command result: %s...", json.dumps(result)[:1000])
             print(json.dumps(result, indent=2))
     except Exception as e:
         print(f"Error executing command: {e}")

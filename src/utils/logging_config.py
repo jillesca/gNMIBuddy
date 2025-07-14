@@ -50,7 +50,7 @@ def configure_logging(log_level=None):
     # logger.info(
     #     f"Logging initialized with level: {logging.getLevelName(level)}"
     # )
-    # logger.info(f"Log file: {log_file}")
+    # logger.info("Log file: %s", log_file)
 
     return logger
 

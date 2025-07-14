@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from src.inventory.manager import InventoryManager
-from src.inventory.models import Device
+from src.schemas.models import Device
 
 
 class TestInventoryManager(unittest.TestCase):

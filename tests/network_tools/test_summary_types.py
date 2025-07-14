@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 """
-Test module to diagnose type annotation issues in NetworkTools response classes
+Test module to diagnose type annotation issues in NetworkOperationResult response classes
 """
 
-from typing import Dict
 import sys
 
 # Add src to path
@@ -12,69 +11,45 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from src.network_tools.responses import (
-    InterfaceResponse,
-    MplsResponse,
-    RoutingResponse,
-    VpnResponse,
-    LogResponse,
-    NetworkToolsResponse,
-)
+from src.schemas.responses import NetworkOperationResult, OperationStatus
 
 
-def test_summary_field_types():
-    """Test to print out details of summary field types in all response classes"""
+def test_network_operation_result_structure():
+    """Test to print out details of NetworkOperationResult structure"""
 
-    # Create an instance of each class to test
-    classes = [
-        InterfaceResponse(),
-        MplsResponse(),
-        RoutingResponse(),
-        VpnResponse(),
-        LogResponse(),
-    ]
+    # Create an instance of NetworkOperationResult to test
+    result = NetworkOperationResult(
+        device_name="test-device",
+        ip_address="192.168.1.1",
+        nos="iosxr",
+        operation_type="mpls",
+        status=OperationStatus.SUCCESS,
+        data={"test": "data"},
+        metadata={"timestamp": "2024-01-01"},
+    )
 
-    for instance in classes:
-        cls_name = instance.__class__.__name__
-        print(f"\n{cls_name} summary field inspection:")
+    print(f"\nNetworkOperationResult structure inspection:")
+    print(f"  device_name: {result.device_name}")
+    print(f"  ip_address: {result.ip_address}")
+    print(f"  nos: {result.nos}")
+    print(f"  operation_type: {result.operation_type}")
+    print(f"  status: {result.status}")
+    print(f"  data type: {type(result.data).__name__}")
+    print(f"  metadata type: {type(result.metadata).__name__}")
+    print(f"  error_response: {result.error_response}")
+    print(f"  feature_not_found_response: {result.feature_not_found_response}")
 
-        # Get the summary field value and its type
-        summary_value = getattr(instance, "summary", None)
-        summary_type = (
-            type(summary_value).__name__
-            if summary_value is not None
-            else "None"
-        )
-        print(f"  summary field value: {summary_value}")
-        print(f"  summary field type: {summary_type}")
+    # Test that the structure is consistent
+    assert isinstance(result.data, dict), "data field should be a dictionary"
+    assert isinstance(
+        result.metadata, dict
+    ), "metadata field should be a dictionary"
+    assert isinstance(
+        result.status, OperationStatus
+    ), "status should be an OperationStatus enum"
 
-        # Test the to_dict method with an empty result
-        try:
-            test_result = {"logs": [], "interfaces": [], "data": {}}
-            try:
-                test_result["summary"] = instance.summary
-                print(
-                    f"  Setting test_result['summary'] = instance.summary: SUCCESS"
-                )
-            except Exception as e:
-                print(
-                    f"  Setting test_result['summary'] = instance.summary: FAILED - {type(e).__name__}: {str(e)}"
-                )
-        except Exception as e:
-            print(
-                f"  Error testing result assignment: {type(e).__name__}: {str(e)}"
-            )
-
-        # Check result of actual to_dict method
-        try:
-            result = instance.to_dict()
-            print(f"  to_dict() return type: {type(result).__name__}")
-            print(f"  to_dict() result: {result}")
-        except Exception as e:
-            print(f"  Error in to_dict(): {type(e).__name__}: {str(e)}")
-
-        print("")
+    print("\nAll NetworkOperationResult structure tests passed!")
 
 
 if __name__ == "__main__":
-    test_summary_field_types()
+    test_network_operation_result_structure()

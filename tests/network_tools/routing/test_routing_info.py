@@ -7,7 +7,7 @@ Uses mocking to test the routing functions without making actual GNMI requests.
 import os
 import sys
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add the project root to the Python path
 sys.path.insert(
@@ -21,8 +21,13 @@ from src.network_tools.routing_info import (
     _get_bgp_info,
     _get_isis_info,
 )
-from src.network_tools.responses import RoutingResponse
-from src.gnmi.responses import GnmiResponse, GnmiError
+from src.schemas.responses import (
+    NetworkOperationResult,
+    OperationStatus,
+    ErrorResponse,
+    SuccessResponse,
+)
+from src.schemas.models import Device
 
 
 class TestRoutingInfoFunctions:
@@ -61,27 +66,54 @@ class TestRoutingInfoFunctions:
     ):
         """Test getting routing information for all protocols."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create mock responses for BGP and ISIS
-        bgp_response = MagicMock(spec=RoutingResponse)
-        bgp_response.success = True
-        bgp_response.protocols = {"bgp": {"neighbors": 2}}
+        bgp_response = NetworkOperationResult(
+            device_name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            operation_type="routing_info",
+            status=OperationStatus.SUCCESS,
+            data={
+                "routing_data": {"bgp": {"neighbors": 2}},
+                "summary": {"bgp_neighbors": 2},
+            },
+            metadata={"protocol": "bgp", "include_details": True},
+        )
 
-        isis_response = MagicMock(spec=RoutingResponse)
-        isis_response.success = True
-        isis_response.protocols = {"isis": {"interfaces": 3}}
+        isis_response = NetworkOperationResult(
+            device_name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            operation_type="routing_info",
+            status=OperationStatus.SUCCESS,
+            data={
+                "routing_data": {"isis": {"interfaces": 3}},
+                "summary": {"isis_interfaces": 3},
+            },
+            metadata={"protocol": "isis", "include_details": True},
+        )
 
         # Configure the mocks to return our responses
         mock_get_bgp_info.return_value = bgp_response
         mock_get_isis_info.return_value = isis_response
 
         # Call the function with no protocol filter (get all)
-        responses = get_routing_information(mock_device, include_details=True)
+        response = get_routing_information(mock_device, include_details=True)
 
-        # Verify we got both protocol responses
-        assert len(responses) == 2
+        # Verify we got the combined response
+        assert isinstance(response, NetworkOperationResult)
+        assert response.status == OperationStatus.SUCCESS
+        assert response.device_name == "test-device"
+        assert "bgp" in response.data["routing_data"]
+        assert "isis" in response.data["routing_data"]
         assert mock_get_bgp_info.called
         assert mock_get_isis_info.called
 
@@ -92,22 +124,39 @@ class TestRoutingInfoFunctions:
     ):
         """Test getting routing information for BGP only."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create a mock response for BGP
-        bgp_response = MagicMock(spec=RoutingResponse)
-        bgp_response.success = True
-        bgp_response.protocols = {"bgp": {"neighbors": 2}}
+        bgp_response = NetworkOperationResult(
+            device_name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            operation_type="routing_info",
+            status=OperationStatus.SUCCESS,
+            data={
+                "routing_data": {"bgp": {"neighbors": 2}},
+                "summary": {"bgp_neighbors": 2},
+            },
+            metadata={"protocol": "bgp", "include_details": False},
+        )
 
         # Configure the mock to return our response
         mock_get_bgp_info.return_value = bgp_response
 
         # Call the function with BGP protocol filter
-        responses = get_routing_information(mock_device, protocol="bgp")
+        response = get_routing_information(mock_device, protocol="bgp")
 
         # Verify we got only BGP response
-        assert len(responses) == 1
+        assert isinstance(response, NetworkOperationResult)
+        assert response.status == OperationStatus.SUCCESS
+        assert "bgp" in response.data["routing_data"]
+        assert "isis" not in response.data["routing_data"]
         assert mock_get_bgp_info.called
         assert not mock_get_isis_info.called
 
@@ -115,41 +164,48 @@ class TestRoutingInfoFunctions:
     def test_get_bgp_info_success(self, mock_get_gnmi_data):
         """Test getting BGP information successfully."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create a mock successful GNMI response
-        mock_response = MagicMock(spec=GnmiResponse)
-        mock_response.is_error.return_value = False
-        mock_response.to_dict.return_value = {
-            "openconfig-network-instance:network-instances": {
-                "network-instance": [
-                    {
-                        "name": "default",
-                        "protocols": {
-                            "protocol": [
-                                {
-                                    "identifier": "BGP",
-                                    "name": "bgp",
-                                    "bgp": {
-                                        "neighbors": {
-                                            "neighbor": [
-                                                {
-                                                    "neighbor-address": "10.1.1.1"
-                                                },
-                                                {
-                                                    "neighbor-address": "10.1.1.2"
-                                                },
-                                            ]
+        mock_response = SuccessResponse(
+            data=[
+                {
+                    "openconfig-network-instance:network-instances": {
+                        "network-instance": [
+                            {
+                                "name": "default",
+                                "protocols": {
+                                    "protocol": [
+                                        {
+                                            "identifier": "BGP",
+                                            "name": "bgp",
+                                            "bgp": {
+                                                "neighbors": {
+                                                    "neighbor": [
+                                                        {
+                                                            "neighbor-address": "10.1.1.1"
+                                                        },
+                                                        {
+                                                            "neighbor-address": "10.1.1.2"
+                                                        },
+                                                    ]
+                                                }
+                                            },
                                         }
-                                    },
-                                }
-                            ]
-                        },
+                                    ]
+                                },
+                            }
+                        ]
                     }
-                ]
-            }
-        }
+                }
+            ]
+        )
 
         # Configure the mock to return our response
         mock_get_gnmi_data.return_value = mock_response
@@ -181,12 +237,13 @@ class TestRoutingInfoFunctions:
                 response = _get_bgp_info(mock_device, include_details=True)
 
                 # Verify the response is as expected
-                assert isinstance(response, RoutingResponse)
-                assert response.success is True
+                assert isinstance(response, NetworkOperationResult)
+                assert response.status == OperationStatus.SUCCESS
                 assert response.device_name == "test-device"
-                assert response.include_details is True
-                assert response.protocols["bgp"] == bgp_data
-                assert response.summary["total_neighbors"] == 2
+                assert response.operation_type == "routing_info"
+                assert response.data["routing_data"]["bgp"] == bgp_data
+                assert response.data["summary"]["total_neighbors"] == 2
+                assert response.metadata["include_details"] is True
 
                 # Verify that get_gnmi_data was called with the correct parameters
                 mock_get_gnmi_data.assert_called_once()
@@ -197,73 +254,83 @@ class TestRoutingInfoFunctions:
     def test_get_bgp_info_error(self, mock_get_gnmi_data):
         """Test getting BGP information with an error."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create a mock error response
-        error = GnmiError(
+        error_response = ErrorResponse(
             type="DEVICE_ERROR", message="Could not connect to device"
         )
-        mock_response = MagicMock(spec=GnmiResponse)
-        mock_response.is_error.return_value = True
-        mock_response.error = error
 
         # Configure the mock to return our error response
-        mock_get_gnmi_data.return_value = mock_response
+        mock_get_gnmi_data.return_value = error_response
 
         # Call the function with our mock device
         response = _get_bgp_info(mock_device)
 
         # Verify the response is an error
-        assert isinstance(response, RoutingResponse)
-        assert response.success is False
+        assert isinstance(response, NetworkOperationResult)
+        assert response.status == OperationStatus.FAILED
         assert response.device_name == "test-device"
-        assert response.error == error
+        assert response.error_response is not None
+        assert response.error_response.type == "DEVICE_ERROR"
 
     @patch("src.network_tools.routing_info.get_gnmi_data")
     def test_get_isis_info_success(self, mock_get_gnmi_data):
         """Test getting ISIS information successfully."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create a mock successful GNMI response
-        mock_response = MagicMock(spec=GnmiResponse)
-        mock_response.is_error.return_value = False
-        mock_response.to_dict.return_value = {
-            "openconfig-network-instance:network-instances": {
-                "network-instance": [
-                    {
-                        "name": "default",
-                        "protocols": {
-                            "protocol": [
-                                {
-                                    "identifier": "ISIS",
-                                    "name": "isis",
-                                    "isis": {
-                                        "interfaces": {
-                                            "interface": [
-                                                {
-                                                    "interface-id": "GigabitEthernet0/0/0/0"
+        mock_response = SuccessResponse(
+            data=[
+                {
+                    "openconfig-network-instance:network-instances": {
+                        "network-instance": [
+                            {
+                                "name": "default",
+                                "protocols": {
+                                    "protocol": [
+                                        {
+                                            "identifier": "ISIS",
+                                            "name": "isis",
+                                            "isis": {
+                                                "interfaces": {
+                                                    "interface": [
+                                                        {
+                                                            "interface-id": "GigabitEthernet0/0/0/0"
+                                                        },
+                                                        {
+                                                            "interface-id": "GigabitEthernet0/0/0/1"
+                                                        },
+                                                    ]
                                                 },
-                                                {
-                                                    "interface-id": "GigabitEthernet0/0/0/1"
+                                                "global": {
+                                                    "config": {
+                                                        "level-capability": "LEVEL_2"
+                                                    }
                                                 },
-                                            ]
-                                        },
-                                        "global": {
-                                            "config": {
-                                                "level-capability": "LEVEL_2"
-                                            }
-                                        },
-                                    },
-                                }
-                            ]
-                        },
+                                            },
+                                        }
+                                    ]
+                                },
+                            }
+                        ]
                     }
-                ]
-            }
-        }
+                }
+            ]
+        )
 
         # Configure the mock to return our response
         mock_get_gnmi_data.return_value = mock_response
@@ -300,12 +367,13 @@ class TestRoutingInfoFunctions:
                 response = _get_isis_info(mock_device, include_details=True)
 
                 # Verify the response is as expected
-                assert isinstance(response, RoutingResponse)
-                assert response.success is True
+                assert isinstance(response, NetworkOperationResult)
+                assert response.status == OperationStatus.SUCCESS
                 assert response.device_name == "test-device"
-                assert response.include_details is True
-                assert response.protocols["isis"] == isis_data
-                assert response.summary["total_interfaces"] == 2
+                assert response.operation_type == "routing_info"
+                assert response.data["routing_data"]["isis"] == isis_data
+                assert response.data["summary"]["total_interfaces"] == 2
+                assert response.metadata["include_details"] is True
 
                 # Verify that get_gnmi_data was called with the correct parameters
                 mock_get_gnmi_data.assert_called_once()

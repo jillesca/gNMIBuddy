@@ -16,7 +16,9 @@ def test_deviceprofile_pe():
         os.path.join(os.path.dirname(__file__), "output_pe.json")
     )
     parser = DeviceProfileParser()
-    result = parser.parse(input_data)
+    # Extract the response data from the input_data
+    response_data = input_data["response"]
+    result = parser.parse(response_data)
     assert result == expected
 
 
@@ -28,7 +30,9 @@ def test_deviceprofile_p():
         os.path.join(os.path.dirname(__file__), "output_p.json")
     )
     parser = DeviceProfileParser()
-    result = parser.parse(input_data)
+    # Extract the response data from the input_data
+    response_data = input_data["response"]
+    result = parser.parse(response_data)
     assert result == expected
 
 
@@ -40,7 +44,9 @@ def test_deviceprofile_rr():
         os.path.join(os.path.dirname(__file__), "output_rr.json")
     )
     parser = DeviceProfileParser()
-    result = parser.parse(input_data)
+    # Extract the response data from the input_data
+    response_data = input_data["response"]
+    result = parser.parse(response_data)
     assert result == expected
 
 
@@ -52,7 +58,9 @@ def test_deviceprofile_ce():
         os.path.join(os.path.dirname(__file__), "output_ce.json")
     )
     parser = DeviceProfileParser()
-    result = parser.parse(input_data)
+    # Extract the response data from the input_data
+    response_data = input_data["response"]
+    result = parser.parse(response_data)
     assert result == expected
 
 
@@ -64,5 +72,7 @@ def test_deviceprofile_unknown():
         os.path.join(os.path.dirname(__file__), "output_unknown.json")
     )
     parser = DeviceProfileParser()
-    result = parser.parse(input_data)
+    # Extract the response data from the input_data
+    response_data = input_data["response"]
+    result = parser.parse(response_data)
     assert result == expected

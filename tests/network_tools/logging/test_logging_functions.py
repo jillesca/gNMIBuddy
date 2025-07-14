@@ -7,7 +7,7 @@ Uses mocking to test the logging functions without making actual GNMI requests.
 import os
 import sys
 import pytest
-from unittest.mock import patch, MagicMock, ANY
+from unittest.mock import patch, ANY
 
 # Add the project root to the Python path
 sys.path.insert(
@@ -15,8 +15,13 @@ sys.path.insert(
 )
 
 from src.network_tools.logging import get_logging_information
-from src.network_tools.responses import LogResponse
-from src.gnmi.responses import GnmiResponse, GnmiError
+from src.schemas.responses import (
+    NetworkOperationResult,
+    OperationStatus,
+    ErrorResponse,
+    SuccessResponse,
+)
+from src.schemas.models import Device
 
 
 class TestLoggingFunctions:
@@ -26,19 +31,26 @@ class TestLoggingFunctions:
     def test_get_logging_information_success(self, mock_get_gnmi_data):
         """Test getting logging information successfully."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create a mock successful GNMI response
-        mock_response = MagicMock(spec=GnmiResponse)
-        mock_response.is_error.return_value = False
-        mock_response.to_dict.return_value = {
-            "data": """
+        mock_response = SuccessResponse(
+            data=[
+                {
+                    "data": """
             Apr 20 15:32:45 ERROR Test error message
             Apr 20 15:33:12 INFO Test info message
             Apr 20 15:34:01 WARNING Test warning message
             """
-        }
+                }
+            ]
+        )
 
         # Configure the mock to return our response
         mock_get_gnmi_data.return_value = mock_response
@@ -79,13 +91,18 @@ class TestLoggingFunctions:
             )
 
             # Verify the response is as expected
-            assert isinstance(response, LogResponse)
-            assert response.success is True
+            assert isinstance(response, NetworkOperationResult)
+            assert response.status == OperationStatus.SUCCESS
             assert response.device_name == "test-device"
-            assert len(response.logs) == 3
-            assert response.logs[0]["severity"] == "ERROR"
-            assert response.filter_info["keywords"] == "TEST"
-            assert response.filter_info["filter_minutes"] == 5
+            assert response.operation_type == "logs"
+            assert len(response.data["logs"]) == 3
+            assert response.data["logs"][0]["severity"] == "ERROR"
+            assert (
+                response.data["summary"]["filter_info"]["keywords"] == "TEST"
+            )
+            assert (
+                response.data["summary"]["filter_info"]["filter_minutes"] == 5
+            )
 
             # Simply verify get_gnmi_data was called with the device and any request
             mock_get_gnmi_data.assert_called_once_with(
@@ -96,28 +113,31 @@ class TestLoggingFunctions:
     def test_get_logging_information_error(self, mock_get_gnmi_data):
         """Test getting logging information with an error."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create a mock error response
-        error = GnmiError(
+        error_response = ErrorResponse(
             type="DEVICE_ERROR", message="Could not connect to device"
         )
-        mock_response = MagicMock(spec=GnmiResponse)
-        mock_response.is_error.return_value = True
-        mock_response.error = error
 
         # Configure the mock to return our error response
-        mock_get_gnmi_data.return_value = mock_response
+        mock_get_gnmi_data.return_value = error_response
 
         # Call the function with our mock device
         response = get_logging_information(mock_device)
 
         # Verify the response is an error
-        assert isinstance(response, LogResponse)
-        assert response.success is False
+        assert isinstance(response, NetworkOperationResult)
+        assert response.status == OperationStatus.FAILED
         assert response.device_name == "test-device"
-        assert response.error == error
+        assert response.error_response is not None
+        assert response.error_response.type == "DEVICE_ERROR"
 
     @patch("src.network_tools.logging.get_gnmi_data")
     def test_get_logging_information_filter_processing_error(
@@ -125,13 +145,16 @@ class TestLoggingFunctions:
     ):
         """Test getting logging information with a filter processing error."""
         # Create a mock device
-        mock_device = MagicMock()
-        mock_device.name = "test-device"
+        mock_device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="password",
+        )
 
         # Create a mock successful GNMI response
-        mock_response = MagicMock(spec=GnmiResponse)
-        mock_response.is_error.return_value = False
-        mock_response.to_dict.return_value = {"data": "Some log data"}
+        mock_response = SuccessResponse(data=[{"data": "Some log data"}])
 
         # Configure the mock to return our response
         mock_get_gnmi_data.return_value = mock_response
@@ -145,8 +168,10 @@ class TestLoggingFunctions:
             response = get_logging_information(mock_device)
 
             # Verify the response is an error
-            assert isinstance(response, LogResponse)
-            assert response.success is False
+            assert isinstance(response, NetworkOperationResult)
+            assert response.status == OperationStatus.FAILED
             assert response.device_name == "test-device"
-            assert response.error.type == "LOG_PROCESSING_ERROR"
-            assert "Filter processing error" in response.error.message
+            assert response.error_response is not None
+            assert response.error_response.type == "LOG_PROCESSING_ERROR"
+            assert response.error_response.message is not None
+            assert "Filter processing error" in response.error_response.message

@@ -81,6 +81,8 @@ class DeviceProfileParser(BaseParser):
         )
 
     def _has_vpn_ipv4_unicast_bgp(self, vpn_bgp_afi_safi_states):
+        if vpn_bgp_afi_safi_states is None:
+            return False
         return any(
             v.get("val", {}).get("afi-safi-name")
             == "openconfig-bgp-types:IPV4_UNICAST"

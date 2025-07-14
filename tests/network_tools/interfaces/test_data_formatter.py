@@ -81,7 +81,9 @@ def expected_output(test_data_dir):
 
 def test_format_interface_data_for_llm(openconfig_data, expected_output):
     """Test the full formatting pipeline with OpenConfig data."""
-    result = format_interface_data_for_llm(openconfig_data)
+    # Extract the response data from the openconfig_data
+    response_data = openconfig_data["response"]
+    result = format_interface_data_for_llm(response_data)
 
     # Sort interfaces by name for comparison, as order might differ
     result["interfaces"] = sorted(

@@ -15,7 +15,7 @@ sys.path.insert(
 )
 
 import grpc
-from src.inventory.models import Device
+from src.schemas.models import Device
 from src.gnmi.error_handlers import (
     handle_timeout_error,
     handle_rpc_error,
@@ -24,7 +24,7 @@ from src.gnmi.error_handlers import (
     _extract_feature_name,
     _log_error,
 )
-from src.gnmi.responses import GnmiError, GnmiFeatureNotFoundResponse
+from src.schemas.responses import ErrorResponse, FeatureNotFoundResponse
 
 
 class MockRpcError(grpc.RpcError):
@@ -58,7 +58,7 @@ class Test_ErrorHandlers:
     def test_handle_timeout_error(self):
         """Test the handle_timeout_error function."""
         result = handle_timeout_error(self.device)
-        assert isinstance(result, GnmiError)
+        assert isinstance(result, ErrorResponse)
         assert result.type == "CONNECTION_TIMEOUT"
         assert "Connection timeout" in result.message
         assert self.device.name in result.message
@@ -68,7 +68,7 @@ class Test_ErrorHandlers:
     def test_handle_connection_refused(self):
         """Test the handle_connection_refused function."""
         result = handle_connection_refused(self.device)
-        assert isinstance(result, GnmiError)
+        assert isinstance(result, ErrorResponse)
         assert result.type == "CONNECTION_REFUSED"
         assert "Connection refused" in result.message
         assert self.device.name in result.message
@@ -81,7 +81,7 @@ class Test_ErrorHandlers:
         )
 
         result = handle_rpc_error(self.device, error)
-        assert isinstance(result, GnmiError)
+        assert isinstance(result, ErrorResponse)
         assert result.type == "GRPC_ERROR"
         assert "gRPC error" in result.message
         assert self.device.name in result.message
@@ -97,23 +97,19 @@ class Test_ErrorHandlers:
         )
 
         result = handle_rpc_error(self.device, error)
-        assert isinstance(result, GnmiFeatureNotFoundResponse)
-        assert (
-            result.success is True
-        )  # Feature not found should not be an error
+        assert isinstance(result, FeatureNotFoundResponse)
         assert result.feature_name == feature_name
-        assert feature_name in result.feature_message
-        assert self.device.name in result.feature_message
-        assert "code" in result.feature_details
-        assert "device" in result.feature_details
-        assert "device_ip" in result.feature_details
+        assert feature_name in result.message
+        assert self.device.name in result.message
+        assert "code" in result.details
+        assert "full_details" in result.details
 
     def test_handle_generic_error_regular_error(self):
         """Test the handle_generic_error function with a regular error."""
         error = ValueError("Invalid value")
 
         result = handle_generic_error(self.device, error)
-        assert isinstance(result, GnmiError)
+        assert isinstance(result, ErrorResponse)
         assert result.type == "ValueError"
         assert str(error) in result.message
 
@@ -123,15 +119,12 @@ class Test_ErrorHandlers:
         error = Exception(f"Element not found: '{feature_name}'")
 
         result = handle_generic_error(self.device, error)
-        assert isinstance(result, GnmiFeatureNotFoundResponse)
-        assert (
-            result.success is True
-        )  # Feature not found should not be an error
+        assert isinstance(result, FeatureNotFoundResponse)
         assert result.feature_name == feature_name
-        assert "not found" in result.feature_message.lower()
-        assert self.device.name in result.feature_message
-        assert "device" in result.feature_details
-        assert "device_ip" in result.feature_details
+        assert "not found" in result.message.lower()
+        assert self.device.name in result.message
+        # The generic error handler creates an empty details dict
+        assert isinstance(result.details, dict)
 
     def test_extract_feature_name(self):
         """Test the _extract_feature_name function."""

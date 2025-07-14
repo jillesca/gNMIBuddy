@@ -11,7 +11,9 @@ def sample_input():
 
 def test_system_info_parser_basic(sample_input):
     parser = SystemInfoParser()
-    result = parser.parse(sample_input)
+    # Extract the response data from the sample_input
+    response_data = sample_input["response"]
+    result = parser.parse(response_data)
     # Check top-level fields
     assert result["hostname"] == "xrd-9"
     assert result["software_version"] == "24.2.1"
@@ -43,7 +45,9 @@ def test_system_info_parser_basic(sample_input):
 
 def test_system_info_parser_output_matches_expected(sample_input):
     parser = SystemInfoParser()
-    result = parser.parse(sample_input)
+    # Extract the response data from the sample_input
+    response_data = sample_input["response"]
+    result = parser.parse(response_data)
     with open("tests/network_tools/system_info/system_info_output.json") as f:
         expected = json.load(f)
 

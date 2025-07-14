@@ -9,7 +9,7 @@ import pytest
 from pathlib import Path
 
 from src.inventory.manager import InventoryManager
-from src.inventory.models import Device
+from src.schemas.models import Device
 
 
 @pytest.fixture

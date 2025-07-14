@@ -39,11 +39,17 @@ def parse_vrf_data(gnmi_response: Dict[str, Any]) -> Dict[str, Any]:
         logger.error("Empty gNMI response")
         return result
 
+    # Extract the response data list
+    response_data = gnmi_response.get("response", [])
+    if not response_data:
+        logger.warning("No response data found in gNMI response")
+        return result
+
     # Track VRF names to avoid duplicates
     processed_vrfs = set()
 
     # Process each VRF in the response
-    for item in gnmi_response:
+    for item in response_data:
         if not isinstance(item, dict) or "val" not in item:
             continue
 

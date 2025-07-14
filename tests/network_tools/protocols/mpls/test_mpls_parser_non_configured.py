@@ -29,7 +29,9 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
 
     def test_parse_non_configured_mpls_data(self):
         """Test parsing MPLS data when MPLS is not effectively configured."""
-        parsed_data = parse_mpls_data(self.test_data)
+        # Extract the response data from test_data
+        response_data = self.test_data["response"]
+        parsed_data = parse_mpls_data(response_data)
 
         # Verify the parser correctly identified MPLS is not effectively enabled
         self.assertFalse(parsed_data["enabled"])
@@ -52,7 +54,9 @@ class TestMPLSParserNonConfigured(unittest.TestCase):
 
     def test_generate_summary_non_configured_mpls(self):
         """Test generating a summary for non-configured MPLS."""
-        parsed_data = parse_mpls_data(self.test_data)
+        # Extract the response data from test_data
+        response_data = self.test_data["response"]
+        parsed_data = parse_mpls_data(response_data)
         summary = generate_mpls_summary(parsed_data)
 
         # Verify the summary indicates MPLS is not effectively configured

@@ -1,4 +1,3 @@
-import logging
 from src.schemas.models import Device
 from src.schemas.responses import (
     ErrorResponse,
@@ -6,8 +5,9 @@ from src.schemas.responses import (
     NetworkOperationResult,
 )
 from .utils import _build_graph_ip_only
+from src.logging.config import get_logger, log_operation
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def ip_adjacency_dump(device: Device) -> NetworkOperationResult:

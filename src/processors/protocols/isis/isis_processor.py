@@ -6,10 +6,10 @@ This module provides functions to process ISIS data received from gNMI queries
 and format it in a way that's easier for small LLMs to understand.
 """
 
-import logging
 from typing import Dict, Any, List, Optional
+from src.logging.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def process_isis_data(response: List[Dict[str, Any]]) -> Dict[str, Any]:

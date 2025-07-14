@@ -7,18 +7,18 @@ Handles parsing JSON inventory files and related file operations.
 import json
 import os
 import sys
-import logging
 from typing import Dict, List, Any, Optional, cast
 from pathlib import Path
 
 from src.schemas.models import Device
+from src.logging.config import get_logger
 
 # Type alias for device inventory data from JSON
 DeviceData = Dict[str, Any]
 DeviceInventory = List[DeviceData]
 
 # Setup module logger
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def get_inventory_path(cli_path: Optional[str] = None) -> str:

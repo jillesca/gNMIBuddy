@@ -4,10 +4,10 @@ MPLS Processor module.
 Processes MPLS data from gNMI responses and formats it for easier consumption by small LLMs.
 """
 
-import logging
 from typing import Dict, Any, List
+from src.logging.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def process_mpls_data(gnmi_response: List[Dict[str, Any]]) -> Dict[str, Any]:

@@ -4,11 +4,11 @@ Cisco IOS-XR VRF processor implementation.
 Implements the standard VRF processor interface for Cisco IOS-XR devices.
 """
 
-import logging
 from typing import Dict, Any, List
 from src.processors.protocols.vrf.processor_interface import VrfProcessor
+from src.logging.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CiscoIosXrVrfProcessor(VrfProcessor):

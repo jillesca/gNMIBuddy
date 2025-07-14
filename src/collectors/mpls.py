@@ -3,7 +3,6 @@
 Provides functions for retrieving MPLS information from network devices using gNMI.
 """
 
-import logging
 from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
@@ -17,8 +16,9 @@ from src.processors.protocols.mpls.mpls_processor import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
+from src.logging.config import get_logger, log_operation
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def mpls_request():

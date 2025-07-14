@@ -4,7 +4,6 @@ System information module.
 Provides functions for retrieving system information from network devices using gNMI.
 """
 
-import logging
 from src.schemas.responses import (
     ErrorResponse,
     OperationStatus,
@@ -15,9 +14,9 @@ from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.processors.system_info_processor import SystemInfoProcessor
+from src.logging.config import get_logger, log_operation
 
-
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # Define common requests as constants

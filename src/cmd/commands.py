@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Command implementations for the network tools CLI"""
-from src.utils.logging_config import get_logger
+from src.logging.config import get_logger
 from src.cmd.base import BaseCommand
 from src.utils.parallel_execution import run_command_on_all_devices
 
@@ -456,40 +456,102 @@ class TopologyNeighborsCommand(BaseCommand):
         return get_topology_neighbors(args.device)
 
 
-# class TopologyPathCommand(BaseCommand):
-#     name = "topology-path"
-#     help = "Show shortest path between two devices"
-#     description = (
-#         "Show the shortest path between two devices in the topology graph"
-#     )
+class LogLevelCommand(BaseCommand):
+    """Command handler for managing application logging levels"""
 
-#     def configure_parser(self, parser):
-#         parser.add_argument(
-#             "--target", required=True, help="Target device name"
-#         )
+    name = "log-level"
+    help = "Manage application logging levels"
+    description = "View and modify logging levels for different modules"
 
-#     def execute(self, args):
-#         from api import get_topology_path
+    def configure_parser(self, parser):
+        subparsers = parser.add_subparsers(
+            dest="log_action", help="Log level actions"
+        )
 
-#         return get_topology_path(args.device, args.target)
+        # Show current levels
+        show_parser = subparsers.add_parser(
+            "show", help="Show current log levels"
+        )
 
+        # Set module log level
+        set_parser = subparsers.add_parser(
+            "set", help="Set log level for a module"
+        )
+        set_parser.add_argument(
+            "module",
+            help="Module name (e.g., gnmibuddy.collectors.interfaces)",
+        )
+        set_parser.add_argument(
+            "level",
+            choices=["debug", "info", "warning", "error"],
+            help="Log level",
+        )
 
-# class TopologySegmentCommand(BaseCommand):
-#     name = "topology-segment"
-#     help = "Show devices on a specified L3 segment"
-#     description = "Show all devices on a specified L3 network segment in the topology graph"
+        # List available modules
+        list_parser = subparsers.add_parser(
+            "modules", help="List available modules for logging control"
+        )
 
-#     def configure_parser(self, parser):
-#         parser.add_argument(
-#             "--network",
-#             required=True,
-#             help="L3 network segment (e.g., 10.0.0.0/30)",
-#         )
+    def execute(self, args):
+        from src.logging.config import LoggingConfig, LoggerNames
 
-#     def execute(self, args):
-#         from api import get_topology_segment
+        if args.log_action == "show":
+            return self._show_current_levels()
+        elif args.log_action == "set":
+            return self._set_module_level(args.module, args.level)
+        elif args.log_action == "modules":
+            return self._list_available_modules()
+        else:
+            return {"error": "Invalid log action"}
 
-#         return get_topology_segment(args.device, args.network)
+    def _show_current_levels(self):
+        from src.logging.config import LoggingConfig
+
+        levels = LoggingConfig.get_module_levels()
+        return {
+            "current_module_levels": levels,
+            "available_actions": ["show", "set", "modules"],
+        }
+
+    def _set_module_level(self, module: str, level: str):
+        from src.logging.config import LoggingConfig
+
+        try:
+            LoggingConfig.set_module_level(module, level)
+            return {
+                "success": True,
+                "message": f"Set {module} log level to {level}",
+                "module": module,
+                "level": level,
+            }
+        except (ValueError, KeyError, AttributeError) as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "module": module,
+                "level": level,
+            }
+
+    def _list_available_modules(self):
+        from src.logging.config import LoggerNames
+
+        # Get all logger name constants
+        modules = []
+        for attr_name in dir(LoggerNames):
+            if not attr_name.startswith("_"):
+                modules.append(getattr(LoggerNames, attr_name))
+
+        return {
+            "available_modules": sorted(modules),
+            "examples": [
+                "gnmibuddy.collectors.interfaces - Interface collection operations",
+                "gnmibuddy.collectors.routing - Routing protocol operations",
+                "gnmibuddy.gnmi - gNMI client operations",
+                "gnmibuddy.inventory - Device inventory management",
+                "pygnmi - External pygnmi library",
+            ],
+            "usage": "Use 'log-level set <module> <level>' to change levels",
+        }
 
 
 # Dictionary of all available commands
@@ -508,6 +570,7 @@ COMMANDS = {
         DeviceProfileCommand,
         TopologyIPAdjacencyCommand,
         TopologyNeighborsCommand,
+        LogLevelCommand,
         # TopologyPathCommand,
         # TopologySegmentCommand,
     ]

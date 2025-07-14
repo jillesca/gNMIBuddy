@@ -4,7 +4,6 @@ Interface functions module.
 Provides functions for retrieving interface information from network devices using gNMI.
 """
 
-import logging
 from typing import Optional, Dict, Any
 from src.schemas.responses import (
     ErrorResponse,
@@ -21,10 +20,12 @@ from src.processors.interfaces.data_processor import (
 from src.processors.interfaces.single_interface_processor import (
     process_single_interface_data,
 )
+from src.logging.config import get_logger, log_operation
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
+@log_operation("get_interfaces")
 def get_interfaces(
     device: Device,
     interface: Optional[str] = None,
@@ -39,6 +40,11 @@ def get_interfaces(
     Returns:
         NetworkOperationResult: Response object containing interface information
     """
+    logger.debug(
+        "Getting interface information",
+        extra={"device_name": device.name, "interface": interface},
+    )
+
     if interface:
         return _get_single_interface_info(device, interface)
 

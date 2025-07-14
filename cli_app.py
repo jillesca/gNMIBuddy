@@ -13,7 +13,7 @@ apply_thread_safety_patches()
 
 from api import get_devices
 from src.cmd import run_cli_mode
-from src.utils.logging_config import configure_logging, get_logger
+from src.logging.config import LoggingConfig, get_logger
 
 
 def main():
@@ -23,9 +23,28 @@ def main():
     # Get log level from command line before initializing
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--log-level", type=str)
+    parser.add_argument("--module-log-levels", type=str)
+    parser.add_argument("--structured-logging", action="store_true")
     args, _ = parser.parse_known_args(sys.argv[1:])
 
-    configure_logging(args.log_level if hasattr(args, "log_level") else None)
+    # Parse module-specific log levels
+    module_levels = {}
+    if args.module_log_levels:
+        try:
+            for item in args.module_log_levels.split(","):
+                if "=" in item:
+                    module, level = item.strip().split("=", 1)
+                    module_levels[module.strip()] = level.strip()
+        except ValueError:
+            print(
+                "Warning: Invalid module-log-levels format. Use 'module1=debug,module2=warning'"
+            )
+
+    LoggingConfig.configure(
+        global_level=args.log_level,
+        module_levels=module_levels,
+        enable_structured=args.structured_logging,
+    )
     logger = get_logger(__name__)
 
     try:

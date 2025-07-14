@@ -4,7 +4,6 @@ Logging functions module.
 Provides functions for retrieving logging information from network devices using gNMI.
 """
 
-import logging
 from typing import Optional
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
@@ -16,11 +15,12 @@ from src.schemas.responses import (
     OperationStatus,
     NetworkOperationResult,
 )
+from src.logging.config import get_logger, log_operation
+
+logger = get_logger(__name__)
 
 
-logger = logging.getLogger(__name__)
-
-
+@log_operation("get_logs")
 def get_logs(
     device: Device,
     keywords: Optional[str] = None,
@@ -39,6 +39,15 @@ def get_logs(
     Returns:
         NetworkOperationResult: Response object containing logs or error information
     """
+    logger.debug(
+        "Getting logs",
+        extra={
+            "device_name": device.name,
+            "keywords": keywords,
+            "minutes": minutes,
+            "show_all_logs": show_all_logs,
+        },
+    )
     # Prepare filter information for inclusion in the response
     filter_info = {
         "keywords": keywords,

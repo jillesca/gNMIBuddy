@@ -4,7 +4,6 @@ Routing information module.
 Provides functions for retrieving routing protocol information from network devices using gNMI.
 """
 
-import logging
 from typing import Optional
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
@@ -24,9 +23,9 @@ from src.processors.protocols.isis.isis_processor import (
     process_isis_data,
     generate_isis_summary,
 )
+from src.logging.config import get_logger, log_operation
 
-
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # Define common requests as constants

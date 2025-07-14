@@ -31,7 +31,8 @@ from src.gnmi.error_handlers import (
     handle_connection_refused,
     handle_generic_error,
 )
-from src.utils.logging_config import get_logger
+from src.logging.config import get_logger
+
 
 logger = get_logger(__name__)
 

@@ -4,7 +4,6 @@ VPN/VRF information module.
 Provides functions for retrieving VRF/VPN information from network devices using gNMI.
 """
 
-import logging
 from typing import List, Optional, Union
 from src.schemas.responses import (
     ErrorResponse,
@@ -20,9 +19,9 @@ from src.processors.protocols.vrf import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
+from src.logging.config import get_logger, log_operation
 
-
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def get_vpn_info(

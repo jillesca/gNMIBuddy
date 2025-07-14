@@ -4,7 +4,7 @@ from typing import Optional, Union
 import re
 import grpc
 from src.schemas.models import Device
-from src.utils.logging_config import get_logger
+from src.logging.config import get_logger
 from src.schemas.responses import ErrorResponse, FeatureNotFoundResponse
 
 logger = get_logger(__name__)

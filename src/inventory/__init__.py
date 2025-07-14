@@ -4,14 +4,14 @@ Inventory package.
 Provides functions and classes for managing network device inventory.
 """
 
-import logging
 from typing import Optional, Tuple, Union
 
 from .manager import InventoryManager
 from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
+from src.logging.config import get_logger
 
 # Setup module logger
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def initialize_inventory(cli_path: Optional[str] = None) -> None:

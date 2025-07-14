@@ -4,7 +4,6 @@ Device profile module.
 Provides functions for retrieving device role/profile information from network devices using gNMI.
 """
 
-import logging
 from src.schemas.responses import (
     ErrorResponse,
     OperationStatus,
@@ -16,8 +15,9 @@ from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.utils.vrf_utils import get_non_default_vrf_names
 from src.processors.deviceprofile_processor import DeviceProfileProcessor
+from src.logging.config import get_logger, log_operation
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def deviceprofile_request():

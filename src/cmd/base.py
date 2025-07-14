@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Base classes and utilities for CLI command handling"""
 from abc import ABC, abstractmethod
-from src.utils.logging_config import get_logger
+from src.logging.config import get_logger
+
 
 logger = get_logger(__name__)
 

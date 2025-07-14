@@ -3,7 +3,7 @@
 import concurrent.futures
 from typing import Dict, Any, List, Callable
 
-from src.utils.logging_config import get_logger
+from src.logging.config import get_logger
 import src.inventory
 
 

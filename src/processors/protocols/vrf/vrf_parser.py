@@ -5,11 +5,11 @@ Processes VRF configuration and state data from gNMI responses and formats it
 in a simplified way for easier consumption by small LLMs.
 """
 
-import logging
 import time
 from typing import Dict, Any, List
+from src.logging.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def process_vrf_data(gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:

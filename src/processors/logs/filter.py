@@ -4,12 +4,12 @@ Log filtering module.
 Provides functions for filtering logs based on time and other criteria.
 """
 
-import logging
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional, List
+from src.logging.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def filter_logs(

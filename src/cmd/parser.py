@@ -4,7 +4,7 @@ import argparse
 import sys
 from typing import Optional, Tuple, Dict, Any
 
-from src.utils.logging_config import get_logger, configure_logging
+from src.logging.config import get_logger
 from src.cmd.commands import COMMANDS
 from src.cmd.display import display_all_commands
 from src.inventory import initialize_inventory
@@ -12,7 +12,9 @@ from src.inventory import initialize_inventory
 logger = get_logger(__name__)
 
 
-def run_cli_mode() -> None:
+def run_cli_mode() -> (
+    Tuple[Optional[Dict[str, Any]], Optional[argparse.ArgumentParser]]
+):
     """
     Run the toolkit in CLI mode.
 
@@ -27,11 +29,28 @@ def run_cli_mode() -> None:
             parser.print_help()
             return None, parser
 
-        # Configure logging with the specified log level
+        # Configure logging with the specified log level and module settings
         if hasattr(args, "log_level") and args.log_level:
-            from src.utils.logging_config import configure_logging
+            from src.logging.config import LoggingConfig
 
-            configure_logging(args.log_level.lower())
+            # Parse module-specific log levels
+            module_levels = {}
+            if hasattr(args, "module_log_levels") and args.module_log_levels:
+                try:
+                    for item in args.module_log_levels.split(","):
+                        if "=" in item:
+                            module, level = item.strip().split("=", 1)
+                            module_levels[module.strip()] = level.strip()
+                except ValueError:
+                    logger.warning(
+                        "Invalid module-log-levels format. Use 'module1=debug,module2=warning'"
+                    )
+
+            LoggingConfig.configure(
+                global_level=args.log_level.lower(),
+                module_levels=module_levels,
+                enable_structured=getattr(args, "structured_logging", False),
+            )
 
         # Special handling for list-commands to show all available commands
         if args.command == "list-commands":
@@ -86,9 +105,33 @@ def parse_args(
             "DEBUG: Successfully parsed arguments: %s", vars(parsed_args)
         )
 
-        # Configure logging with the specified log level
+        # Configure logging with the specified log level and module settings
         if hasattr(parsed_args, "log_level") and parsed_args.log_level:
-            configure_logging(parsed_args.log_level.lower())
+            from src.logging.config import LoggingConfig
+
+            # Parse module-specific log levels
+            module_levels = {}
+            if (
+                hasattr(parsed_args, "module_log_levels")
+                and parsed_args.module_log_levels
+            ):
+                try:
+                    for item in parsed_args.module_log_levels.split(","):
+                        if "=" in item:
+                            module, level = item.strip().split("=", 1)
+                            module_levels[module.strip()] = level.strip()
+                except ValueError:
+                    logger.warning(
+                        "Invalid module-log-levels format. Use 'module1=debug,module2=warning'"
+                    )
+
+            LoggingConfig.configure(
+                global_level=parsed_args.log_level.lower(),
+                module_levels=module_levels,
+                enable_structured=getattr(
+                    parsed_args, "structured_logging", False
+                ),
+            )
 
         # Log the parsed command
         if hasattr(parsed_args, "command") and parsed_args.command:
@@ -124,8 +167,24 @@ def create_parser() -> argparse.ArgumentParser:
         "--log-level",
         type=str.lower,
         choices=["debug", "info", "warning", "error"],
-        help="Set the logging level (debug, info, warning, error)",
+        help="Set the global logging level (debug, info, warning, error)",
         default="info",
+    )
+    parser.add_argument(
+        "--module-log-levels",
+        type=str,
+        help="Set specific log levels for modules (format: 'module1=debug,module2=warning'). Available modules: gnmibuddy.collectors.*, gnmibuddy.gnmi, gnmibuddy.inventory, etc.",
+    )
+    parser.add_argument(
+        "--structured-logging",
+        action="store_true",
+        help="Enable structured JSON logging (useful for observability tools)",
+    )
+    parser.add_argument(
+        "--quiet-external",
+        action="store_true",
+        help="Reduce noise from external libraries (pygnmi, grpc, etc.)",
+        default=True,
     )
     parser.add_argument(
         "--device",

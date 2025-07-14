@@ -9,9 +9,10 @@ from typing import Dict, Optional, Tuple, Union
 
 from .file_handler import get_inventory_path, load_inventory
 from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
+from src.logging.config import get_logger
 
 # Setup module logger
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class InventoryManager:

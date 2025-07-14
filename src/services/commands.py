@@ -4,7 +4,6 @@ Simplified network command service for executing commands with standardized erro
 """
 
 import json
-import logging
 from enum import Enum
 from dataclasses import is_dataclass, asdict
 from typing import Dict, Any, Protocol, runtime_checkable
@@ -12,8 +11,9 @@ from typing import Dict, Any, Protocol, runtime_checkable
 import src.inventory
 from src.schemas.models import Device
 from src.schemas.responses import NetworkOperationResult
+from src.logging.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @runtime_checkable

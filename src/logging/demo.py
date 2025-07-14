@@ -165,23 +165,23 @@ def demo_cli_integration():
     print("You can now use these CLI options:")
     print()
     print("# Basic log level control:")
-    print("python cli_app.py --log-level debug --device xrd-1 interfaces")
+    print("python gnmictl.py --log-level debug --device xrd-1 interfaces")
     print()
     print("# Module-specific logging:")
-    print("python cli_app.py --log-level info \\")
+    print("python gnmictl.py --log-level info \\")
     print("  --module-log-levels 'gnmibuddy.collectors=debug,pygnmi=error' \\")
     print("  --device xrd-1 interfaces")
     print()
     print("# Structured logging for observability:")
-    print("python cli_app.py --log-level info --structured-logging \\")
+    print("python gnmictl.py --log-level info --structured-logging \\")
     print("  --device xrd-1 interfaces")
     print()
     print("# Dynamic log level management:")
-    print("python cli_app.py --device xrd-1 log-level show")
+    print("python gnmictl.py --device xrd-1 log-level show")
     print(
-        "python cli_app.py --device xrd-1 log-level set gnmibuddy.gnmi debug"
+        "python gnmictl.py --device xrd-1 log-level set gnmibuddy.gnmi debug"
     )
-    print("python cli_app.py --device xrd-1 log-level modules")
+    print("python gnmictl.py --device xrd-1 log-level modules")
     print()
 
 

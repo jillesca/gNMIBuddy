@@ -19,6 +19,8 @@ See the [API definition](/api.py) for all available APIs and options.
 
 ## ⚡ Quick Start
 
+> **Note:** The main CLI entry point is now called `gnmictl.py` (following the Kubernetes `kubectl` naming convention) instead of the previous `cli_app.py`.
+
 ### Prerequisites
 
 - Python 3.13+
@@ -43,20 +45,29 @@ Run the application:
 
 ```bash
 # Creates virtual environment, installs dependencies, and shows help
-uv run cli_app.py --help
+uv run gnmictl.py --help
+
+# Or use the wrapper script (after making it executable)
+./gnmictl --help
 ```
 
 ### Basic Usage
 
 ```bash
 # List available devices
-uv run cli_app.py list-devices
+uv run gnmictl.py list-devices
+# or
+./gnmictl list-devices
 
 # Get routing info from a device
-uv run cli_app.py --device xrd-1 routing --protocol bgp
+uv run gnmictl.py --device xrd-1 routing --protocol bgp
+# or
+./gnmictl --device xrd-1 routing --protocol bgp
 
 # Check all interfaces across all devices
-uv run cli_app.py --all-devices interface
+uv run gnmictl.py --all-devices interface
+# or
+./gnmictl --all-devices interface
 ```
 
 ## 🤖 LLM Integration (MCP)
@@ -156,22 +167,34 @@ Use the `--help` flag for detailed command options.
 
 ```bash
 # Routing with BGP details
-uv run cli_app.py --device xrd-1 routing --protocol bgp --detail
+uv run gnmictl.py --device xrd-1 routing --protocol bgp --detail
+# or
+./gnmictl --device xrd-1 routing --protocol bgp --detail
 
 # Specific interface
-uv run cli_app.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
+uv run gnmictl.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
+# or
+./gnmictl --device xrd-2 interface --name GigabitEthernet0/0/0/0
 
 # MPLS details
-uv run cli_app.py --device xrd-1 mpls --detail
+uv run gnmictl.py --device xrd-1 mpls --detail
+# or
+./gnmictl --device xrd-1 mpls --detail
 
 # VRF information
-uv run cli_app.py --device xrd-3 vpn --vrf customer-a
+uv run gnmictl.py --device xrd-3 vpn --vrf customer-a
+# or
+./gnmictl --device xrd-3 vpn --vrf customer-a
 
 # Filtered logs
-uv run cli_app.py --device xrd-2 logging --keywords "bgp|error"
+uv run gnmictl.py --device xrd-2 logging --keywords "bgp|error"
+# or
+./gnmictl --device xrd-2 logging --keywords "bgp|error"
 
 # Run on all devices
-uv run cli_app.py --all-devices interface
+uv run gnmictl.py --all-devices interface
+# or
+./gnmictl --all-devices interface
 ```
 
 ## 🏗️ Architecture

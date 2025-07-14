@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Wrapper script for gnmictl.py to make it easier to run
+# This allows running just "gnmictl" instead of "uv run gnmictl.py"
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Change to the script directory and run gnmictl.py with uv
+cd "$SCRIPT_DIR" && uv run gnmictl.py "$@"

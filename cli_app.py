@@ -12,7 +12,7 @@ from src.utils.thread_safety import apply_thread_safety_patches
 apply_thread_safety_patches()
 
 from api import get_devices
-from src.cli import run_cli_mode
+from src.cmd import run_cli_mode
 from src.utils.logging_config import configure_logging, get_logger
 
 

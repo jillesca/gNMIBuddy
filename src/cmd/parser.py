@@ -5,8 +5,8 @@ import sys
 from typing import Optional, Tuple, Dict, Any
 
 from src.utils.logging_config import get_logger, configure_logging
-from src.cli.commands import COMMANDS
-from src.cli.display import display_all_commands
+from src.cmd.commands import COMMANDS
+from src.cmd.display import display_all_commands
 from src.inventory import initialize_inventory
 
 logger = get_logger(__name__)

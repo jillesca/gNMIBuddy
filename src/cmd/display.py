@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Display functions for CLI output"""
 from typing import Dict, List, Tuple, Any
-from src.cli.commands import COMMANDS
+from src.cmd.commands import COMMANDS
 
 
 def display_all_commands(detailed=False):

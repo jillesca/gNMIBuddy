@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Command implementations for the network tools CLI"""
 from src.utils.logging_config import get_logger
-from src.cli.base import BaseCommand
+from src.cmd.base import BaseCommand
 from src.utils.parallel_execution import run_command_on_all_devices
 
 logger = get_logger(__name__)
@@ -224,7 +224,7 @@ class ListCommandsCommand(BaseCommand):
 
     def execute(self, args):
         logger.info("Displaying all available commands")
-        from src.cli.display import display_all_commands
+        from src.cmd.display import display_all_commands
 
         display_all_commands(detailed=args.detail)
         return None  # Special case, no result to return

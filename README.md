@@ -116,12 +116,13 @@ Add to Claude's configuration (Settings > Developer > Edit config):
 Use the MCP inspector for testing:
 
 ```bash
+NETWORK_INVENTORY=xrd_sandbox.json \
 npx @modelcontextprotocol/inspector \
 uv run --with "mcp[cli],pygnmi,networkx" \
 mcp run mcp_server.py
 ```
 
-> **Note:** Set the `NETWORK_INVENTORY` environment variable or you'll get errors.
+> **Note:** Set the `NETWORK_INVENTORY` environment variable to your inventory file or you'll get errors.
 
 ## 🧪 Testing with DevNet Sandbox
 

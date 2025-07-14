@@ -7,7 +7,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
 )
 
-from src.parsers.logs.filter import filter_logs
+from src.processors.logs.filter import filter_logs
 
 
 class TestShowAllLogs:
@@ -75,7 +75,7 @@ RP/0/RP0/CPU0:Apr 24 11:22:45.789 UTC: MPLS-3-LDP_NEIGHBOR: LDP neighbor 192.168
             return recent_log
 
         with patch(
-            "src.parsers.logs.filter.filter_logs_by_time",
+            "src.processors.logs.filter.filter_logs_by_time",
             side_effect=mock_filter_by_time,
         ):
             # Filter logs with 5 minutes threshold and show_all_logs=False

@@ -15,7 +15,7 @@ from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.utils.vrf_utils import get_non_default_vrf_names
-from src.parsers.deviceprofile_parser import DeviceProfileParser
+from src.processors.deviceprofile_processor import DeviceProfileProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,9 @@ def get_device_profile(device: Device) -> NetworkOperationResult:
     # Get VPN info and BGP AFI-SAFI state for non-default VPNs
     vpn_info, vpn_bgp_afi_safi_states = _get_vpn_bgp_info(device)
 
-    parser = DeviceProfileParser()
+    parser = DeviceProfileProcessor()
     try:
-        parsed_data = parser.parse(
+        parsed_data = parser.process_data(
             response.data, vpn_info, vpn_bgp_afi_safi_states
         )
         return NetworkOperationResult(

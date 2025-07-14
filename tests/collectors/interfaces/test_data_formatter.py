@@ -5,7 +5,7 @@ Tests for the data_formatter module in parsers/interfaces.
 import json
 import os
 import pytest
-from src.parsers.interfaces.data_formatter import (
+from src.processors.interfaces.data_processor import (
     format_interface_data_for_llm,
     extract_interfaces,
     extract_interface_info,

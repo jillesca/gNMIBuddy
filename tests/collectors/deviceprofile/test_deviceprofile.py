@@ -1,6 +1,6 @@
 import json
 import os
-from src.parsers.deviceprofile_parser import DeviceProfileParser
+from src.processors.deviceprofile_processor import DeviceProfileProcessor
 
 
 def load_json(path):
@@ -15,10 +15,10 @@ def test_deviceprofile_pe():
     expected = load_json(
         os.path.join(os.path.dirname(__file__), "output_pe.json")
     )
-    parser = DeviceProfileParser()
+    parser = DeviceProfileProcessor()
     # Pass gNMI data directly to parser
     gnmi_data = input_file["response"]
-    result = parser.parse(gnmi_data)
+    result = parser.process_data(gnmi_data)
     assert result == expected
 
 
@@ -29,10 +29,10 @@ def test_deviceprofile_p():
     expected = load_json(
         os.path.join(os.path.dirname(__file__), "output_p.json")
     )
-    parser = DeviceProfileParser()
+    parser = DeviceProfileProcessor()
     # Pass gNMI data directly to parser
     gnmi_data = input_file["response"]
-    result = parser.parse(gnmi_data)
+    result = parser.process_data(gnmi_data)
     assert result == expected
 
 
@@ -43,10 +43,10 @@ def test_deviceprofile_rr():
     expected = load_json(
         os.path.join(os.path.dirname(__file__), "output_rr.json")
     )
-    parser = DeviceProfileParser()
+    parser = DeviceProfileProcessor()
     # Pass gNMI data directly to parser
     gnmi_data = input_file["response"]
-    result = parser.parse(gnmi_data)
+    result = parser.process_data(gnmi_data)
     assert result == expected
 
 
@@ -57,10 +57,10 @@ def test_deviceprofile_ce():
     expected = load_json(
         os.path.join(os.path.dirname(__file__), "output_ce.json")
     )
-    parser = DeviceProfileParser()
+    parser = DeviceProfileProcessor()
     # Pass gNMI data directly to parser
     gnmi_data = input_file["response"]
-    result = parser.parse(gnmi_data)
+    result = parser.process_data(gnmi_data)
     assert result == expected
 
 
@@ -71,8 +71,8 @@ def test_deviceprofile_unknown():
     expected = load_json(
         os.path.join(os.path.dirname(__file__), "output_unknown.json")
     )
-    parser = DeviceProfileParser()
+    parser = DeviceProfileProcessor()
     # Pass gNMI data directly to parser
     gnmi_data = input_file["response"]
-    result = parser.parse(gnmi_data)
+    result = parser.process_data(gnmi_data)
     assert result == expected

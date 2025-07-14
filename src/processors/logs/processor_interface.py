@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Log parser interfaces.
-Defines standard interfaces for parsers that work with log data.
+Log processor interfaces.
+Defines standard interfaces for processors that work with log data.
 """
 
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
-from src.parsers.base import BaseParser  # Changed GnmiDataParser to BaseParser
+from src.processors.base import BaseProcessor
 
 
-class LogParser(BaseParser):  # Changed GnmiDataParser to BaseParser
+class LogProcessor(BaseProcessor):
     """
-    Base class for log data parsers.
+    Base class for log data processors.
 
     This class provides a consistent interface for extracting and transforming
     log data from network devices.
@@ -65,8 +65,8 @@ class LogParser(BaseParser):  # Changed GnmiDataParser to BaseParser
         """
         return {"items": gnmi_data if gnmi_data else []}
 
-    def parse(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Parse gNMI data through extraction and transformation."""
+    def process_data(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process gNMI data through extraction and transformation."""
         extracted_data = self.extract_data(gnmi_data)
         return self.transform_data(extracted_data)
 

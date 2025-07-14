@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 """
-Device profile parser module.
-Parses device profile data from gNMI responses into a structured format.
+Device profile processor module.
+Processes device profile data from gNMI responses into a structured format.
 """
 
 from typing import Dict, Any, List
-from src.parsers.base import BaseParser
+from src.processors.base import BaseProcessor
 
 
-class DeviceProfileParser(BaseParser):
+class DeviceProfileProcessor(BaseProcessor):
     """
-    Parser for device profile data from gNMI responses.
+    Processor for device profile data from gNMI responses.
 
     Accepts raw gNMI data (List[Dict[str, Any]]) directly and determines
     device role and capabilities including MPLS, ISIS, BGP L3VPN,
     route reflector status, and VPN BGP configuration.
     """
 
-    def parse(
+    def process_data(
         self,
         gnmi_data: List[Dict[str, Any]],
         vpn_info: Any = None,
         vpn_bgp_afi_safi_states: Any = None,
     ) -> Dict[str, Any]:
         """
-        Parse device profile information from gNMI data.
+        Process device profile information from gNMI data.
 
         Args:
             gnmi_data: Raw gNMI response data (list of update dictionaries)

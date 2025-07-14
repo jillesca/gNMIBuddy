@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-MPLS parser interfaces.
-Defines standard interfaces for parsers that work with MPLS data.
+MPLS processor interfaces.
+Defines standard interfaces for processors that work with MPLS data.
 """
 
 from typing import Dict, Any, List
-from src.parsers.protocols.parser_interface import MplsParser
+from src.processors.protocols.processor_interface import MplsProcessor
 
 
-class OpenConfigMplsParser(MplsParser):
+class OpenConfigMplsProcessor(MplsProcessor):
     """
-    Parser for MPLS data using OpenConfig model.
+    Processor for MPLS data using OpenConfig model.
 
-    This class handles parsing MPLS configuration and state data
+    This class handles processing MPLS configuration and state data
     from OpenConfig YANG models.
     """
 

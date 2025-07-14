@@ -15,8 +15,10 @@ from src.schemas.responses import (
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.parsers.interfaces.data_formatter import format_interface_data_for_llm
-from src.parsers.interfaces.single_interface_parser import (
+from src.processors.interfaces.data_processor import (
+    format_interface_data_for_llm,
+)
+from src.processors.interfaces.single_interface_processor import (
     parse_single_interface_data,
 )
 

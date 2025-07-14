@@ -1,6 +1,6 @@
 import json
 import pytest
-from src.parsers.system_info_parser import SystemInfoParser
+from src.processors.system_info_processor import SystemInfoProcessor
 
 
 @pytest.fixture
@@ -12,9 +12,9 @@ def sample_input():
 
 
 def test_system_info_parser_basic(sample_input):
-    parser = SystemInfoParser()
+    parser = SystemInfoProcessor()
     # Pass gNMI data directly to parser
-    result = parser.parse(sample_input)
+    result = parser.process_data(sample_input)
     # Check top-level fields
     assert result["hostname"] == "xrd-9"
     assert result["software_version"] == "24.2.1"
@@ -45,9 +45,9 @@ def test_system_info_parser_basic(sample_input):
 
 
 def test_system_info_parser_output_matches_expected(sample_input):
-    parser = SystemInfoParser()
+    parser = SystemInfoProcessor()
     # Pass gNMI data directly to parser
-    result = parser.parse(sample_input)
+    result = parser.process_data(sample_input)
     with open("tests/collectors/system_info/system_info_output.json") as f:
         expected = json.load(f)
 

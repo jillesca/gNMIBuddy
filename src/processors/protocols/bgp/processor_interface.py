@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-BGP parser interfaces.
-Defines standard interfaces for parsers that work with BGP protocol data.
+BGP processor interfaces.
+Defines standard interfaces for processors that work with BGP protocol data.
 """
 
 from typing import Dict, Any, List
-from src.parsers.protocols.parser_interface import RoutingParser
+from src.processors.protocols.processor_interface import RoutingProcessor
 
 
-class BgpParser(RoutingParser):
+class BgpProcessor(RoutingProcessor):
     """
-    Parser for BGP protocol data.
+    Processor for BGP protocol data.
 
-    This class handles parsing BGP configuration and state data
+    This class handles processing BGP configuration and state data
     from OpenConfig models.
     """
 

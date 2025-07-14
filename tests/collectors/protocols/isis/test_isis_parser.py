@@ -14,7 +14,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../"))
 )
 
-from src.parsers.protocols.isis.isis_parser import (
+from src.processors.protocols.isis.isis_processor import (
     parse_isis_data,
     generate_isis_summary,
 )

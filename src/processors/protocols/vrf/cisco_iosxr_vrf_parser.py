@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Cisco IOS-XR VRF parser implementation.
-Implements the standard VRF parser interface for Cisco IOS-XR devices.
+Cisco IOS-XR VRF processor implementation.
+Implements the standard VRF processor interface for Cisco IOS-XR devices.
 """
 
 import logging
 from typing import Dict, Any, List
-from src.parsers.protocols.vrf.parser_interface import VrfParser
+from src.processors.protocols.vrf.processor_interface import VrfProcessor
 
 logger = logging.getLogger(__name__)
 
 
-class CiscoIosXrVrfParser(VrfParser):
+class CiscoIosXrVrfProcessor(VrfProcessor):
     """
-    Parser for VRF data from Cisco IOS-XR devices.
+    Processor for VRF data from Cisco IOS-XR devices.
 
-    This class implements the VrfParser interface for Cisco IOS-XR devices,
+    This class implements the VrfProcessor interface for Cisco IOS-XR devices,
     extracting VRF information from OpenConfig paths.
     """
 

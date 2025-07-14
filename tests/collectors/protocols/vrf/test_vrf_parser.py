@@ -19,7 +19,7 @@ project_root = os.path.abspath(
 )
 sys.path.insert(0, project_root)
 
-from src.parsers.protocols.vrf import (
+from src.processors.protocols.vrf import (
     parse_vrf_data,
     generate_vrf_summary,
     generate_llm_friendly_data,

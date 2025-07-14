@@ -186,6 +186,7 @@ gNMIBuddy uses a centralized schema approach for data contracts:
   - `__init__.py`: Unified imports for all schemas
 
 - **`src/collectors/`**: Network telemetry data collectors following OpenTelemetry patterns
+
   - `system.py`: System information collector
   - `interfaces.py`: Interface data collector
   - `routing.py`: Routing protocol collector
@@ -195,6 +196,15 @@ gNMIBuddy uses a centralized schema approach for data contracts:
   - `profile.py`: Device profile and role collector
   - `topology/`: Network topology discovery
 
+- **`src/processors/`**: Data transformation processors following OpenTelemetry patterns
+  - `base.py`: Base processor interfaces and contracts
+  - `system_info_processor.py`: System information data processor
+  - `deviceprofile_processor.py`: Device profile analysis processor
+  - `topology_processor.py`: Network topology data processor
+  - `interfaces/`: Interface data processors
+  - `protocols/`: Protocol-specific data processors (BGP, ISIS, MPLS, VRF)
+  - `logs/`: Log data processing and filtering
+
 These schemas serve as contracts between different parts of the system, ensuring consistency across:
 
 - CLI and API interfaces
@@ -202,10 +212,23 @@ These schemas serve as contracts between different parts of the system, ensuring
 - Error handling and status reporting
 - MCP tool integration
 
+### Data Processing Pipeline
+
+The application follows an OpenTelemetry-inspired architecture:
+
+```text
+Raw gNMI Data → Collector → Processor → Schema → Response
+```
+
+1. **Collectors** gather data from network devices via gNMI
+2. **Processors** transform raw data into structured, LLM-friendly formats
+3. **Schemas** ensure consistent data contracts across the system
+4. **Responses** provide standardized output for CLI, API, and MCP interfaces
+
 ## 🚧 Development Notes
 
 **Planned Improvements:**
 
 - [ ] Capability check for minimum OpenConfig model support
-- [ ] Standardized parser interfaces and output formats
+- [ ] Standardized processor interfaces and output formats
 - [ ] Device compatibility validation

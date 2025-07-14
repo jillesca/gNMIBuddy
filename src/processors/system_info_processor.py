@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-System information parser module.
-Parses system information data from gNMI responses into a structured format.
+System information processor module.
+Processes system information data from gNMI responses into a structured format.
 """
 
 from typing import Dict, Any, List
-from src.parsers.base import BaseParser
+from src.processors.base import BaseProcessor
 import datetime
 
 
-class SystemInfoParser(BaseParser):
+class SystemInfoProcessor(BaseProcessor):
     """
-    Parser for system information data from gNMI responses.
+    Processor for system information data from gNMI responses.
 
     Accepts raw gNMI data (List[Dict[str, Any]]) directly and transforms it
     into structured system information including hostname, software version,
     memory, gRPC servers, logging, users, and uptime details.
     """
 
-    def parse(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def process_data(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Parse system information from gNMI data.
+        Process system information from gNMI data.
 
         Args:
             gnmi_data: Raw gNMI response data (list of update dictionaries)

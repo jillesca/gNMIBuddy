@@ -4,7 +4,7 @@ import networkx as nx
 from src.schemas.models import Device
 from src.schemas.responses import OperationStatus
 from src.inventory.manager import InventoryManager
-from src.parsers.topology_parser import extract_interface_subnets
+from src.processors.topology_processor import extract_interface_subnets
 from src.collectors.routing import get_routing_info
 from src.utils.parallel_execution import run_command_on_all_devices
 from src.collectors.interfaces import get_interfaces

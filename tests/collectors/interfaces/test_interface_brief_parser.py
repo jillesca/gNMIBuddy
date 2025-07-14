@@ -5,7 +5,7 @@ Tests for the single_interface_parser module using interface brief data.
 import json
 import os
 import pytest
-from src.parsers.interfaces.single_interface_parser import (
+from src.processors.interfaces.single_interface_processor import (
     parse_single_interface_data,
 )
 

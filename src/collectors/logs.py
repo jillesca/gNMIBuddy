@@ -9,7 +9,7 @@ from typing import Optional
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.parsers.logs.filter import filter_logs
+from src.processors.logs.filter import filter_logs
 from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,

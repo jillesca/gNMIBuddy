@@ -13,7 +13,7 @@ from src.schemas.responses import (
     NetworkOperationResult,
 )
 from src.schemas.models import Device
-from src.parsers.protocols.vrf import (
+from src.processors.protocols.vrf import (
     parse_vrf_data,
     generate_vrf_summary,
     generate_llm_friendly_data,

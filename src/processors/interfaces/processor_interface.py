@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Interface data parser interfaces.
-Defines standard interfaces for parsers that work with interface data.
+Interface data processor interfaces.
+Defines standard interfaces for processors that work with interface data.
 """
 
 from typing import Dict, Any, List, Optional
-from src.parsers.base import BaseParser
+from src.processors.base import BaseProcessor
 
 
-class InterfaceParser(BaseParser):
+class InterfaceProcessor(BaseProcessor):
     """
-    Base class for interface data parsers.
+    Base class for interface data processors.
 
     This class provides a consistent interface for extracting and transforming
     interface data from OpenConfig models.
@@ -61,7 +61,7 @@ class InterfaceParser(BaseParser):
         """
         return {"items": gnmi_data if gnmi_data else []}
 
-    def parse(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def process_data(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Parse gNMI data through extraction and transformation."""
         extracted_data = self.extract_data(gnmi_data)
         return self.transform_data(extracted_data)
@@ -141,7 +141,7 @@ class InterfaceParser(BaseParser):
         raise NotImplementedError
 
 
-class SingleInterfaceParser(InterfaceParser):
+class SingleInterfaceProcessor(InterfaceProcessor):
     """
     Parser for single interface data.
 
@@ -200,7 +200,7 @@ class SingleInterfaceParser(InterfaceParser):
         return {}
 
 
-class InterfaceBriefParser(InterfaceParser):
+class InterfaceBriefProcessor(InterfaceProcessor):
     """
     Parser for interface brief data.
 

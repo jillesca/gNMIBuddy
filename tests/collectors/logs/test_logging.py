@@ -8,7 +8,7 @@ Focuses on testing the filtering functions:
 import os
 import pytest
 from datetime import datetime, timezone
-from src.parsers.logs.filter import filter_logs, filter_logs_by_time
+from src.processors.logs.filter import filter_logs, filter_logs_by_time
 
 
 @pytest.fixture
@@ -105,7 +105,7 @@ class TestFilterLogs:
             return "FILTERED LOGS"  # Return a marker we can check for
 
         monkeypatch.setattr(
-            "src.parsers.logs.filter.filter_logs_by_time",
+            "src.processors.logs.filter.filter_logs_by_time",
             mock_filter_logs_by_time,
         )
 

@@ -11,7 +11,7 @@ from src.schemas.responses import (
     NetworkOperationResult,
 )
 from src.schemas.models import Device
-from src.parsers.protocols.mpls.mpls_parser import (
+from src.processors.protocols.mpls.mpls_processor import (
     parse_mpls_data,
     generate_mpls_summary,
 )

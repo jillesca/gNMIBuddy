@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-VRF parser interfaces.
-Defines standard interfaces for parsers that work with VRF data.
+VRF processor interfaces.
+Defines standard interfaces for processors that work with VRF data.
 """
 
 from typing import Dict, Any, List
-from src.parsers.protocols.parser_interface import VrfParser
+from src.processors.protocols.processor_interface import VrfProcessor
 
 
-class OpenConfigVrfParser(VrfParser):
+class OpenConfigVrfProcessor(VrfProcessor):
     """
-    Parser for VRF data using OpenConfig model.
+    Processor for VRF data using OpenConfig model.
 
-    This class handles parsing VRF configuration and state data
+    This class handles processing VRF configuration and state data
     from OpenConfig network-instance models.
     """
 

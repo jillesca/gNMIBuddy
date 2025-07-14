@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Protocol parser interfaces.
-Defines standard interfaces for parsers that work with network protocol data.
+Protocol processor interfaces.
+Defines standard interfaces for processors that work with network protocol data.
 """
 
 from typing import Dict, Any, Optional, List
-from src.parsers.base import BaseParser
+from src.processors.base import BaseProcessor
 
 
-class ProtocolParser(BaseParser):
+class ProtocolProcessor(BaseProcessor):
     """
-    Base class for protocol data parsers.
+    Base class for protocol data processors.
 
     This class provides a consistent interface for extracting and transforming
     protocol data from OpenConfig models.
@@ -59,8 +59,8 @@ class ProtocolParser(BaseParser):
         """
         return {"items": gnmi_data if gnmi_data else []}
 
-    def parse(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Parse gNMI data through extraction and transformation."""
+    def process_data(self, gnmi_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process gNMI data through extraction and transformation."""
         extracted_data = self.extract_data(gnmi_data)
         return self.transform_data(extracted_data)
 
@@ -108,7 +108,7 @@ class ProtocolParser(BaseParser):
         raise NotImplementedError
 
 
-class MplsParser(ProtocolParser):
+class MplsProcessor(ProtocolProcessor):
     """
     Parser for MPLS data.
 
@@ -137,7 +137,7 @@ class MplsParser(ProtocolParser):
         return result
 
 
-class VrfParser(ProtocolParser):
+class VrfProcessor(ProtocolProcessor):
     """
     Parser for VRF data.
 
@@ -161,7 +161,7 @@ class VrfParser(ProtocolParser):
         return result
 
 
-class RoutingParser(ProtocolParser):
+class RoutingProcessor(ProtocolProcessor):
     """
     Parser for routing protocol data.
 

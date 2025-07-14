@@ -14,7 +14,7 @@ from src.schemas.responses import (
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.parsers.system_info_parser import SystemInfoParser
+from src.processors.system_info_processor import SystemInfoProcessor
 
 
 logger = logging.getLogger(__name__)
@@ -68,9 +68,9 @@ def get_system_info(device: Device) -> NetworkOperationResult:
         )
 
     # Work directly with response data
-    parser = SystemInfoParser()
+    parser = SystemInfoProcessor()
     try:
-        parsed_data = parser.parse(response.data)
+        parsed_data = parser.process_data(response.data)
         summary = (
             parsed_data.get("summary", {})
             if isinstance(parsed_data, dict)

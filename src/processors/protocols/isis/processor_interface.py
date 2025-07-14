@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-ISIS parser interfaces.
-Defines standard interfaces for parsers that work with ISIS protocol data.
+ISIS processor interfaces.
+Defines standard interfaces for processors that work with ISIS protocol data.
 """
 
 from typing import Dict, Any, List
-from src.parsers.protocols.parser_interface import RoutingParser
+from src.processors.protocols.processor_interface import RoutingProcessor
 
 
-class IsisParser(RoutingParser):
+class IsisProcessor(RoutingProcessor):
     """
-    Parser for ISIS protocol data.
+    Processor for ISIS protocol data.
 
-    This class handles parsing ISIS configuration and state data
+    This class handles processing ISIS configuration and state data
     from OpenConfig models.
     """
 

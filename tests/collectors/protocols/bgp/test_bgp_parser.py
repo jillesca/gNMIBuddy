@@ -15,7 +15,7 @@ import pytest
 project_root = str(Path(__file__).resolve().parents[4])
 sys.path.insert(0, project_root)
 
-from src.parsers.protocols.bgp.config_parser import (
+from src.processors.protocols.bgp.config_processor import (
     parse_bgp_data,
     generate_bgp_summary,
     generate_simple_bgp_state_summary,

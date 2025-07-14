@@ -6,7 +6,7 @@ Test module for MPLS parser.
 import json
 import os
 import unittest
-from src.parsers.protocols.mpls.mpls_parser import (
+from src.processors.protocols.mpls.mpls_processor import (
     parse_mpls_data,
     generate_mpls_summary,
 )

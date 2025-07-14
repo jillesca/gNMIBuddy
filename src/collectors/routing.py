@@ -16,11 +16,11 @@ from src.schemas.responses import (
     FeatureNotFoundResponse,
 )
 from src.schemas.models import Device
-from src.parsers.protocols.bgp.config_parser import (
+from src.processors.protocols.bgp.config_processor import (
     parse_bgp_data,
     generate_bgp_summary,
 )
-from src.parsers.protocols.isis.isis_parser import (
+from src.processors.protocols.isis.isis_processor import (
     parse_isis_data,
     generate_isis_summary,
 )

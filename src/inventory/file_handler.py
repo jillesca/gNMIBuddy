@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 from typing import Dict, List, Any, Optional, cast
+from pathlib import Path
 
 from src.schemas.models import Device
 
@@ -60,6 +61,70 @@ def get_inventory_path(cli_path: Optional[str] = None) -> str:
     )
 
 
+def resolve_inventory_path(file_path: str) -> str:
+    """
+    Resolve inventory file path with enhanced error reporting.
+
+    This function handles both absolute and relative paths, providing
+    clear error messages when files are not found.
+
+    Args:
+        file_path: Path to the inventory file (absolute or relative)
+
+    Returns:
+        Absolute path to the inventory file
+
+    Raises:
+        FileNotFoundError: If the file does not exist with detailed context
+    """
+    # Convert to absolute path
+    abs_path = os.path.abspath(file_path)
+
+    # Check if file exists
+    if os.path.exists(abs_path):
+        logger.debug(f"Found inventory file: {abs_path}")
+        return abs_path
+
+    # File doesn't exist - provide helpful error message
+    current_dir = os.getcwd()
+    is_relative = not os.path.isabs(file_path)
+
+    error_msg = f"File not found: {abs_path}"
+    if is_relative:
+        error_msg += f"\nNote: '{file_path}' is a relative path, resolved from current directory: {current_dir}"
+
+        # Suggest some common alternatives
+        possible_paths = []
+
+        # Check if it exists relative to project root (common mistake)
+        try:
+            # Try to find project root by looking for pyproject.toml or similar
+            project_indicators = ["pyproject.toml", "setup.py", ".git"]
+            potential_project_root = Path(current_dir)
+
+            for parent in [potential_project_root] + list(
+                potential_project_root.parents
+            ):
+                if any(
+                    (parent / indicator).exists()
+                    for indicator in project_indicators
+                ):
+                    project_relative_path = parent / file_path
+                    if project_relative_path.exists():
+                        possible_paths.append(str(project_relative_path))
+                    break
+        except Exception:
+            pass  # Ignore errors in suggestion logic
+
+        if possible_paths:
+            error_msg += f"\nDid you mean: {possible_paths[0]}?"
+        else:
+            error_msg += f"\nMake sure you're running from the correct directory or use an absolute path."
+
+    logger.error(error_msg)
+    raise FileNotFoundError(error_msg)
+
+
 def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
     """
     Load device inventory from a JSON file and convert to Device objects.
@@ -102,7 +167,7 @@ def parse_json_file(json_file_path: str) -> DeviceInventory:
     Parse a JSON file into a Python list of device dictionaries.
 
     Args:
-        json_file_path: Path to the JSON file
+        json_file_path: Path to the JSON file (absolute or relative)
 
     Returns:
         List of dictionaries representing network devices
@@ -113,23 +178,26 @@ def parse_json_file(json_file_path: str) -> DeviceInventory:
         IOError: If there's an error reading the file
     """
     try:
-        # Check if file exists
-        abs_path = os.path.abspath(json_file_path)
-        if not os.path.exists(abs_path):
-            logger.error(f"File not found: {abs_path}")
-            raise FileNotFoundError(f"File not found: {abs_path}")
+        # Resolve path with enhanced error reporting
+        abs_path = resolve_inventory_path(json_file_path)
 
         # Open and parse the JSON file with explicit encoding
         with open(abs_path, "r", encoding="utf-8") as file:
             data = json.load(file)
 
+        logger.debug(f"Successfully parsed JSON file: {abs_path}")
         return cast(DeviceInventory, data)
     except json.JSONDecodeError as e:
-        logger.error(f"Error parsing JSON in {abs_path}: {e}")
-        raise
+        # Re-resolve path for error message (in case of symlinks, etc.)
+        abs_path = os.path.abspath(json_file_path)
+        error_msg = f"Error parsing JSON in {abs_path}: {e}"
+        logger.error(error_msg)
+        raise json.JSONDecodeError(error_msg, e.doc, e.pos) from e
     except FileNotFoundError:
-        # Already logged in the check above
+        # Already logged in resolve_inventory_path
         raise
     except IOError as e:
-        logger.error(f"IO error reading file {abs_path}: {e}")
-        raise
+        abs_path = os.path.abspath(json_file_path)
+        error_msg = f"IO error reading file {abs_path}: {e}"
+        logger.error(error_msg)
+        raise IOError(error_msg) from e

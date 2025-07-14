@@ -42,15 +42,14 @@ def get_vpn_information(
         NetworkOperationResult: Response object containing structured VRF information
     """
 
-    # First get all VRF names from the device
+    # Get all VRF names from the device
     vrf_names_result = _get_vrfs_name(device)
 
+    # If error occurred while getting VRF names, return the error
     if isinstance(vrf_names_result, NetworkOperationResult):
         return vrf_names_result
 
-    vrf_names = vrf_names_result
-
-    if not vrf_names:
+    if not vrf_names_result:
         logger.info("No VRFs found on device %s", device.name)
         return NetworkOperationResult(
             device_name=device.name,
@@ -67,25 +66,11 @@ def get_vpn_information(
         )
 
     # If a specific VRF is requested, filter the list
-    if isinstance(vrf_names, list) and vrf in vrf_names:
-        vrf_names = [vrf]
+    if vrf and vrf in vrf_names_result:
+        vrf_names_result = [vrf]
 
     # Get detailed information for each VRF
-    if isinstance(vrf_names, list):
-        return _get_vrf_details(device, vrf_names)
-    else:
-        # This case should not happen if _get_vrfs_name is working correctly
-        return NetworkOperationResult(
-            device_name=device.name,
-            ip_address=device.ip_address,
-            nos=device.nos,
-            operation_type="vpn_info",
-            status=OperationStatus.FAILED,
-            metadata={
-                "issue_type": "VRF_NAMES_ERROR",
-                "message": "Failed to retrieve VRF names",
-            },
-        )
+    return _get_vrf_details(device, vrf_names_result)
 
 
 DEFAULT_INTERNAL_VRFS = ["default", "**iid"]
@@ -120,24 +105,17 @@ def _get_vrfs_name(device: Device) -> Union[List[str], NetworkOperationResult]:
 
     # Extract VRF names from the response
     vrf_names = []
-    if isinstance(response, SuccessResponse):
-        # Work directly with response data
-        if response.data:
-            response_data = response.data
-        else:
-            response_data = []
-
-        if isinstance(response_data, list):
-            for item in response_data:
-                if isinstance(item, dict) and "val" in item:
-                    val = item.get("val")
-                    if (
-                        val
-                        and isinstance(val, str)
-                        and val.lower()
-                        not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
-                    ):
-                        vrf_names.append(val)
+    if isinstance(response, SuccessResponse) and response.data:
+        for item in response.data:
+            if isinstance(item, dict) and "val" in item:
+                val = item.get("val")
+                if (
+                    val
+                    and isinstance(val, str)
+                    and val.lower()
+                    not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
+                ):
+                    vrf_names.append(val)
     return vrf_names
 
 
@@ -151,11 +129,9 @@ def _get_vrf_details(
     Args:
         device: Device object from inventory
         vrf_names: List of VRF names to query
-        vrf: Optional VRF name filter
-        include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
-        VpnInfoResponse: Response object containing structured VRF information with parsed data and summary
+        NetworkOperationResult: Response object containing structured VRF information with parsed data and summary
     """
     # If no VRF names, return empty result
     if not vrf_names:
@@ -168,11 +144,11 @@ def _get_vrf_details(
             data={"vpn_data": {}, "summary": {"message": "No VRFs found"}},
         )
 
-    vrf_path_queries = []
-    for vrf_name in vrf_names:
-        vrf_path_queries.append(
-            f"openconfig-network-instance:network-instances/network-instance[name={vrf_name}]"
-        )
+    # Build path queries for each VRF
+    vrf_path_queries = [
+        f"openconfig-network-instance:network-instances/network-instance[name={vrf_name}]"
+        for vrf_name in vrf_names
+    ]
 
     # Create a GnmiRequest for VRF details
     vrf_details_request = GnmiRequest(
@@ -195,10 +171,9 @@ def _get_vrf_details(
 
     try:
         # Extract gNMI data from response
-        gnmi_data = []
-        if isinstance(response, SuccessResponse):
-            if response.data:
-                gnmi_data = response.data
+        gnmi_data = (
+            response.data if isinstance(response, SuccessResponse) else []
+        )
 
         parsed_data = parse_vrf_data(gnmi_data or [])
         llm_data = generate_llm_friendly_data(parsed_data)

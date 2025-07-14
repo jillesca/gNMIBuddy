@@ -29,7 +29,7 @@ def system_request():
     )
 
 
-def get_system_information(device: Device) -> NetworkOperationResult:
+def get_system_info(device: Device) -> NetworkOperationResult:
     """
     Get system information from a device.
 

@@ -1,9 +1,9 @@
 import logging
 from src.schemas.models import Device
 from src.schemas.responses import (
-    NetworkOperationResult,
     ErrorResponse,
     OperationStatus,
+    NetworkOperationResult,
 )
 from .utils import _build_graph_ip_only
 

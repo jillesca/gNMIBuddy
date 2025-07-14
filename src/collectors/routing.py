@@ -47,7 +47,7 @@ def bgp_request():
     )
 
 
-def get_routing_information(
+def get_routing_info(
     device: Device,
     protocol: Optional[str] = None,
     include_details: bool = False,

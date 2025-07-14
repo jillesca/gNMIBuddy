@@ -5,7 +5,7 @@ from src.parsers.system_info_parser import SystemInfoParser
 
 @pytest.fixture
 def sample_input():
-    with open("tests/network_tools/system_info/system_info_input.json") as f:
+    with open("tests/collectors/system_info/system_info_input.json") as f:
         data = json.load(f)
         # Return gNMI data directly instead of wrapped structure
         return data["response"]
@@ -48,7 +48,7 @@ def test_system_info_parser_output_matches_expected(sample_input):
     parser = SystemInfoParser()
     # Pass gNMI data directly to parser
     result = parser.parse(sample_input)
-    with open("tests/network_tools/system_info/system_info_output.json") as f:
+    with open("tests/collectors/system_info/system_info_output.json") as f:
         expected = json.load(f)
 
     # For uptime, allow a small difference in seconds due to runtime

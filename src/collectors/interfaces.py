@@ -23,7 +23,7 @@ from src.parsers.interfaces.single_interface_parser import (
 logger = logging.getLogger(__name__)
 
 
-def get_interface_information(
+def get_interfaces(
     device: Device,
     interface: Optional[str] = None,
 ) -> NetworkOperationResult:

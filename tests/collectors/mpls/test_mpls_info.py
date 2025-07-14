@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tests for the MPLS functions in network_tools/mpls_info.py.
+Tests for the MPLS functions in collectors/mpls.py.
 Uses mocking to test the MPLS functions without making actual GNMI requests.
 """
 
@@ -14,7 +14,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 )
 
-from src.network_tools.mpls_info import get_mpls_information, mpls_request
+from src.collectors.mpls import get_mpls_info, mpls_request
 from src.schemas.responses import (
     NetworkOperationResult,
     OperationStatus,
@@ -41,7 +41,7 @@ class TestMplsInfoFunctions:
         assert request.encoding == "json_ietf"
         assert request.datatype == "all"
 
-    @patch("src.network_tools.mpls_info.get_gnmi_data")
+    @patch("src.collectors.mpls.get_gnmi_data")
     def test_get_mpls_information_success(self, mock_get_gnmi_data):
         """Test getting MPLS information successfully."""
         # Create a mock device
@@ -93,17 +93,15 @@ class TestMplsInfoFunctions:
         summary = {"total_lsps": 1, "ldp_enabled": True, "ldp_neighbors": 0}
 
         with patch(
-            "src.network_tools.mpls_info.parse_mpls_data",
+            "src.collectors.mpls.parse_mpls_data",
             return_value=mpls_data,
         ):
             with patch(
-                "src.network_tools.mpls_info.generate_mpls_summary",
+                "src.collectors.mpls.generate_mpls_summary",
                 return_value=summary,
             ):
                 # Call the function with our mock device
-                response = get_mpls_information(
-                    mock_device, include_details=True
-                )
+                response = get_mpls_info(mock_device, include_details=True)
 
                 # Verify the response is as expected
                 assert isinstance(response, NetworkOperationResult)
@@ -119,7 +117,7 @@ class TestMplsInfoFunctions:
                 args, _ = mock_get_gnmi_data.call_args
                 assert args[0] == mock_device
 
-    @patch("src.network_tools.mpls_info.get_gnmi_data")
+    @patch("src.collectors.mpls.get_gnmi_data")
     def test_get_mpls_information_error(self, mock_get_gnmi_data):
         """Test getting MPLS information with an error."""
         # Create a mock device
@@ -140,7 +138,7 @@ class TestMplsInfoFunctions:
         mock_get_gnmi_data.return_value = error_response
 
         # Call the function with our mock device
-        response = get_mpls_information(mock_device)
+        response = get_mpls_info(mock_device)
 
         # Verify the response is an error
         assert isinstance(response, NetworkOperationResult)
@@ -148,7 +146,7 @@ class TestMplsInfoFunctions:
         assert response.error_response is not None
         assert response.error_response.type == "DEVICE_ERROR"
 
-    @patch("src.network_tools.mpls_info.get_gnmi_data")
+    @patch("src.collectors.mpls.get_gnmi_data")
     def test_get_mpls_information_parsing_error(self, mock_get_gnmi_data):
         """Test getting MPLS information with a parsing error."""
         # Create a mock device
@@ -168,11 +166,11 @@ class TestMplsInfoFunctions:
 
         # Mock the parse_mpls_data function to raise an exception
         with patch(
-            "src.network_tools.mpls_info.parse_mpls_data",
+            "src.collectors.mpls.parse_mpls_data",
             side_effect=ValueError("Parsing error"),
         ):
             # Call the function with our mock device
-            response = get_mpls_information(mock_device)
+            response = get_mpls_info(mock_device)
 
             # Verify the response is an error
             assert isinstance(response, NetworkOperationResult)

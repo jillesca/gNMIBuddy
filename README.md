@@ -180,9 +180,20 @@ uv run cli_app.py --all-devices interface
 gNMIBuddy uses a centralized schema approach for data contracts:
 
 - **`src/schemas/`**: Contains all shared data models and response contracts
+
   - `models.py`: Device and inventory data models
   - `responses.py`: Network operation response schemas
   - `__init__.py`: Unified imports for all schemas
+
+- **`src/collectors/`**: Network telemetry data collectors following OpenTelemetry patterns
+  - `system.py`: System information collector
+  - `interfaces.py`: Interface data collector
+  - `routing.py`: Routing protocol collector
+  - `mpls.py`: MPLS information collector
+  - `vpn.py`: VPN/VRF data collector
+  - `logs.py`: System logs collector
+  - `profile.py`: Device profile and role collector
+  - `topology/`: Network topology discovery
 
 These schemas serve as contracts between different parts of the system, ensuring consistency across:
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tests for the routing functions in network_tools/routing_info.py.
+Tests for the routing functions in collectors/routing.py.
 Uses mocking to test the routing functions without making actual GNMI requests.
 """
 
@@ -14,8 +14,8 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 )
 
-from src.network_tools.routing_info import (
-    get_routing_information,
+from src.collectors.routing import (
+    get_routing_info,
     bgp_request,
     isis_request,
     _get_bgp_info,
@@ -59,8 +59,8 @@ class TestRoutingInfoFunctions:
         assert request.encoding == "json_ietf"
         assert request.datatype == "all"
 
-    @patch("src.network_tools.routing_info._get_bgp_info")
-    @patch("src.network_tools.routing_info._get_isis_info")
+    @patch("src.collectors.routing._get_bgp_info")
+    @patch("src.collectors.routing._get_isis_info")
     def test_get_routing_information_all_protocols(
         self, mock_get_isis_info, mock_get_bgp_info
     ):
@@ -106,7 +106,7 @@ class TestRoutingInfoFunctions:
         mock_get_isis_info.return_value = isis_response
 
         # Call the function with no protocol filter (get all)
-        response = get_routing_information(mock_device, include_details=True)
+        response = get_routing_info(mock_device, include_details=True)
 
         # Verify we got the combined response
         assert isinstance(response, NetworkOperationResult)
@@ -117,8 +117,8 @@ class TestRoutingInfoFunctions:
         assert mock_get_bgp_info.called
         assert mock_get_isis_info.called
 
-    @patch("src.network_tools.routing_info._get_bgp_info")
-    @patch("src.network_tools.routing_info._get_isis_info")
+    @patch("src.collectors.routing._get_bgp_info")
+    @patch("src.collectors.routing._get_isis_info")
     def test_get_routing_information_bgp_only(
         self, mock_get_isis_info, mock_get_bgp_info
     ):
@@ -150,7 +150,7 @@ class TestRoutingInfoFunctions:
         mock_get_bgp_info.return_value = bgp_response
 
         # Call the function with BGP protocol filter
-        response = get_routing_information(mock_device, protocol="bgp")
+        response = get_routing_info(mock_device, protocol="bgp")
 
         # Verify we got only BGP response
         assert isinstance(response, NetworkOperationResult)
@@ -160,7 +160,7 @@ class TestRoutingInfoFunctions:
         assert mock_get_bgp_info.called
         assert not mock_get_isis_info.called
 
-    @patch("src.network_tools.routing_info.get_gnmi_data")
+    @patch("src.collectors.routing.get_gnmi_data")
     def test_get_bgp_info_success(self, mock_get_gnmi_data):
         """Test getting BGP information successfully."""
         # Create a mock device
@@ -226,11 +226,11 @@ class TestRoutingInfoFunctions:
         }
 
         with patch(
-            "src.network_tools.routing_info.parse_bgp_data",
+            "src.collectors.routing.parse_bgp_data",
             return_value=bgp_data,
         ):
             with patch(
-                "src.network_tools.routing_info.generate_bgp_summary",
+                "src.collectors.routing.generate_bgp_summary",
                 return_value=summary,
             ):
                 # Call the function with our mock device
@@ -250,7 +250,7 @@ class TestRoutingInfoFunctions:
                 args, _ = mock_get_gnmi_data.call_args
                 assert args[0] == mock_device
 
-    @patch("src.network_tools.routing_info.get_gnmi_data")
+    @patch("src.collectors.routing.get_gnmi_data")
     def test_get_bgp_info_error(self, mock_get_gnmi_data):
         """Test getting BGP information with an error."""
         # Create a mock device
@@ -280,7 +280,7 @@ class TestRoutingInfoFunctions:
         assert response.error_response is not None
         assert response.error_response.type == "DEVICE_ERROR"
 
-    @patch("src.network_tools.routing_info.get_gnmi_data")
+    @patch("src.collectors.routing.get_gnmi_data")
     def test_get_isis_info_success(self, mock_get_gnmi_data):
         """Test getting ISIS information successfully."""
         # Create a mock device
@@ -356,11 +356,11 @@ class TestRoutingInfoFunctions:
         }
 
         with patch(
-            "src.network_tools.routing_info.parse_isis_data",
+            "src.collectors.routing.parse_isis_data",
             return_value=isis_data,
         ):
             with patch(
-                "src.network_tools.routing_info.generate_isis_summary",
+                "src.collectors.routing.generate_isis_summary",
                 return_value=summary,
             ):
                 # Call the function with our mock device

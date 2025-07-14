@@ -29,7 +29,7 @@ def mpls_request():
     )
 
 
-def get_mpls_information(
+def get_mpls_info(
     device: Device, include_details: bool = False
 ) -> NetworkOperationResult:
     """

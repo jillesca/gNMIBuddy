@@ -1,5 +1,5 @@
 import json
-from src.network_tools.topology import (
+from src.collectors.topology.utils import (
     build_ip_only_graph_from_interface_results,
 )
 
@@ -25,11 +25,11 @@ def graph_to_direct_connections(graph):
 def test_ip_only_graph_and_output():
     # Load input and expected output
     with open(
-        "tests/network_tools/topology/topology_input.json", encoding="utf-8"
+        "tests/collectors/topology/topology_input.json", encoding="utf-8"
     ) as f:
         interface_results = json.load(f)
     with open(
-        "tests/network_tools/topology/topology_expected_output.json",
+        "tests/collectors/topology/topology_expected_output.json",
         encoding="utf-8",
     ) as f:
         expected_output = json.load(f)

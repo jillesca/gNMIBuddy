@@ -5,9 +5,9 @@ from src.schemas.models import Device
 from src.schemas.responses import OperationStatus
 from src.inventory.manager import InventoryManager
 from src.parsers.topology_parser import extract_interface_subnets
-from src.network_tools.routing_info import get_routing_information
+from src.collectors.routing import get_routing_info
 from src.utils.parallel_execution import run_command_on_all_devices
-from src.network_tools.interfaces_info import get_interface_information
+from src.collectors.interfaces import get_interfaces
 
 
 # In-memory cache for the topology graph
@@ -146,7 +146,7 @@ def _get_interface(device: str) -> dict:
     if not isinstance(device_obj, Device):
         return device_obj
 
-    interface_response = get_interface_information(device_obj)
+    interface_response = get_interfaces(device_obj)
 
     # Handle NetworkOperationResult
     if hasattr(interface_response, "status"):
@@ -204,7 +204,7 @@ def _get_device_or_error_dict(
 
 
 def _get_isis(device) -> dict:
-    routing_responses = get_routing_information(
+    routing_responses = get_routing_info(
         device, protocol="isis", include_details=True
     )
     if isinstance(routing_responses, list) and routing_responses:

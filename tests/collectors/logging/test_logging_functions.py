@@ -14,7 +14,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 )
 
-from src.network_tools.logging import get_logging_information
+from src.collectors.logs import get_logs
 from src.schemas.responses import (
     NetworkOperationResult,
     OperationStatus,
@@ -27,7 +27,7 @@ from src.schemas.models import Device
 class TestLoggingFunctions:
     """Test suite for logging functionality."""
 
-    @patch("src.network_tools.logging.get_gnmi_data")
+    @patch("src.collectors.logs.get_gnmi_data")
     def test_get_logging_information_success(self, mock_get_gnmi_data):
         """Test getting logging information successfully."""
         # Create a mock device
@@ -83,12 +83,10 @@ class TestLoggingFunctions:
         }
 
         with patch(
-            "src.network_tools.logging.filter_logs", return_value=filtered_logs
+            "src.collectors.logs.filter_logs", return_value=filtered_logs
         ):
             # Call the function with our mock device
-            response = get_logging_information(
-                mock_device, keywords="TEST", minutes=5
-            )
+            response = get_logs(mock_device, keywords="TEST", minutes=5)
 
             # Verify the response is as expected
             assert isinstance(response, NetworkOperationResult)
@@ -109,7 +107,7 @@ class TestLoggingFunctions:
                 device=mock_device, request=ANY
             )
 
-    @patch("src.network_tools.logging.get_gnmi_data")
+    @patch("src.collectors.logs.get_gnmi_data")
     def test_get_logging_information_error(self, mock_get_gnmi_data):
         """Test getting logging information with an error."""
         # Create a mock device
@@ -130,7 +128,7 @@ class TestLoggingFunctions:
         mock_get_gnmi_data.return_value = error_response
 
         # Call the function with our mock device
-        response = get_logging_information(mock_device)
+        response = get_logs(mock_device)
 
         # Verify the response is an error
         assert isinstance(response, NetworkOperationResult)
@@ -139,7 +137,7 @@ class TestLoggingFunctions:
         assert response.error_response is not None
         assert response.error_response.type == "DEVICE_ERROR"
 
-    @patch("src.network_tools.logging.get_gnmi_data")
+    @patch("src.collectors.logs.get_gnmi_data")
     def test_get_logging_information_filter_processing_error(
         self, mock_get_gnmi_data
     ):
@@ -161,11 +159,11 @@ class TestLoggingFunctions:
 
         # Mock the filter_logs function to raise an exception
         with patch(
-            "src.network_tools.logging.filter_logs",
+            "src.collectors.logs.filter_logs",
             side_effect=Exception("Filter processing error"),
         ):
             # Call the function with our mock device
-            response = get_logging_information(mock_device)
+            response = get_logs(mock_device)
 
             # Verify the response is an error
             assert isinstance(response, NetworkOperationResult)

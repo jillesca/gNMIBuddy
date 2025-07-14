@@ -25,7 +25,7 @@ from src.gnmi.parameters import GnmiRequest
 logger = logging.getLogger(__name__)
 
 
-def get_vpn_information(
+def get_vpn_info(
     device: Device,
     vrf: Optional[str] = None,
     include_details: bool = False,

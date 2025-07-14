@@ -5,7 +5,7 @@ Provides functions for retrieving logging information from network devices using
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
@@ -21,7 +21,7 @@ from src.schemas.responses import (
 logger = logging.getLogger(__name__)
 
 
-def get_logging_information(
+def get_logs(
     device: Device,
     keywords: Optional[str] = None,
     minutes: Optional[int] = 5,

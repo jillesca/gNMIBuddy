@@ -10,11 +10,11 @@ from src.schemas.responses import (
 )
 
 # Note: adjacency_dump import is commented out due to missing module
-# from src.network_tools.topology.adjacency_dump import adjacency_dump
-from src.network_tools.topology.path import path
-from src.network_tools.topology.segment import segment
-from src.network_tools.topology.neighbors import neighbors
-from src.network_tools.topology.ip_adjacency_dump import ip_adjacency_dump
+# from src.collectors.topology.adjacency_dump import adjacency_dump
+from src.collectors.topology.path import path
+from src.collectors.topology.segment import segment
+from src.collectors.topology.neighbors import neighbors
+from src.collectors.topology.ip_adjacency_dump import ip_adjacency_dump
 
 
 # Note: adjacency_dump_cmd is commented out due to missing adjacency_dump module

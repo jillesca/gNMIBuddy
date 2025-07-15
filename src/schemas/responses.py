@@ -107,6 +107,12 @@ class NetworkOperationResult:
         status: Operation result status (OperationStatus enum)
         data: The parsed/structured data from the operation
         metadata: Additional metadata about the operation and results
+                 Common metadata fields include:
+                 - capability_verification: Dict containing capability verification results
+                   with keys like 'is_supported', 'model_capability', 'warning_message', etc.
+                 - device_capabilities: Information about device capabilities
+                 - model_versions: Version information for supported models
+                 - compatibility_warnings: List of compatibility warnings
         error_response: Optional ErrorResponse object for failed operations
         feature_not_found_response: Optional FeatureNotFoundResponse for unavailable features
     """
@@ -126,3 +132,103 @@ class NetworkOperationResult:
 NetworkResponse = Union[
     SuccessResponse, ErrorResponse, FeatureNotFoundResponse
 ]
+
+
+def add_capability_verification_to_metadata(
+    result: NetworkOperationResult, verification_result: Dict[str, Any]
+) -> None:
+    """
+    Add capability verification results to NetworkOperationResult metadata.
+
+    Args:
+        result: NetworkOperationResult object to update
+        verification_result: Dictionary containing verification results from
+                           capability_verification.verify_openconfig_network_instance()
+    """
+    result.metadata["capability_verification"] = verification_result
+
+    # Add compatibility warnings if present
+    if verification_result.get("warning_message"):
+        if "compatibility_warnings" not in result.metadata:
+            result.metadata["compatibility_warnings"] = []
+        result.metadata["compatibility_warnings"].append(
+            verification_result["warning_message"]
+        )
+
+    # Add model version information
+    model_capability = verification_result.get("model_capability", {})
+    if model_capability.get("found_version"):
+        if "model_versions" not in result.metadata:
+            result.metadata["model_versions"] = {}
+        result.metadata["model_versions"][model_capability["model_name"]] = {
+            "found_version": model_capability["found_version"],
+            "required_version": model_capability["required_version"],
+            "status": model_capability["status"],
+        }
+
+
+def get_capability_verification_from_metadata(
+    result: NetworkOperationResult,
+) -> Optional[Dict[str, Any]]:
+    """
+    Extract capability verification results from NetworkOperationResult metadata.
+
+    Args:
+        result: NetworkOperationResult object to extract from
+
+    Returns:
+        Dictionary containing verification results or None if not found
+    """
+    return result.metadata.get("capability_verification")
+
+
+def has_capability_warnings(result: NetworkOperationResult) -> bool:
+    """
+    Check if NetworkOperationResult has capability-related warnings.
+
+    Args:
+        result: NetworkOperationResult object to check
+
+    Returns:
+        True if capability warnings are present, False otherwise
+    """
+    verification = get_capability_verification_from_metadata(result)
+    if not verification:
+        return False
+
+    return (
+        verification.get("warning_message") is not None
+        or verification.get("model_capability", {}).get("warning_message")
+        is not None
+    )
+
+
+def get_capability_status_summary(result: NetworkOperationResult) -> str:
+    """
+    Get a human-readable summary of capability verification status.
+
+    Args:
+        result: NetworkOperationResult object to summarize
+
+    Returns:
+        String summary of capability status
+    """
+    verification = get_capability_verification_from_metadata(result)
+    if not verification:
+        return "No capability verification performed"
+
+    model_capability = verification.get("model_capability", {})
+    model_name = model_capability.get("model_name", "unknown")
+    status = model_capability.get("status", "unknown")
+    found_version = model_capability.get("found_version", "unknown")
+    required_version = model_capability.get("required_version", "unknown")
+
+    if verification.get("is_supported"):
+        if status == "supported":
+            return f"✓ {model_name} v{found_version} is fully supported"
+        elif status == "version_warning":
+            return f"⚠ {model_name} v{found_version} is supported with warnings (minimum tested: {required_version})"
+    else:
+        return f"✗ {model_name} is not supported or verification failed"
+
+    return f"? {model_name} capability status unclear"

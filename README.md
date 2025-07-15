@@ -19,7 +19,7 @@ See the [API definition](/api.py) for all available APIs and options.
 
 ## ⚡ Quick Start
 
-> **Note:** The main CLI entry point is now called `gnmictl.py` (following the Kubernetes `kubectl` naming convention) instead of the previous `cli_app.py`.
+> **Note:** The main CLI entry point is now called `gnmictl.py`.
 
 ### Prerequisites
 
@@ -27,10 +27,36 @@ See the [API definition](/api.py) for all available APIs and options.
 - Network devices with gNMI _enabled_ and `openconfig-network-instance` support
 - Device inventory file (JSON format)
 
+### Device Compatibility Requirements
+
+**⚠️ Important**: gNMIBuddy requires devices to support the `openconfig-network-instance` model version 1.3.0 or higher. The application will automatically verify device capabilities on first connection and:
+
+- ✅ **Supported version (≥1.3.0)**: Continue normal operation
+- ⚠️ **Older version (<1.3.0)**: Show warning but continue (compatibility not guaranteed)
+- ❌ **Model not found**: Return error and stop execution
+
 **Tested on:**
 
 - **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
-- **OpenConfig:** `openconfig-network-instance` (`1.3.0`)
+- **OpenConfig:**
+  - `openconfig-system` (`0.17.1`)
+  - `openconfig-interfaces` (`3.0.0`)
+  - `openconfig-network-instance` (`1.3.0`)
+
+### Troubleshooting Device Compatibility
+
+If you encounter capability errors:
+
+1. **Check model support**: Verify your device supports `openconfig-network-instance`
+2. **Check version**: Ensure you have version 1.3.0 or higher
+3. **Check gNMI setup**: Ensure gNMI is properly configured and accessible
+
+**Example error messages:**
+
+```bash
+ERROR: Required model 'openconfig-network-instance' version 1.3.0 or higher is not supported on this device
+WARNING: Device supports openconfig-network-instance 1.2.0, but minimum tested version is 1.3.0
+```
 
 ### Installation
 

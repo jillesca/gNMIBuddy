@@ -160,7 +160,12 @@ def create_parser() -> argparse.ArgumentParser:
     Returns:
         The configured ArgumentParser instance
     """
-    parser = argparse.ArgumentParser(description="Network Information CLI")
+    parser = argparse.ArgumentParser(
+        description="Network Information CLI - Retrieves network data via gNMI and OpenConfig models.\n"
+        "⚠️  Device Requirements: Supports openconfig-network-instance v1.3.0+\n"
+        "See COMPATIBILITY.md for detailed device compatibility information.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     # Global options
     parser.add_argument(

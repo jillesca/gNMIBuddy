@@ -24,12 +24,21 @@ from src.schemas.responses import (
     SuccessResponse,
     ErrorResponse,
     NetworkResponse,
+    add_capability_verification_to_metadata,
 )
 from src.gnmi.error_handlers import (
     handle_timeout_error,
     handle_rpc_error,
     handle_connection_refused,
     handle_generic_error,
+    handle_capability_error,
+)
+from src.services.capability_verification import (
+    verify_openconfig_network_instance,
+)
+from src.utils.capability_cache import (
+    is_device_verified,
+    cache_verification_result,
 )
 from src.logging.config import get_logger
 
@@ -49,6 +58,63 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> NetworkResponse:
         Union of SuccessResponse, ErrorResponse, or FeatureNotFoundResponse
     """
     logger.debug("gNMI request parameters: %s", request)
+
+    # Check capability verification cache first
+    if not is_device_verified(device.name):
+        logger.info(
+            f"Verifying openconfig-network-instance capability for device: {device.name}"
+        )
+
+        # Perform capability verification
+        verification_result = verify_openconfig_network_instance(device)
+
+        if not verification_result.get("is_supported", False):
+            # Cache the failed verification result
+            cache_verification_result(
+                device.name,
+                is_verified=False,
+                verification_result=verification_result,
+            )
+
+            # Return error response for unsupported devices
+            error_message = verification_result.get(
+                "error_message",
+                "Device does not support openconfig-network-instance model",
+            )
+            model_capability = verification_result.get("model_capability", {})
+
+            if model_capability.get("status") == "NOT_FOUND":
+                required_version = model_capability.get(
+                    "required_version", "1.3.0"
+                )
+                model_name = model_capability.get(
+                    "model_name", "openconfig-network-instance"
+                )
+                error_message = f"Required model '{model_name}' version {required_version} or higher is not supported on this device"
+
+            return handle_capability_error(device, error_message)
+
+        # Cache the successful verification result
+        cache_verification_result(
+            device.name,
+            is_verified=True,
+            verification_result=verification_result,
+        )
+
+        # Log appropriate message based on verification result
+        model_capability = verification_result.get("model_capability", {})
+        found_version = model_capability.get("found_version", "unknown")
+        required_version = model_capability.get("required_version", "1.3.0")
+
+        if verification_result.get("warning_message"):
+            logger.warning(
+                f"Device {device.name}: {verification_result['warning_message']}"
+            )
+        else:
+            logger.info(
+                f"Device {device.name}: openconfig-network-instance v{found_version} is supported (required: {required_version})"
+            )
+
     gnmi_params = {
         "target": (device.ip_address, device.port),
         "username": device.username,
@@ -69,7 +135,11 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> NetworkResponse:
 
             response_data = gc.get(**request)
             raw_response = _extract_gnmi_data(response=response_data)
-            return _create_response_from_raw_data(raw_response=raw_response)
+            response = _create_response_from_raw_data(
+                raw_response=raw_response
+            )
+
+            return response
 
     except grpc.FutureTimeoutError:
         return handle_timeout_error(device)
@@ -121,9 +191,8 @@ def _create_response_from_raw_data(
 
 if __name__ == "__main__":
     from pprint import pprint as pp
-    from src.utils.logging_config import configure_logging, get_logger
+    from src.logging.config import get_logger
 
-    configure_logging("DEBUG")
     logger = get_logger(__name__)
 
     # Get the directory of the current script

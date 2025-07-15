@@ -10,6 +10,38 @@ from src.schemas.responses import ErrorResponse, FeatureNotFoundResponse
 logger = get_logger(__name__)
 
 
+def handle_capability_error(
+    device: Device,
+    error_message: str,
+    error_type: str = "CAPABILITY_NOT_SUPPORTED",
+) -> ErrorResponse:
+    """
+    Handle capability verification errors.
+
+    Args:
+        device: Device object containing device information
+        error_message: Error message describing the capability issue
+        error_type: Type of capability error (default: CAPABILITY_NOT_SUPPORTED)
+
+    Returns:
+        ErrorResponse object with capability error details
+    """
+    full_message = f"Device {device.name} ({device.ip_address}:{device.port}) capability verification failed: {error_message}"
+
+    logger.error(full_message)
+
+    return ErrorResponse(
+        type=error_type,
+        message=full_message,
+        details={
+            "device_name": device.name,
+            "device_ip": device.ip_address,
+            "device_port": device.port,
+            "capability_error": error_message,
+        },
+    )
+
+
 def handle_timeout_error(device: Device) -> ErrorResponse:
     """
     Handle connection timeout errors.

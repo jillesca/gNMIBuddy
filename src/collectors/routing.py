@@ -24,6 +24,7 @@ from src.processors.protocols.isis.isis_processor import (
     generate_isis_summary,
 )
 from src.logging.config import get_logger, log_operation
+from src.decorators.capability_verification import verify_capabilities
 
 logger = get_logger(__name__)
 
@@ -46,6 +47,7 @@ def bgp_request():
     )
 
 
+@verify_capabilities()
 def get_routing_info(
     device: Device,
     protocol: Optional[str] = None,

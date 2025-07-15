@@ -19,7 +19,7 @@ See the [API definition](/api.py) for all available APIs and options.
 
 ## ⚡ Quick Start
 
-> **Note:** The main CLI entry point is now called `gnmictl.py` (following the Kubernetes `kubectl` naming convention) instead of the previous `cli_app.py`.
+> **Note:** The main CMD entry point is `gnmictl.py`.
 
 ### Prerequisites
 
@@ -27,10 +27,16 @@ See the [API definition](/api.py) for all available APIs and options.
 - Network devices with gNMI _enabled_ and `openconfig-network-instance` support
 - Device inventory file (JSON format)
 
+### Device Compatibility Requirements
+
+- **OpenConfig:**
+  - `openconfig-system` (`0.17.1`)
+  - `openconfig-interfaces` (`3.0.0`)
+  - `openconfig-network-instance` (`1.3.0`)
+
 **Tested on:**
 
 - **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
-- **OpenConfig:** `openconfig-network-instance` (`1.3.0`)
 
 ### Installation
 
@@ -46,9 +52,6 @@ Run the application:
 ```bash
 # Creates virtual environment, installs dependencies, and shows help
 uv run gnmictl.py --help
-
-# Or use the wrapper script (after making it executable)
-./gnmictl --help
 ```
 
 ### Basic Usage
@@ -56,18 +59,12 @@ uv run gnmictl.py --help
 ```bash
 # List available devices
 uv run gnmictl.py list-devices
-# or
-./gnmictl list-devices
 
 # Get routing info from a device
 uv run gnmictl.py --device xrd-1 routing --protocol bgp
-# or
-./gnmictl --device xrd-1 routing --protocol bgp
 
 # Check all interfaces across all devices
 uv run gnmictl.py --all-devices interface
-# or
-./gnmictl --all-devices interface
 ```
 
 ## 🤖 LLM Integration (MCP)
@@ -137,7 +134,7 @@ mcp run mcp_server.py
 
 ## 🧪 Testing with DevNet Sandbox
 
-Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/) with the included Ansible playbook:
+Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/), follow the instructions to bring up a MPLS network with docker, then configure gNMI with the included Ansible playbook:
 
 ```bash
 # Enable gRPC on the DevNet XRd Sandbox
@@ -168,33 +165,21 @@ Use the `--help` flag for detailed command options.
 ```bash
 # Routing with BGP details
 uv run gnmictl.py --device xrd-1 routing --protocol bgp --detail
-# or
-./gnmictl --device xrd-1 routing --protocol bgp --detail
 
 # Specific interface
 uv run gnmictl.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
-# or
-./gnmictl --device xrd-2 interface --name GigabitEthernet0/0/0/0
 
 # MPLS details
 uv run gnmictl.py --device xrd-1 mpls --detail
-# or
-./gnmictl --device xrd-1 mpls --detail
 
 # VRF information
 uv run gnmictl.py --device xrd-3 vpn --vrf customer-a
-# or
-./gnmictl --device xrd-3 vpn --vrf customer-a
 
 # Filtered logs
 uv run gnmictl.py --device xrd-2 logging --keywords "bgp|error"
-# or
-./gnmictl --device xrd-2 logging --keywords "bgp|error"
 
 # Run on all devices
 uv run gnmictl.py --all-devices interface
-# or
-./gnmictl --all-devices interface
 ```
 
 ## 🏗️ Architecture

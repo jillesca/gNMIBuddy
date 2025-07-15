@@ -19,6 +19,8 @@ See the [API definition](/api.py) for all available APIs and options.
 
 ## ⚡ Quick Start
 
+> **Note:** The main CLI entry point is now called `gnmictl.py` (following the Kubernetes `kubectl` naming convention) instead of the previous `cli_app.py`.
+
 ### Prerequisites
 
 - Python 3.13+
@@ -43,20 +45,29 @@ Run the application:
 
 ```bash
 # Creates virtual environment, installs dependencies, and shows help
-uv run cli_app.py --help
+uv run gnmictl.py --help
+
+# Or use the wrapper script (after making it executable)
+./gnmictl --help
 ```
 
 ### Basic Usage
 
 ```bash
 # List available devices
-uv run cli_app.py list-devices
+uv run gnmictl.py list-devices
+# or
+./gnmictl list-devices
 
 # Get routing info from a device
-uv run cli_app.py --device xrd-1 routing --protocol bgp
+uv run gnmictl.py --device xrd-1 routing --protocol bgp
+# or
+./gnmictl --device xrd-1 routing --protocol bgp
 
 # Check all interfaces across all devices
-uv run cli_app.py --all-devices interface
+uv run gnmictl.py --all-devices interface
+# or
+./gnmictl --all-devices interface
 ```
 
 ## 🤖 LLM Integration (MCP)
@@ -116,12 +127,13 @@ Add to Claude's configuration (Settings > Developer > Edit config):
 Use the MCP inspector for testing:
 
 ```bash
+NETWORK_INVENTORY=xrd_sandbox.json \
 npx @modelcontextprotocol/inspector \
 uv run --with "mcp[cli],pygnmi,networkx" \
 mcp run mcp_server.py
 ```
 
-> **Note:** Set the `NETWORK_INVENTORY` environment variable or you'll get errors.
+> **Note:** Set the `NETWORK_INVENTORY` environment variable to your inventory file or you'll get errors.
 
 ## 🧪 Testing with DevNet Sandbox
 
@@ -155,29 +167,92 @@ Use the `--help` flag for detailed command options.
 
 ```bash
 # Routing with BGP details
-uv run cli_app.py --device xrd-1 routing --protocol bgp --detail
+uv run gnmictl.py --device xrd-1 routing --protocol bgp --detail
+# or
+./gnmictl --device xrd-1 routing --protocol bgp --detail
 
 # Specific interface
-uv run cli_app.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
+uv run gnmictl.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
+# or
+./gnmictl --device xrd-2 interface --name GigabitEthernet0/0/0/0
 
 # MPLS details
-uv run cli_app.py --device xrd-1 mpls --detail
+uv run gnmictl.py --device xrd-1 mpls --detail
+# or
+./gnmictl --device xrd-1 mpls --detail
 
 # VRF information
-uv run cli_app.py --device xrd-3 vpn --vrf customer-a
+uv run gnmictl.py --device xrd-3 vpn --vrf customer-a
+# or
+./gnmictl --device xrd-3 vpn --vrf customer-a
 
 # Filtered logs
-uv run cli_app.py --device xrd-2 logging --keywords "bgp|error"
+uv run gnmictl.py --device xrd-2 logging --keywords "bgp|error"
+# or
+./gnmictl --device xrd-2 logging --keywords "bgp|error"
 
 # Run on all devices
-uv run cli_app.py --all-devices interface
+uv run gnmictl.py --all-devices interface
+# or
+./gnmictl --all-devices interface
 ```
+
+## 🏗️ Architecture
+
+### Schema Organization
+
+gNMIBuddy uses a centralized schema approach for data contracts:
+
+- **`src/schemas/`**: Contains all shared data models and response contracts
+
+  - `models.py`: Device and inventory data models
+  - `responses.py`: Network operation response schemas
+  - `__init__.py`: Unified imports for all schemas
+
+- **`src/collectors/`**: Network telemetry data collectors following OpenTelemetry patterns
+
+  - `system.py`: System information collector
+  - `interfaces.py`: Interface data collector
+  - `routing.py`: Routing protocol collector
+  - `mpls.py`: MPLS information collector
+  - `vpn.py`: VPN/VRF data collector
+  - `logs.py`: System logs collector
+  - `profile.py`: Device profile and role collector
+  - `topology/`: Network topology discovery
+
+- **`src/processors/`**: Data transformation processors following OpenTelemetry patterns
+  - `base.py`: Base processor interfaces and contracts
+  - `system_info_processor.py`: System information data processor
+  - `deviceprofile_processor.py`: Device profile analysis processor
+  - `topology_processor.py`: Network topology data processor
+  - `interfaces/`: Interface data processors
+  - `protocols/`: Protocol-specific data processors (BGP, ISIS, MPLS, VRF)
+  - `logs/`: Log data processing and filtering
+
+These schemas serve as contracts between different parts of the system, ensuring consistency across:
+
+- CLI and API interfaces
+- Network operation responses
+- Error handling and status reporting
+- MCP tool integration
+
+### Data Processing Pipeline
+
+The application follows an OpenTelemetry-inspired architecture:
+
+```text
+Raw gNMI Data → Collector → Processor → Schema → Response
+```
+
+1. **Collectors** gather data from network devices via gNMI
+2. **Processors** transform raw data into structured, LLM-friendly formats
+3. **Schemas** ensure consistent data contracts across the system
+4. **Responses** provide standardized output for CLI, API, and MCP interfaces
 
 ## 🚧 Development Notes
 
 **Planned Improvements:**
 
 - [ ] Capability check for minimum OpenConfig model support
-- [ ] Standardized parser interfaces and output formats
-- [ ] Enhanced error handling for missing gNMI features
+- [ ] Standardized processor interfaces and output formats
 - [ ] Device compatibility validation

@@ -1,0 +1,84 @@
+{
+  "timestamp": 1745255227135712076,
+  "timestamp_readable": "2025-04-21 18:07:07",
+  "vrfs": [
+    {
+      "name": "100",
+      "description": null,
+      "enabled": true,
+      "type": "openconfig-network-instance-types:L3VRF",
+      "router_id": null,
+      "route_distinguisher": "100.100.100.101:100",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/0/0/2",
+          "address_families": [
+            "IPV4",
+            "IPV6"
+          ]
+        }
+      ],
+      "route_targets": {
+        "import": [
+          "100:100"
+        ],
+        "export": [
+          "100:100"
+        ]
+      },
+      "protocols": [
+        {
+          "type": "openconfig-policy-types:BGP",
+          "name": "default",
+          "details": {
+            "as_number": 100,
+            "router_id": "100.100.100.101",
+            "total_paths": 1,
+            "total_prefixes": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mgmt",
+      "description": null,
+      "enabled": true,
+      "type": "openconfig-network-instance-types:L3VRF",
+      "router_id": null,
+      "route_distinguisher": "",
+      "interfaces": [
+        {
+          "name": "MgmtEth0/RP0/CPU0/0",
+          "address_families": [
+            "IPV4",
+            "IPV6"
+          ]
+        }
+      ],
+      "route_targets": {
+        "import": [],
+        "export": []
+      },
+      "protocols": [
+        {
+          "type": "static-routes",
+          "name": "DEFAULT",
+          "details": {
+            "routes": [
+              {
+                "prefix": "0.0.0.0/0",
+                "next_hops": [
+                  {
+                    "address": "198.18.128.1",
+                    "metric": 0,
+                    "preference": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

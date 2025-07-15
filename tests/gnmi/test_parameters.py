@@ -22,68 +22,67 @@ class TestGnmiRequest:
     def test_initialization(self):
         """Test basic initialization of the GnmiRequest class."""
         # Test with minimal parameters
-        request = GnmiRequest(xpath=["/interfaces"])
-        assert request.xpath == ["/interfaces"]
+        request = GnmiRequest(path=["/interfaces"])
+        assert request.path == ["/interfaces"]
         assert request.prefix is None
         assert request.encoding == "json_ietf"
         assert request.datatype == "all"
-        assert request.extended_params == {}
 
-        # Test with all parameters
+        # Test with all core parameters plus some gNMI specific ones
         request = GnmiRequest(
-            xpath=["/interfaces", "/network-instances"],
+            path=["/interfaces", "/network-instances"],
             prefix="/openconfig",
             encoding="json",
             datatype="config",
-            extended_params={"timeout": 30},
         )
-        assert request.xpath == ["/interfaces", "/network-instances"]
+        assert request.path == ["/interfaces", "/network-instances"]
         assert request.prefix == "/openconfig"
         assert request.encoding == "json"
         assert request.datatype == "config"
-        assert request.extended_params == {"timeout": 30}
 
-    def test_to_dict(self):
-        """Test conversion to dictionary for GNMI client."""
+    def test_mapping_functionality(self):
+        """Test mapping functionality of the GnmiRequest class."""
         # Test minimal parameters
-        request = GnmiRequest(xpath=["/interfaces"])
-        result = request.to_dict()
-        assert result["path"] == ["/interfaces"]
-        assert result["prefix"] is None
-        assert result["encoding"] == "json_ietf"
-        assert result["datatype"] == "all"
+        request = GnmiRequest(path=["/interfaces"])
+        assert request["path"] == ["/interfaces"]
+        assert request["encoding"] == "json_ietf"
+        assert request["datatype"] == "all"
+        # prefix is included even when None (simplified behavior)
+        assert request["prefix"] is None
 
-        # Test with all parameters including extended parameters
+        # Test with all parameters including gNMI specific parameters
         request = GnmiRequest(
-            xpath=["/interfaces", "/network-instances"],
+            path=["/interfaces", "/network-instances"],
             prefix="/openconfig",
             encoding="json",
             datatype="config",
-            extended_params={"timeout": 30, "labels": ["test"]},
         )
-        result = request.to_dict()
-        assert result["path"] == ["/interfaces", "/network-instances"]
-        assert result["prefix"] == "/openconfig"
-        assert result["encoding"] == "json"
-        assert result["datatype"] == "config"
-        assert result["timeout"] == 30
-        assert result["labels"] == ["test"]
+        assert request["path"] == ["/interfaces", "/network-instances"]
+        assert request["prefix"] == "/openconfig"
+        assert request["encoding"] == "json"
+        assert request["datatype"] == "config"
 
-    def test_multiple_xpaths(self):
-        """Test handling of multiple XPath expressions."""
+        # Test that it can be unpacked with **
+        def mock_function(**kwargs):
+            return kwargs
+
+        result = mock_function(**request)
+        assert result["path"] == ["/interfaces", "/network-instances"]
+
+    def test_multiple_paths(self):
+        """Test handling of multiple path expressions."""
         request = GnmiRequest(
-            xpath=[
+            path=[
                 "/interfaces/interface[name=GigabitEthernet0/0/0/0]",
                 "/interfaces/interface[name=GigabitEthernet0/0/0/1]",
             ]
         )
-        result = request.to_dict()
-        assert len(result["path"]) == 2
+        assert len(request["path"]) == 2
         assert (
-            result["path"][0]
+            request["path"][0]
             == "/interfaces/interface[name=GigabitEthernet0/0/0/0]"
         )
         assert (
-            result["path"][1]
+            request["path"][1]
             == "/interfaces/interface[name=GigabitEthernet0/0/0/1]"
         )

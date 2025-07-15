@@ -14,6 +14,9 @@ https://github.com/python/cpython/issues/130522
 import atexit
 import logging
 import threading
+from src.logging.config import get_logger
+
+logger = get_logger(__name__)
 
 
 def patch_threading_for_python_3_13():
@@ -27,19 +30,19 @@ def patch_threading_for_python_3_13():
     the _tlock attribute has been set to None during interpreter shutdown.
     """
     # Original __del__ method from threading.py
-    original_del = threading._DeleteDummyThreadOnDel.__del__
+    original_del = threading._DeleteDummyThreadOnDel.__del__  # type: ignore
 
     # Replacement __del__ method that handles the case when _tlock is None
     def safe_del(self):
         try:
             # If _tlock is None, this will fail gracefully
-            if hasattr(self, "_tlock") and self._tlock is not None:
+            if hasattr(self, "_tlock") and self._tlock is not None:  # type: ignore
                 original_del(self)
         except Exception:
             pass  # Suppress all exceptions in __del__
 
     # Replace the method
-    threading._DeleteDummyThreadOnDel.__del__ = safe_del
+    threading._DeleteDummyThreadOnDel.__del__ = safe_del  # type: ignore
 
     # Register shutdown handler to prevent thread-related errors
     @atexit.register

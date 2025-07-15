@@ -17,13 +17,13 @@ if __name__ == "__main__":
     )
 
 
-from src.inventory.models import Device
+from src.schemas.models import Device
 from src.inventory.file_handler import parse_json_file
 from src.gnmi.parameters import GnmiRequest
-from src.gnmi.responses import (
-    GnmiDataResponse,
-    GnmiError,
-    GnmiFeatureNotFoundResponse,
+from src.schemas.responses import (
+    SuccessResponse,
+    ErrorResponse,
+    NetworkResponse,
 )
 from src.gnmi.error_handlers import (
     handle_timeout_error,
@@ -31,12 +31,13 @@ from src.gnmi.error_handlers import (
     handle_connection_refused,
     handle_generic_error,
 )
-from src.utils.logging_config import get_logger
+from src.logging.config import get_logger
+
 
 logger = get_logger(__name__)
 
 
-def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
+def get_gnmi_data(device: Device, request: GnmiRequest) -> NetworkResponse:
     """
     Get data from a gNMI target using the GnmiRequest parameter object.
 
@@ -45,42 +46,39 @@ def get_gnmi_data(device: Device, request: GnmiRequest) -> GnmiDataResponse:
         request: GnmiRequest object containing the request parameters
 
     Returns:
-        GnmiDataResponse object containing either the retrieved data or error information
+        Union of SuccessResponse, ErrorResponse, or FeatureNotFoundResponse
     """
-    logger.debug(f"gNMI request parameters: {request}")
-
-    target = (device.ip_address, device.port)
-    username = device.username
-    password = device.password
+    logger.debug("gNMI request parameters: %s", request)
+    gnmi_params = {
+        "target": (device.ip_address, device.port),
+        "username": device.username,
+        "password": device.password,
+        "insecure": device.insecure,
+        "path_cert": device.path_cert,
+        "path_key": device.path_key,
+        "path_root": device.path_root,
+        "override": device.override,
+        "skip_verify": device.skip_verify,
+        "gnmi_timeout": device.gnmi_timeout,
+        "grpc_options": device.grpc_options,
+        "show_diff": device.show_diff,
+    }
 
     try:
-        with gNMIclient(
-            target=target, username=username, password=password, insecure=True
-        ) as gc:
+        with gNMIclient(**gnmi_params) as gc:
 
-            request_params = request.to_dict()
-            result = gc.get(**request_params)
-            raw_response = _extract_gnmi_data(response=result)
+            response_data = gc.get(**request)
+            raw_response = _extract_gnmi_data(response=response_data)
             return _create_response_from_raw_data(raw_response=raw_response)
 
     except grpc.FutureTimeoutError:
-        error = handle_timeout_error(device)
-        return GnmiDataResponse.error_response(error)
+        return handle_timeout_error(device)
     except grpc.RpcError as e:
-        result = handle_rpc_error(device, e)
-        # Special handling for feature not found
-        if isinstance(result, GnmiFeatureNotFoundResponse):
-            return result
-        return GnmiDataResponse.error_response(result)
+        return handle_rpc_error(device, e)
     except ConnectionRefusedError:
-        error = handle_connection_refused(device)
-        return GnmiDataResponse.error_response(error)
+        return handle_connection_refused(device)
     except Exception as e:
-        result = handle_generic_error(device, e)
-        # Special handling for feature not found
-        if isinstance(result, GnmiFeatureNotFoundResponse):
-            return result
-        return GnmiDataResponse.error_response(result)
+        return handle_generic_error(device, e)
 
 
 def _extract_gnmi_data(
@@ -100,7 +98,7 @@ def _extract_gnmi_data(
         return None
 
     result = {}
-    result["response"] = updates
+    result["data"] = updates
 
     if "timestamp" in notifications[0]:
         result["timestamp"] = notifications[0]["timestamp"]
@@ -110,12 +108,14 @@ def _extract_gnmi_data(
 
 def _create_response_from_raw_data(
     raw_response: Union[Dict[str, Any], None],
-) -> GnmiDataResponse:
+) -> Union[SuccessResponse, ErrorResponse]:
     if raw_response:
-        return GnmiDataResponse.from_raw_response(raw_response)
+        data = raw_response.get("data", [])
+        timestamp = raw_response.get("timestamp")
+        return SuccessResponse(data=data, timestamp=timestamp)
 
-    return GnmiDataResponse.error_response(
-        GnmiError(type="NO_DATA", message="No data returned from device")
+    return ErrorResponse(
+        type="NO_DATA", message="No data returned from device"
     )
 
 
@@ -134,11 +134,11 @@ if __name__ == "__main__":
     # Parse the JSON file to get device information
     devices = parse_json_file(json_file_path)
 
-    device = Device.from_dict(devices[0])
+    device = Device(**devices[0])
 
     # Creating a GnmiRequest for an example query
     request = GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-interfaces:interfaces/interface[name=*]/state/admin-status",
             "openconfig-interfaces:interfaces/interface[name=*]/state/oper-status",
         ],

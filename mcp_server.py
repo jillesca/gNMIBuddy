@@ -16,7 +16,7 @@ logger = logging.getLogger("mcp")
 
 mcp = FastMCP("gNMIBuddy")
 logger.info("Started MCP server for gNMIBuddy")
-logger.debug(f'Network Inventory: {os.environ.get("NETWORK_INVENTORY")}')
+logger.debug("Network Inventory: %s", os.environ.get("NETWORK_INVENTORY"))
 
 
 def register_as_mcp_tool(func):
@@ -30,7 +30,7 @@ def register_as_mcp_tool(func):
     Returns:
         A decorated function that will be registered as an MCP tool
     """
-    logger.debug(f"Calling MCP tool: {func.__name__} ")
+    logger.debug("Calling MCP tool: %s", func.__name__)
 
     # Define a dynamic wrapper that preserves the original function's signature
     @mcp.tool()

@@ -3,11 +3,10 @@ VRF utility functions for extracting non-default VRF names from gNMI responses.
 """
 
 from typing import List
-from src.gnmi.parameters import GnmiRequest
+from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
-from src.gnmi.responses import GnmiError
-from src.network_tools.responses import VpnResponse
-from src.inventory.models import Device
+from src.gnmi.parameters import GnmiRequest
+from src.schemas.responses import ErrorResponse, SuccessResponse
 
 DEFAULT_INTERNAL_VRFS = ["default", "**iid"]
 
@@ -18,17 +17,32 @@ def get_non_default_vrf_names(device: Device) -> List[str]:
     Returns a list of VRF names (strings) that are not in DEFAULT_INTERNAL_VRFS.
     """
     vrf_names_request = GnmiRequest(
-        xpath=[
+        path=[
             "openconfig-network-instance:network-instances/network-instance[name=*]/state/name",
         ],
     )
     response = get_gnmi_data(device, vrf_names_request)
     vrf_names = []
-    if hasattr(response, "data") and response.data:
-        for item in response.data:
-            if "val" in item:
-                if item["val"].lower() not in [
-                    vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS
-                ]:
-                    vrf_names.append(item["val"])
+
+    # Only process if we have a successful response (not an error)
+    if not isinstance(response, ErrorResponse) and isinstance(
+        response, SuccessResponse
+    ):
+        # Work directly with response data
+        if response.data:
+            response_data = response.data
+        else:
+            response_data = []
+
+        if isinstance(response_data, list):
+            for item in response_data:
+                if isinstance(item, dict) and "val" in item:
+                    val = item.get("val")
+                    if (
+                        val
+                        and isinstance(val, str)
+                        and val.lower()
+                        not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
+                    ):
+                        vrf_names.append(val)
     return vrf_names

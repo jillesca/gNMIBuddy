@@ -4,35 +4,14 @@ Inventory package.
 Provides functions and classes for managing network device inventory.
 """
 
-import logging
-from typing import List, Optional, Tuple, Union, TypedDict
+from typing import Optional, Tuple, Union
 
-from .models import Device
 from .manager import InventoryManager
+from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
+from src.logging.config import get_logger
 
 # Setup module logger
-logger = logging.getLogger(__name__)
-
-
-# Type definitions for improved type safety
-class DeviceInfo(TypedDict):
-    """Type definition for device information dictionary."""
-
-    name: str
-    ip_address: str
-    port: int
-
-
-class DeviceListResult(TypedDict):
-    """Type definition for the device list result."""
-
-    devices: List[DeviceInfo]
-
-
-class DeviceErrorResult(TypedDict):
-    """Type definition for device error result."""
-
-    error: str
+logger = get_logger(__name__)
 
 
 def initialize_inventory(cli_path: Optional[str] = None) -> None:
@@ -62,7 +41,7 @@ def get_device(
         If device is found, returns (device_info, True)
         If device is not found, returns ({"error": error_message}, False)
     """
-    # logger.debug(f"Getting device from inventory: {device_name}")
+    # logger.debug("Getting device from inventory: %s", device_name)
     return InventoryManager.get_device(device_name)
 
 

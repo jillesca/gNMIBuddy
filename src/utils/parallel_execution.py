@@ -3,7 +3,7 @@
 import concurrent.futures
 from typing import Dict, Any, List, Callable
 
-from src.utils.logging_config import get_logger
+from src.logging.config import get_logger
 import src.inventory
 
 
@@ -48,7 +48,9 @@ def run_command_on_all_devices(
                 result = future.result()
                 results.append(result)
             except (ConnectionError, TimeoutError) as exc:
-                logger.error(f"Network error for device {device_name}: {exc}")
+                logger.error(
+                    "Network error for device %s: %s", device_name, exc
+                )
                 results.append(
                     {
                         "device": device_name,
@@ -56,7 +58,7 @@ def run_command_on_all_devices(
                     }
                 )
             except ValueError as exc:
-                logger.error(f"Value error for device {device_name}: {exc}")
+                logger.error("Value error for device %s: %s", device_name, exc)
                 results.append(
                     {
                         "device": device_name,
@@ -66,7 +68,7 @@ def run_command_on_all_devices(
             except Exception as exc:
                 # Still catch unexpected exceptions as a fallback
                 logger.error(
-                    f"Unexpected error for device {device_name}: {exc}"
+                    "Unexpected error for device %s: %s", device_name, exc
                 )
                 results.append(
                     {

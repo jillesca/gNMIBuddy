@@ -1,0 +1,61 @@
+{
+  "timestamp": "2025-04-21 18:07:07",
+  "vrfs": [
+    {
+      "name": "100",
+      "description": null,
+      "rd": "100.100.100.101:100",
+      "interfaces": [
+        "GigabitEthernet0/0/0/2"
+      ],
+      "route_targets": {
+        "import": [
+          "100:100"
+        ],
+        "export": [
+          "100:100"
+        ]
+      },
+      "protocols": [
+        {
+          "type": "openconfig-policy-types:BGP",
+          "name": "default",
+          "as_number": 100,
+          "router_id": "100.100.100.101",
+          "paths": 1,
+          "prefixes": 1
+        }
+      ]
+    },
+    {
+      "name": "Mgmt",
+      "description": null,
+      "rd": "",
+      "interfaces": [
+        "MgmtEth0/RP0/CPU0/0"
+      ],
+      "route_targets": {
+        "import": [],
+        "export": []
+      },
+      "protocols": [
+        {
+          "type": "static-routes",
+          "name": "DEFAULT",
+          "routes": [
+            {
+              "prefix": "0.0.0.0/0",
+              "next_hops": [
+                {
+                  "address": "198.18.128.1",
+                  "metric": 0,
+                  "preference": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

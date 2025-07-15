@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-"""Error handling functions for gNMI operations"""
+"""Error handling functions for network operations"""
 from typing import Optional, Union
 import re
 import grpc
-from src.inventory.models import Device
-from src.gnmi.responses import GnmiError, GnmiFeatureNotFoundResponse
-from src.utils.logging_config import get_logger
+from src.schemas.models import Device
+from src.logging.config import get_logger
+from src.schemas.responses import ErrorResponse, FeatureNotFoundResponse
 
 logger = get_logger(__name__)
 
 
-def handle_timeout_error(device: Device) -> GnmiError:
+def handle_timeout_error(device: Device) -> ErrorResponse:
     """
-    Handle gNMI connection timeout errors.
+    Handle connection timeout errors.
 
     Returns:
-        GnmiError object with error details
+        ErrorResponse object with error details
     """
     error_msg = f"Connection timeout when connecting to {device.name} ({device.ip_address}:{device.port})"
     _log_error(device.name, error_msg)
 
-    return GnmiError(
+    return ErrorResponse(
         type="CONNECTION_TIMEOUT",
         message=error_msg,
         details={"error_class": "grpc.FutureTimeoutError"},
@@ -29,12 +29,12 @@ def handle_timeout_error(device: Device) -> GnmiError:
 
 def handle_rpc_error(
     device: Device, error: grpc.RpcError
-) -> Union[GnmiError, GnmiFeatureNotFoundResponse]:
+) -> Union[ErrorResponse, FeatureNotFoundResponse]:
     """
-    Handle gRPC RPC errors from gNMI operations.
+    Handle gRPC RPC errors from network operations.
 
     Returns:
-        GnmiError object with error details or GnmiFeatureNotFoundResponse if a feature is not found
+        ErrorResponse object with error details or FeatureNotFoundResponse if a feature is not found
     """
     error_type = "GRPC_ERROR"
 
@@ -52,23 +52,26 @@ def handle_rpc_error(
         details = str(error)
     feature_name = _extract_feature_name(details)
     error_msg = f"gRPC error when connecting to {device.name}: {code_name} ({code_value}). Details: {details}"
-    _log_error(device.name, error_msg)
 
     if feature_name:
         # Return feature not found response instead of error
-        return GnmiFeatureNotFoundResponse.create(
+        _log_error(device.name, error_msg, level="info")
+        return FeatureNotFoundResponse(
             feature_name=feature_name,
             message=f"Feature '{feature_name}' not found on device {device.name}",
             details={
                 "code": code_name,
                 "code_value": code_value,
-                "device": device.name,
-                "device_ip": device.ip_address,
                 "full_details": details,
             },
         )
 
-    return GnmiError(
+    _log_error(
+        device.name,
+        error_msg,
+    )
+
+    return ErrorResponse(
         type=error_type,
         message=error_msg,
         details={
@@ -79,27 +82,27 @@ def handle_rpc_error(
     )
 
 
-def handle_connection_refused(device: Device) -> GnmiError:
+def handle_connection_refused(device: Device) -> ErrorResponse:
     """
-    Handle connection refused errors when connecting to a gNMI target.
+    Handle connection refused errors when connecting to a target.
 
     Returns:
-        GnmiError object with error details
+        ErrorResponse object with error details
     """
-    error_msg = f"Connection refused by {device.name} ({device.ip_address}:{device.port}). Ensure the device is running and the gNMI port is open."
+    error_msg = f"Connection refused by {device.name} ({device.ip_address}:{device.port}). Ensure the device is running and the port is open."
     _log_error(device.name, error_msg)
 
-    return GnmiError(type="CONNECTION_REFUSED", message=error_msg)
+    return ErrorResponse(type="CONNECTION_REFUSED", message=error_msg)
 
 
 def handle_generic_error(
     device: Device, error: Exception
-) -> Union[GnmiError, GnmiFeatureNotFoundResponse]:
+) -> Union[ErrorResponse, FeatureNotFoundResponse]:
     """
-    Handle generic exceptions that may occur during gNMI operations.
+    Handle generic exceptions that may occur during network operations.
 
     Returns:
-        GnmiError object with error details or GnmiFeatureNotFoundResponse if a feature is not found
+        ErrorResponse object with error details or FeatureNotFoundResponse if a feature is not found
     """
     error_type = type(error).__name__
     error_message = str(error)
@@ -107,19 +110,15 @@ def handle_generic_error(
 
     if feature_name or "not found" in error_message.lower():
         # Return feature not found response instead of error
-        return GnmiFeatureNotFoundResponse.create(
+        return FeatureNotFoundResponse(
             feature_name=feature_name or "unknown",
             message=f"Feature not found on device {device.name}: {error_message}",
-            details={
-                "device": device.name,
-                "device_ip": device.ip_address,
-            },
         )
 
     error_msg = f"{error_type} - {error_message}"
     _log_error(device.name, error_msg)
 
-    return GnmiError(type=error_type, message=error_message)
+    return ErrorResponse(type=error_type, message=error_message)
 
 
 def _extract_feature_name(details: str) -> Optional[str]:
@@ -137,7 +136,7 @@ def _extract_feature_name(details: str) -> Optional[str]:
 
 
 def _log_error(device_name: str, message: str, level: str = "error") -> None:
-    log_message = f"Error during gNMI request to {device_name}: {message}"
+    log_message = f"Error during request to {device_name}: {message}"
 
     if level == "warning":
         logger.warning(log_message)

@@ -7,17 +7,17 @@ from typing import Dict, Any, Optional
 
 from src.services.commands import run
 from src.inventory import list_available_devices
-from src.network_tools.vpn_info import get_vpn_information
-from src.network_tools.mpls_info import get_mpls_information
-from src.network_tools.routing_info import get_routing_information
-from src.network_tools.interfaces_info import get_interface_information
-from src.network_tools.logging import get_logging_information
-from src.network_tools.system_info import get_system_information
-from src.network_tools.deviceprofile import get_device_profile
-from src.network_tools.topology.path import path
-from src.network_tools.topology.segment import segment
-from src.network_tools.topology.neighbors import neighbors
-from src.network_tools.topology.ip_adjacency_dump import ip_adjacency_dump
+from src.collectors.vpn import get_vpn_info as collect_vpn_info
+from src.collectors.mpls import get_mpls_info as collect_mpls_info
+from src.collectors.routing import get_routing_info as collect_routing_info
+from src.collectors.interfaces import get_interfaces as collect_interfaces
+from src.collectors.logs import get_logs as collect_logs
+from src.collectors.system import get_system_info as collect_system_info
+from src.collectors.profile import get_device_profile as collect_device_profile
+
+# from src.collectors.topology.segment import segment
+from src.collectors.topology.neighbors import neighbors
+from src.collectors.topology.ip_adjacency_dump import ip_adjacency_dump
 
 
 def get_device_profile_api(device_name: str) -> Dict[str, Any]:
@@ -48,10 +48,10 @@ def get_device_profile_api(device_name: str) -> Dict[str, Any]:
             "role": "PE"
         }
 
-    :param device: Device object from inventory
-    :return: SystemInfoResponse containing the device profile and role
+    :param device_name: Name of the device in inventory
+    :return: Dictionary containing the device profile and role information
     """
-    return run(device_name, get_device_profile)
+    return run(device_name, collect_device_profile)
 
 
 def get_system_info(
@@ -68,7 +68,7 @@ def get_system_info(
     Returns:
         Dictionary with system information fields
     """
-    return run(device_name, get_system_information)
+    return run(device_name, collect_system_info)
 
 
 def get_routing_info(
@@ -87,7 +87,7 @@ def get_routing_info(
     Returns:
         Structured routing information
     """
-    return run(device_name, get_routing_information, protocol, include_details)
+    return run(device_name, collect_routing_info, protocol, include_details)
 
 
 def get_logs(
@@ -110,7 +110,7 @@ def get_logs(
     """
     return run(
         device_name,
-        get_logging_information,
+        collect_logs,
         keywords,
         minutes,
         show_all_logs,
@@ -133,7 +133,7 @@ def get_interface_info(
     Returns:
         Structured interface information containing operational state and configuration details
     """
-    return run(device_name, get_interface_information, interface)
+    return run(device_name, collect_interfaces, interface)
 
 
 def get_mpls_info(
@@ -150,7 +150,7 @@ def get_mpls_info(
     Returns:
         Structured MPLS information
     """
-    return run(device_name, get_mpls_information, include_details)
+    return run(device_name, collect_mpls_info, include_details)
 
 
 def get_vpn_info(
@@ -169,7 +169,7 @@ def get_vpn_info(
     Returns:
         Structured VPN information
     """
-    return run(device_name, get_vpn_information, vrf, include_details)
+    return run(device_name, collect_vpn_info, vrf, include_details)
 
 
 def get_devices() -> Dict[str, Any]:
@@ -206,59 +206,30 @@ def get_topology_neighbors(
     return run(device_name, neighbors)
 
 
-def get_topology_path(
-    device_name: str,
-    target: str,
-) -> Dict[str, Any]:
-    """
-    Compute the shortest path between two devices.
+# def get_topology_segment(
+#     device_name: str,
+#     network: str,
+# ) -> Dict[str, Any]:
+#     """
+#     List devices on the specified L3 segment.
 
-    Args:
-        device_name: Name of the source device in the inventory
-        target: Name of the target device
+#     Args:
+#         device_name: Name of the device in the inventory (used for context)
+#         network: The L3 network segment (e.g., "10.0.0.0/30")
 
-    Returns:
-        Dictionary with the device name and the path (nodes and edges) between the devices.
-        Example:
-        {
-            "device": "PE1",
-            "path": {
-                "nodes": ["PE1", "P1", "PE2"],
-                "edges": [
-                    {"source": "PE1", "target": "P1", "attributes": {...}},
-                    {"source": "P1", "target": "PE2", "attributes": {...}}
-                ]
-            }
-        }
-    """
+#     Returns:
+#         Dictionary with the device name and the list of devices on the specified segment.
+#         Example:
+#         {
+#             "device": "PE1",
+#             "segment": {
+#                 "network": "10.0.0.0/30",
+#                 "devices": ["PE1", "P1"]
+#             }
+#         }
+#     """
 
-    return run(device_name, path, target)
-
-
-def get_topology_segment(
-    device_name: str,
-    network: str,
-) -> Dict[str, Any]:
-    """
-    List devices on the specified L3 segment.
-
-    Args:
-        device_name: Name of the device in the inventory (used for context)
-        network: The L3 network segment (e.g., "10.0.0.0/30")
-
-    Returns:
-        Dictionary with the device name and the list of devices on the specified segment.
-        Example:
-        {
-            "device": "PE1",
-            "segment": {
-                "network": "10.0.0.0/30",
-                "devices": ["PE1", "P1"]
-            }
-        }
-    """
-
-    return run(device_name, segment, network)
+#     return run(device_name, segment, network)
 
 
 def get_topology_ip_adjacency_dump(device_name: str) -> Dict[str, Any]:

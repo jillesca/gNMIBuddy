@@ -4,27 +4,25 @@ Simplified network command service for executing commands with standardized erro
 """
 
 import json
-import logging
-from typing import Dict, Any, Protocol, runtime_checkable, Union, List
+from enum import Enum
+from dataclasses import is_dataclass, asdict
+from typing import Dict, Any, Protocol, runtime_checkable
 
 import src.inventory
-from src.inventory.models import Device
-from src.gnmi.responses import GnmiResponse
-from src.network_tools.responses import NetworkToolsResponse
+from src.schemas.models import Device
+from src.schemas.responses import NetworkOperationResult
+from src.logging.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @runtime_checkable
 class NetworkCommand(Protocol):
     """Protocol defining what a network command function should look like"""
 
-    def __call__(self, device: Device, *args: Any) -> Union[
-        Dict[str, Any],
-        GnmiResponse,
-        NetworkToolsResponse,
-        List[NetworkToolsResponse],
-    ]: ...
+    def __call__(
+        self, device: Device, *args: Any
+    ) -> NetworkOperationResult: ...
 
 
 def run(
@@ -47,34 +45,39 @@ def run(
     device, success = src.inventory.get_device(device_name)
 
     if not success:
-        logger.warning(f"Failed to retrieve device: {device_name}")
-        return device
+        logger.warning("Failed to retrieve device: %s", device_name)
+        return device  # device is a dict with error info when success is False
 
-    logger.debug(f"Executing command on device: {device_name}")
+    logger.debug("Executing command on device: %s", device_name)
 
     command_result = command_func(device, *args)
 
-    # Handle different types of responses
-    if isinstance(command_result, list):
-        # If the result is a list (like from routing_info), convert each item
-        serialized_results = []
-        for item in command_result:
-            if hasattr(item, "to_dict") and callable(item.to_dict):
-                serialized_results.append(item.to_dict())
-            else:
-                serialized_results.append(item)
-        command_result = serialized_results
-    elif hasattr(command_result, "to_dict") and callable(
-        command_result.to_dict
-    ):
-        # If the result has a to_dict method (like our response objects), use it
-        command_result = command_result.to_dict()
+    # Assertion to ensure NetworkOperationResult is always returned
+    assert isinstance(command_result, NetworkOperationResult), (
+        f"Network command function must return NetworkOperationResult, "
+        f"but got {type(command_result).__name__}. "
+        f"Please ensure the network command function implements the NetworkOperationResult schema."
+    )
 
-    result = {
-        "device": device.name,
-        "ip_address": device.ip_address,
-        "nos": device.nos,
-        "response": command_result,
-    }
+    serializable_result = _make_serializable(command_result)
+    return json.loads(json.dumps(serializable_result))
 
-    return json.loads(json.dumps(result))
+
+def _make_serializable(obj: Any) -> Any:
+    """
+    Convert dataclass objects to dictionaries for JSON serialization.
+    """
+    if is_dataclass(obj) and not isinstance(obj, type):
+        # Convert dataclass to dict and recursively process all fields
+        result = {}
+        for field_name, field_value in asdict(obj).items():
+            result[field_name] = _make_serializable(field_value)
+        return result
+    elif isinstance(obj, Enum):
+        return obj.value  # Convert enum to its string value
+    elif isinstance(obj, dict):
+        return {key: _make_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_make_serializable(item) for item in obj]
+    else:
+        return obj

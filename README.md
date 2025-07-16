@@ -136,7 +136,7 @@ mcp run mcp_server.py
 
 ## 🧪 Testing with DevNet Sandbox
 
-Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/) with the included Ansible playbook:
+Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/), follow the instructions to bring up a MPLS network with docker, then configure gNMI with the included Ansible playbook:
 
 ```bash
 # Enable gRPC on the DevNet XRd Sandbox

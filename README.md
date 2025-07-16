@@ -155,12 +155,10 @@ Want to see how this MCP tool integrates with actual AI agents? Check out [sp_on
 
 ### Global Options
 
-Choose **one** target option:
-
-- `--device DEVICE_NAME`: Single device from inventory
 - `--inventory PATH`: Custom inventory file (or set `NETWORK_INVENTORY` env var)
+- `--device DEVICE_NAME`: Single device from inventory
 
-Use the `--help` flag for detailed command options.
+And pick a command. Use the `--help` flag for detailed command options.
 
 ### Examples
 

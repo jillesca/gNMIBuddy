@@ -112,8 +112,17 @@ class TestRoutingInfoFunctions:
         assert isinstance(response, NetworkOperationResult)
         assert response.status == OperationStatus.SUCCESS
         assert response.device_name == "test-device"
-        assert "bgp" in response.data["routing_data"]
-        assert "isis" in response.data["routing_data"]
+
+        # Check that routing_protocols is a list and contains both protocols
+        routing_data = response.data["routing_protocols"]
+        assert isinstance(routing_data, list)
+        assert len(routing_data) == 2
+
+        # Check that both protocols are present
+        protocols = [item["protocol"] for item in routing_data]
+        assert "bgp" in protocols
+        assert "isis" in protocols
+
         assert mock_get_bgp_info.called
         assert mock_get_isis_info.called
 
@@ -155,8 +164,17 @@ class TestRoutingInfoFunctions:
         # Verify we got only BGP response
         assert isinstance(response, NetworkOperationResult)
         assert response.status == OperationStatus.SUCCESS
-        assert "bgp" in response.data["routing_data"]
-        assert "isis" not in response.data["routing_data"]
+
+        # Check that routing_protocols is a list and contains only BGP
+        routing_data = response.data["routing_protocols"]
+        assert isinstance(routing_data, list)
+        assert len(routing_data) == 1
+
+        # Check that only BGP protocol is present
+        protocols = [item["protocol"] for item in routing_data]
+        assert "bgp" in protocols
+        assert "isis" not in protocols
+
         assert mock_get_bgp_info.called
         assert not mock_get_isis_info.called
 
@@ -241,7 +259,7 @@ class TestRoutingInfoFunctions:
                 assert response.status == OperationStatus.SUCCESS
                 assert response.device_name == "test-device"
                 assert response.operation_type == "routing_info"
-                assert response.data["routing_data"]["bgp"] == bgp_data
+                assert response.data["detailed_data"] == bgp_data
                 assert response.data["summary"]["total_neighbors"] == 2
                 assert response.metadata["include_details"] is True
 
@@ -371,7 +389,7 @@ class TestRoutingInfoFunctions:
                 assert response.status == OperationStatus.SUCCESS
                 assert response.device_name == "test-device"
                 assert response.operation_type == "routing_info"
-                assert response.data["routing_data"]["isis"] == isis_data
+                assert response.data["detailed_data"] == isis_data
                 assert response.data["summary"]["total_interfaces"] == 2
                 assert response.metadata["include_details"] is True
 

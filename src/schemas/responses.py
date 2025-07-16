@@ -11,6 +11,20 @@ from enum import Enum
 from typing import List, Dict, Any, Optional, Union
 
 
+class RoutingProtocol(Enum):
+    """
+    Enumeration for routing protocol types.
+
+    Provides type safety and prevents typos when filtering routing protocols.
+    """
+
+    BGP = "bgp"
+    ISIS = "isis"
+    OSPF = "ospf"
+    CONNECTED = "connected"
+    STATIC = "static"
+
+
 class OperationStatus(Enum):
     """
     Enumeration for network operation status values.
@@ -22,6 +36,9 @@ class OperationStatus(Enum):
     SUCCESS = "success"
     FAILED = "failed"
     FEATURE_NOT_AVAILABLE = "feature_not_available"
+    PARTIAL_SUCCESS = (
+        "partial_success"  # New status for multi-protocol operations
+    )
 
 
 @dataclass

@@ -19,24 +19,25 @@ See the [API definition](/api.py) for all available APIs and options.
 
 ## ⚡ Quick Start
 
-> **Note:** The main CMD entry point is `gnmictl.py`.
-
 ### Prerequisites
 
-- Python 3.13+
-- Network devices with gNMI _enabled_ and `openconfig-network-instance` support
-- Device inventory file (JSON format)
+- Python `3.13+`
+- Network devices with gNMI _enabled_.
+- Device inventory file (JSON format).
 
 ### Device Compatibility Requirements
 
-- **OpenConfig:**
+> [!IMPORTANT]
+> gNMIBuddy requires devices to support specific OpenConfig models depending on the functionality used.
+
+- **OpenConfig Models dependencies**
+
   - `openconfig-system` (`0.17.1`)
-  - `openconfig-interfaces` (`3.0.0`)
+  - `openconfig-interfaces` (`4.0.0`)
   - `openconfig-network-instance` (`1.3.0`)
 
-**Tested on:**
-
-- **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
+- **Tested on:**
+  - **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
 
 ### Installation
 
@@ -121,9 +122,10 @@ Add to Claude's configuration (Settings > Developer > Edit config):
 
 ### Testing MCP
 
-Use the MCP inspector for testing:
+Use the MCP inspector for testing.
 
 ```bash
+# Replace `xrd_sandbox.json` with your actual inventory file.
 NETWORK_INVENTORY=xrd_sandbox.json \
 npx @modelcontextprotocol/inspector \
 uv run --with "mcp[cli],pygnmi,networkx" \
@@ -153,12 +155,10 @@ Want to see how this MCP tool integrates with actual AI agents? Check out [sp_on
 
 ### Global Options
 
-Choose **one** target option:
-
-- `--device DEVICE_NAME`: Single device from inventory
 - `--inventory PATH`: Custom inventory file (or set `NETWORK_INVENTORY` env var)
+- `--device DEVICE_NAME`: Single device from inventory
 
-Use the `--help` flag for detailed command options.
+And pick a command. Use the `--help` flag for detailed command options.
 
 ### Examples
 
@@ -188,38 +188,16 @@ uv run gnmictl.py --all-devices interface
 
 gNMIBuddy uses a centralized schema approach for data contracts:
 
-- **`src/schemas/`**: Contains all shared data models and response contracts
-
-  - `models.py`: Device and inventory data models
-  - `responses.py`: Network operation response schemas
-  - `__init__.py`: Unified imports for all schemas
-
-- **`src/collectors/`**: Network telemetry data collectors following OpenTelemetry patterns
-
-  - `system.py`: System information collector
-  - `interfaces.py`: Interface data collector
-  - `routing.py`: Routing protocol collector
-  - `mpls.py`: MPLS information collector
-  - `vpn.py`: VPN/VRF data collector
-  - `logs.py`: System logs collector
-  - `profile.py`: Device profile and role collector
-  - `topology/`: Network topology discovery
-
-- **`src/processors/`**: Data transformation processors following OpenTelemetry patterns
-  - `base.py`: Base processor interfaces and contracts
-  - `system_info_processor.py`: System information data processor
-  - `deviceprofile_processor.py`: Device profile analysis processor
-  - `topology_processor.py`: Network topology data processor
-  - `interfaces/`: Interface data processors
-  - `protocols/`: Protocol-specific data processors (BGP, ISIS, MPLS, VRF)
-  - `logs/`: Log data processing and filtering
+- **`src/schemas/`**: Contains all shared data models and response contracts.
+- **`src/collectors/`**: Network telemetry data collectors following OpenTelemetry patterns.
+- **`src/processors/`**: Data transformation processors following OpenTelemetry patterns.
 
 These schemas serve as contracts between different parts of the system, ensuring consistency across:
 
-- CLI and API interfaces
-- Network operation responses
-- Error handling and status reporting
-- MCP tool integration
+- CLI and API interfaces.
+- Network operation responses.
+- Error handling and status reporting.
+- MCP tool integration.
 
 ### Data Processing Pipeline
 
@@ -229,15 +207,15 @@ The application follows an OpenTelemetry-inspired architecture:
 Raw gNMI Data → Collector → Processor → Schema → Response
 ```
 
-1. **Collectors** gather data from network devices via gNMI
-2. **Processors** transform raw data into structured, LLM-friendly formats
-3. **Schemas** ensure consistent data contracts across the system
-4. **Responses** provide standardized output for CLI, API, and MCP interfaces
+1. **Collectors** gather data from network devices via gNMI.
+2. **Processors** transform raw data into structured, LLM-friendly formats.
+3. **Schemas** ensure consistent data contracts across the system.
+4. **Responses** provide standardized output for CLI, API, and MCP interfaces.
 
 ## 🚧 Development Notes
 
 **Planned Improvements:**
 
-- [ ] Capability check for minimum OpenConfig model support
-- [ ] Standardized processor interfaces and output formats
-- [ ] Device compatibility validation
+- [ ] Capability check for minimum OpenConfig model support.
+- [ ] Standardized processor interfaces and output formats.
+- [ ] Device compatibility validation.

@@ -81,7 +81,8 @@ def get_routing_info(
 
     Args:
         device_name: Name of the device in the inventory
-        protocol: Optional protocol filter (bgp, isis)
+        protocol: Optional protocol filter. Supported values: 'bgp', 'isis'
+                 Can be a single protocol or comma-separated list (e.g., 'bgp,isis')
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:

@@ -6,7 +6,7 @@ Provides OpenConfig model capability verification functionality,
 specifically for openconfig-network-instance model validation.
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Set
 from dataclasses import dataclass, field
 
 from ..schemas.models import Device
@@ -17,13 +17,22 @@ from ..schemas.capabilities import (
     DeviceCapabilities,
 )
 from ..schemas.responses import ErrorResponse, SuccessResponse
+from ..schemas.openconfig_models import OpenConfigModel, get_model_requirement
+from ..schemas.verification_results import (
+    ModelVerificationResult,
+    MultiModelVerificationResult,
+    VerificationStatus,
+)
 from ..gnmi.capabilities import (
     get_device_capabilities,
     extract_capabilities_from_response,
 )
 from ..utils.version_utils import (
     format_version_comparison_message,
+    validate_model_version,
 )
+
+# Temporarily use standard logging to avoid circular import
 from ..logging.config import get_logger
 
 logger = get_logger(__name__)
@@ -92,7 +101,12 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
     required_version = "1.3.0"
 
     logger.info(
-        "Verifying %s capability for device %s", model_name, device.name
+        "Starting capability verification",
+        extra={
+            "device_name": device.name,
+            "model_name": model_name,
+            "required_version": required_version,
+        },
     )
 
     # Initialize result structure
@@ -111,11 +125,22 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
 
     try:
         # Get device capabilities
+        logger.debug(
+            "Requesting device capabilities",
+            extra={"device_name": device.name},
+        )
         capabilities_response = get_device_capabilities(device)
 
         if isinstance(capabilities_response, ErrorResponse):
             error_msg = f"Failed to retrieve capabilities from device {device.name}: {capabilities_response.message}"
-            logger.error(error_msg)
+            logger.error(
+                "Failed to retrieve capabilities from device",
+                extra={
+                    "device_name": device.name,
+                    "error_type": capabilities_response.type,
+                    "error_message": capabilities_response.message,
+                },
+            )
             result.error_message = error_msg
             result.model_capability.status = (
                 CapabilityVerificationStatus.NOT_FOUND
@@ -126,7 +151,13 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
 
         if not isinstance(capabilities_response, SuccessResponse):
             error_msg = f"Unexpected response type from capabilities request: {type(capabilities_response)}"
-            logger.error(error_msg)
+            logger.error(
+                "Unexpected response type from capabilities request",
+                extra={
+                    "device_name": device.name,
+                    "response_type": type(capabilities_response).__name__,
+                },
+            )
             result.error_message = error_msg
             result.model_capability.status = (
                 CapabilityVerificationStatus.NOT_FOUND
@@ -140,7 +171,10 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
             error_msg = (
                 f"No capability data received from device {device.name}"
             )
-            logger.error(error_msg)
+            logger.error(
+                "No capability data received from device",
+                extra={"device_name": device.name},
+            )
             result.error_message = error_msg
             result.model_capability.status = (
                 CapabilityVerificationStatus.NOT_FOUND
@@ -150,6 +184,13 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
             return result.to_dict()
 
         # Extract device capabilities from response
+        logger.debug(
+            "Extracting capabilities from response",
+            extra={
+                "device_name": device.name,
+                "data_size": len(capabilities_response.data),
+            },
+        )
         device_capabilities = extract_capabilities_from_response(
             capabilities_response
         )
@@ -158,7 +199,10 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
             error_msg = (
                 f"Failed to extract capabilities from device {device.name}"
             )
-            logger.error(error_msg)
+            logger.error(
+                "Failed to extract capabilities from device",
+                extra={"device_name": device.name},
+            )
             result.error_message = error_msg
             result.model_capability.status = (
                 CapabilityVerificationStatus.NOT_FOUND
@@ -174,12 +218,28 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
             device_capabilities.timestamp
         )
 
-        # Find the openconfig-network-instance model
-        logger.debug("Searching for model: %s", model_name)
-        logger.debug("Required version: %s", required_version)
         logger.debug(
-            "Total models to search: %d",
-            len(device_capabilities.supported_models),
+            "Capabilities extraction successful",
+            extra={
+                "device_name": device.name,
+                "total_models_found": len(
+                    device_capabilities.supported_models
+                ),
+                "timestamp": device_capabilities.timestamp,
+            },
+        )
+
+        # Find the openconfig-network-instance model
+        logger.debug(
+            "Searching for specific model",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+                "required_version": required_version,
+                "total_models_to_search": len(
+                    device_capabilities.supported_models
+                ),
+            },
         )
 
         # Log OpenConfig models available for debugging
@@ -190,18 +250,35 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
         ]
 
         if openconfig_models:
-            logger.debug("Found %d OpenConfig models:", len(openconfig_models))
-            for model in openconfig_models:
-                logger.debug("  - %s v%s", model.name, model.version)
+            logger.debug(
+                "Found OpenConfig models",
+                extra={
+                    "device_name": device.name,
+                    "openconfig_model_count": len(openconfig_models),
+                    "openconfig_models": [
+                        {"name": model.name, "version": model.version}
+                        for model in openconfig_models
+                    ],
+                },
+            )
         else:
-            logger.debug("No OpenConfig models found in device capabilities")
+            logger.debug(
+                "No OpenConfig models found in device capabilities",
+                extra={"device_name": device.name},
+            )
 
         model_info = device_capabilities.find_model(model_name)
 
         if not model_info:
             logger.debug(
-                "Model not found in %d available models",
-                len(device_capabilities.supported_models),
+                "Model not found in available models",
+                extra={
+                    "device_name": device.name,
+                    "model_name": model_name,
+                    "available_models": len(
+                        device_capabilities.supported_models
+                    ),
+                },
             )
             # Log first few model names for debugging
             if device_capabilities.supported_models:
@@ -336,57 +413,6 @@ def verify_openconfig_network_instance(device: Device) -> Dict[str, Any]:
         return result.to_dict()
 
 
-def _parse_device_capabilities(
-    capabilities_data: Dict[str, Any], device_name: str
-) -> DeviceCapabilities:
-    """
-    Parse capability data into DeviceCapabilities object.
-
-    .. deprecated::
-        This function is deprecated. Use extract_capabilities_from_response() instead.
-        This function expects raw gNMI capability data, but capability verification
-        now uses DeviceCapabilities objects from get_device_capabilities().
-
-    Args:
-        capabilities_data: Raw capability data from gNMI response
-        device_name: Name of the device
-
-    Returns:
-        DeviceCapabilities object
-    """
-    logger.warning(
-        "_parse_device_capabilities is deprecated. Use extract_capabilities_from_response() instead."
-    )
-
-    # Extract basic capability information
-    gnmi_version = capabilities_data.get("gNMI_version", "unknown")
-    supported_encodings = capabilities_data.get("supported_encodings", [])
-
-    # Parse supported models
-    supported_models = []
-    supported_models_data = capabilities_data.get("supported_models", [])
-
-    for model_data in supported_models_data:
-        if isinstance(model_data, dict):
-            model_info = CapabilityInfo(
-                name=model_data.get("name", ""),
-                version=model_data.get("version", ""),
-                organization=model_data.get("organization", ""),
-                module=model_data.get("module"),
-                revision=model_data.get("revision"),
-                namespace=model_data.get("namespace"),
-            )
-            supported_models.append(model_info)
-
-    return DeviceCapabilities(
-        device_name=device_name,
-        gnmi_version=gnmi_version,
-        supported_models=supported_models,
-        supported_encodings=supported_encodings,
-        raw_response=capabilities_data,
-    )
-
-
 def get_verification_summary(verification_result: Dict[str, Any]) -> str:
     """
     Get a human-readable summary of the verification result.
@@ -415,3 +441,274 @@ def get_verification_summary(verification_result: Dict[str, Any]) -> str:
             return f"✗ {model_name} verification failed"
 
     return f"? {model_name} verification status unknown"
+
+
+def verify_single_model(
+    device: Device, model: OpenConfigModel
+) -> ModelVerificationResult:
+    """
+    Verify that a device supports a specific OpenConfig model.
+
+    Args:
+        device: Device object to verify
+        model: OpenConfig model to verify
+
+    Returns:
+        ModelVerificationResult with verification status and details
+    """
+    requirement = get_model_requirement(model)
+    model_name = requirement.name
+    required_version = requirement.min_version
+
+    logger.info(
+        "Starting single model verification",
+        extra={
+            "device_name": device.name,
+            "model_name": model_name,
+            "required_version": required_version,
+        },
+    )
+
+    # Get device capabilities
+    logger.debug(
+        "Requesting device capabilities for single model verification",
+        extra={"device_name": device.name, "model_name": model_name},
+    )
+    capabilities_response = get_device_capabilities(device)
+
+    if isinstance(capabilities_response, ErrorResponse):
+        error_msg = f"Failed to retrieve capabilities from device {device.name}: {capabilities_response.message}"
+        logger.error(
+            "Failed to retrieve capabilities for single model verification",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+                "error_type": capabilities_response.type,
+                "error_message": capabilities_response.message,
+            },
+        )
+        return ModelVerificationResult(
+            model=model,
+            status=VerificationStatus.ERROR,
+            required_version=required_version,
+            error_message=error_msg,
+        )
+
+    if not isinstance(capabilities_response, SuccessResponse):
+        error_msg = f"Unexpected response type from capabilities request: {type(capabilities_response)}"
+        logger.error(
+            "Unexpected response type for single model verification",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+                "response_type": type(capabilities_response).__name__,
+            },
+        )
+        return ModelVerificationResult(
+            model=model,
+            status=VerificationStatus.ERROR,
+            required_version=required_version,
+            error_message=error_msg,
+        )
+
+    # Parse capabilities data
+    if not capabilities_response.data:
+        error_msg = f"No capability data received from device {device.name}"
+        logger.error(
+            "No capability data received for single model verification",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+            },
+        )
+        return ModelVerificationResult(
+            model=model,
+            status=VerificationStatus.ERROR,
+            required_version=required_version,
+            error_message=error_msg,
+        )
+
+    try:
+        device_capabilities = extract_capabilities_from_response(
+            capabilities_response
+        )
+        if not device_capabilities:
+            error_msg = f"Failed to extract capabilities from response for device {device.name}"
+            logger.error(error_msg)
+            return ModelVerificationResult(
+                model=model,
+                status=VerificationStatus.ERROR,
+                required_version=required_version,
+                error_message=error_msg,
+            )
+    except ValueError as e:
+        error_msg = (
+            f"Failed to parse capabilities for device {device.name}: {e}"
+        )
+        logger.error(error_msg)
+        return ModelVerificationResult(
+            model=model,
+            status=VerificationStatus.ERROR,
+            required_version=required_version,
+            error_message=error_msg,
+        )
+
+    # Find the specific model in capabilities
+    model_capability = device_capabilities.find_model(model_name)
+
+    if not model_capability:
+        error_msg = f"Model {model_name} not found on device {device.name}"
+        logger.error(
+            "Model not found in device capabilities",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+                "available_models": len(device_capabilities.supported_models),
+            },
+        )
+        return ModelVerificationResult(
+            model=model,
+            status=VerificationStatus.NOT_FOUND,
+            required_version=required_version,
+            error_message=error_msg,
+        )
+
+    # Validate the version
+    found_version = model_capability.version
+    logger.debug(
+        "Validating model version",
+        extra={
+            "device_name": device.name,
+            "model_name": model_name,
+            "found_version": found_version,
+            "required_version": required_version,
+        },
+    )
+    validation_result = validate_model_version(model, found_version)
+
+    result = ModelVerificationResult(
+        model=model,
+        status=validation_result.status,
+        found_version=found_version,
+        required_version=required_version,
+        warning_message=validation_result.warning_message,
+        error_message=validation_result.error_message,
+    )
+
+    # Log the result
+    if result.status == VerificationStatus.SUPPORTED:
+        logger.info(
+            "Single model verification successful",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+                "found_version": found_version,
+                "required_version": required_version,
+            },
+        )
+    elif result.status == VerificationStatus.VERSION_WARNING:
+        logger.warning(
+            "Single model verification has version warning",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+                "found_version": found_version,
+                "required_version": required_version,
+                "warning_message": result.warning_message,
+            },
+        )
+    else:
+        logger.error(
+            "Single model verification failed",
+            extra={
+                "device_name": device.name,
+                "model_name": model_name,
+                "status": result.status.value,
+                "error_message": result.error_message,
+            },
+        )
+
+    return result
+
+
+def verify_models(
+    device: Device, models: Set[OpenConfigModel]
+) -> MultiModelVerificationResult:
+    """
+    Verify that a device supports multiple OpenConfig models.
+
+    Args:
+        device: Device object to verify
+        models: Set of OpenConfig models to verify
+
+    Returns:
+        MultiModelVerificationResult with verification status for all models
+    """
+    logger.info(
+        "Starting multi-model verification",
+        extra={
+            "device_name": device.name,
+            "model_count": len(models),
+            "models": [model.value for model in models],
+        },
+    )
+
+    model_results = {}
+    supported_count = 0
+    warning_count = 0
+    error_count = 0
+
+    # Verify each model
+    for model in models:
+        logger.debug(
+            "Verifying individual model",
+            extra={
+                "device_name": device.name,
+                "model": model.value,
+            },
+        )
+        result = verify_single_model(device, model)
+        model_results[model] = result
+
+        if result.status == VerificationStatus.SUPPORTED:
+            supported_count += 1
+        elif result.status == VerificationStatus.VERSION_WARNING:
+            warning_count += 1
+        else:
+            error_count += 1
+
+    logger.debug(
+        "Multi-model verification results summary",
+        extra={
+            "device_name": device.name,
+            "supported_count": supported_count,
+            "warning_count": warning_count,
+            "error_count": error_count,
+        },
+    )
+
+    # Determine overall status
+    if error_count > 0:
+        overall_status = VerificationStatus.ERROR
+    elif warning_count > 0:
+        overall_status = VerificationStatus.VERSION_WARNING
+    else:
+        overall_status = VerificationStatus.SUPPORTED
+
+    result = MultiModelVerificationResult(
+        overall_status=overall_status,
+        model_results=model_results,
+    )
+
+    logger.info(
+        "Multi-model verification completed",
+        extra={
+            "device_name": device.name,
+            "overall_status": overall_status.value,
+            "supported_count": supported_count,
+            "warning_count": warning_count,
+            "error_count": error_count,
+        },
+    )
+
+    return result

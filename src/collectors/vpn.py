@@ -19,13 +19,13 @@ from src.processors.protocols.vrf import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
+from src.decorators.smart_capability_verification import verify_required_models
 from src.logging.config import get_logger, log_operation
-from src.decorators.capability_verification import verify_capabilities
 
 logger = get_logger(__name__)
 
 
-@verify_capabilities()
+@verify_required_models()
 def get_vpn_info(
     device: Device,
     vrf: Optional[str] = None,

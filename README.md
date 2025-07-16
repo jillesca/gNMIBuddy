@@ -29,34 +29,46 @@ See the [API definition](/api.py) for all available APIs and options.
 
 ### Device Compatibility Requirements
 
-**⚠️ Important**: gNMIBuddy requires devices to support the `openconfig-network-instance` model version 1.3.0 or higher. The application will automatically verify device capabilities on first connection and:
+**⚠️ Important**: gNMIBuddy requires devices to support specific OpenConfig models depending on the functionality used. The application will automatically verify device capabilities on first connection and:
 
-- ✅ **Supported version (≥1.3.0)**: Continue normal operation
-- ⚠️ **Older version (<1.3.0)**: Show warning but continue (compatibility not guaranteed)
+- ✅ **Supported version**: Continue normal operation
+- ⚠️ **Older version**: Show warning but continue (compatibility not guaranteed)
 - ❌ **Model not found**: Return error and stop execution
+
+#### Model Requirements by Function
+
+| Function     | Required Model                | Minimum Version | Description                             |
+| ------------ | ----------------------------- | --------------- | --------------------------------------- |
+| `system`     | `openconfig-system`           | 0.17.1          | System-level configuration and state    |
+| `interfaces` | `openconfig-interfaces`       | 4.0.0           | Interface configuration and statistics  |
+| `routing`    | `openconfig-network-instance` | 1.3.0           | Routing protocols and network instances |
+| `vpn`        | `openconfig-network-instance` | 1.3.0           | VPN/VRF configuration and state         |
+| `mpls`       | `openconfig-network-instance` | 1.3.0           | MPLS forwarding and labels              |
+| `logs`       | `openconfig-system`           | 0.17.1          | System logging information              |
+| `topology`   | `openconfig-network-instance` | 1.3.0           | Network topology and adjacencies        |
 
 **Tested on:**
 
 - **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
 - **OpenConfig:**
   - `openconfig-system` (`0.17.1`)
-  - `openconfig-interfaces` (`3.0.0`)
+  - `openconfig-interfaces` (`4.0.0`)
   - `openconfig-network-instance` (`1.3.0`)
 
 ### Troubleshooting Device Compatibility
 
 If you encounter capability errors:
 
-1. **Check model support**: Verify your device supports `openconfig-network-instance`
-2. **Check version**: Ensure you have version 1.3.0 or higher
-3. **Check gNMI setup**: Ensure gNMI is properly configured and accessible
+1. **Check model support**: Verify your device supports the required OpenConfig model
+2. **Check version**: Ensure the model version meets minimum requirements
+3. **Enable gNMI**: Ensure gNMI is enabled on your device
+4. **Check connectivity**: Verify network connectivity to the device
 
-**Example error messages:**
+**Example error**: `Model openconfig-network-instance not found on device`
+**Solution**: Enable OpenConfig support on your device or use a compatible device
 
-```bash
-ERROR: Required model 'openconfig-network-instance' version 1.3.0 or higher is not supported on this device
-WARNING: Device supports openconfig-network-instance 1.2.0, but minimum tested version is 1.3.0
-```
+**Example warning**: `Version 1.2.0 found, minimum required is 1.3.0`
+**Solution**: Continue with caution as some features may not work correctly
 
 ### Installation
 

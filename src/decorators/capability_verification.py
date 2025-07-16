@@ -76,6 +76,17 @@ def verify_capabilities(
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
+            logger.debug(
+                "Starting capability verification for function",
+                extra={
+                    "operation": "capability_verification",
+                    "function": func.__name__,
+                    "required_models": required_models,
+                    "fail_on_unsupported": fail_on_unsupported,
+                    "add_to_metadata": add_to_metadata,
+                },
+            )
+
             # Check if capability verification is disabled (useful for testing)
             if (
                 os.environ.get(
@@ -84,8 +95,13 @@ def verify_capabilities(
                 == "1"
             ):
                 logger.debug(
-                    "Capability verification disabled for function %s",
-                    func.__name__,
+                    "Capability verification disabled via environment variable",
+                    extra={
+                        "operation": "capability_verification",
+                        "function": func.__name__,
+                        "verification_disabled": True,
+                        "env_var": "GNMIBUDDY_DISABLE_CAPABILITY_VERIFICATION",
+                    },
                 )
                 return func(*args, **kwargs)
 
@@ -93,8 +109,14 @@ def verify_capabilities(
             device = _extract_device_from_args(*args, **kwargs)
             if not device:
                 logger.error(
-                    "Could not extract device from arguments for function %s",
-                    func.__name__,
+                    "Could not extract device from function arguments",
+                    extra={
+                        "operation": "capability_verification",
+                        "function": func.__name__,
+                        "error_type": "device_extraction_failed",
+                        "args_count": len(args),
+                        "kwargs_keys": list(kwargs.keys()),
+                    },
                 )
                 return _create_capability_error_result(
                     device=None,
@@ -102,10 +124,29 @@ def verify_capabilities(
                     error_message="Could not extract device from function arguments",
                 )
 
+            logger.debug(
+                "Device extracted for capability verification",
+                extra={
+                    "operation": "capability_verification",
+                    "function": func.__name__,
+                    "device": device.name,
+                    "device_ip": device.ip_address,
+                    "device_nos": device.nos,
+                },
+            )
+
             # Check if device is already verified in cache
             if not is_device_verified(device.name):
                 logger.info(
-                    "Verifying capabilities for device: %s", device.name
+                    "Starting capability verification for device",
+                    extra={
+                        "operation": "capability_verification",
+                        "function": func.__name__,
+                        "device": device.name,
+                        "device_ip": device.ip_address,
+                        "required_models": required_models,
+                        "cache_status": "not_verified",
+                    },
                 )
 
                 # Currently only support openconfig-network-instance verification
@@ -122,15 +163,34 @@ def verify_capabilities(
                             verification_result=verification_result,
                         )
 
+                        logger.warning(
+                            "Device capability verification failed",
+                            extra={
+                                "operation": "capability_verification",
+                                "function": func.__name__,
+                                "device": device.name,
+                                "device_ip": device.ip_address,
+                                "verification_result": verification_result,
+                                "is_supported": False,
+                                "fail_on_unsupported": fail_on_unsupported,
+                            },
+                        )
+
                         if fail_on_unsupported:
                             error_message = verification_result.get(
                                 "error_message",
                                 "Device does not support required OpenConfig models",
                             )
                             logger.error(
-                                "Device %s failed capability verification: %s",
-                                device.name,
-                                error_message,
+                                "Function execution blocked due to capability verification failure",
+                                extra={
+                                    "operation": "capability_verification",
+                                    "function": func.__name__,
+                                    "device": device.name,
+                                    "device_ip": device.ip_address,
+                                    "error_message": error_message,
+                                    "verification_result": verification_result,
+                                },
                             )
                             return _create_capability_error_result(
                                 device=device,
@@ -140,8 +200,15 @@ def verify_capabilities(
                             )
                         else:
                             logger.warning(
-                                "Device %s does not support required models but continuing due to fail_on_unsupported=False",
-                                device.name,
+                                "Continuing function execution despite capability verification failure",
+                                extra={
+                                    "operation": "capability_verification",
+                                    "function": func.__name__,
+                                    "device": device.name,
+                                    "device_ip": device.ip_address,
+                                    "fail_on_unsupported": False,
+                                    "verification_result": verification_result,
+                                },
                             )
                     else:
                         # Cache the successful verification
@@ -154,9 +221,17 @@ def verify_capabilities(
                         # Log success or warning message
                         if verification_result.get("warning_message"):
                             logger.warning(
-                                "Device %s: %s",
-                                device.name,
-                                verification_result["warning_message"],
+                                "Device capability verification successful with warnings",
+                                extra={
+                                    "operation": "capability_verification",
+                                    "function": func.__name__,
+                                    "device": device.name,
+                                    "device_ip": device.ip_address,
+                                    "warning_message": verification_result[
+                                        "warning_message"
+                                    ],
+                                    "verification_result": verification_result,
+                                },
                             )
                         else:
                             model_capability = verification_result.get(
@@ -166,13 +241,40 @@ def verify_capabilities(
                                 "found_version", "unknown"
                             )
                             logger.info(
-                                "Device %s: openconfig-network-instance v%s verification successful",
-                                device.name,
-                                found_version,
+                                "Device capability verification successful",
+                                extra={
+                                    "operation": "capability_verification",
+                                    "function": func.__name__,
+                                    "device": device.name,
+                                    "device_ip": device.ip_address,
+                                    "model": "openconfig-network-instance",
+                                    "found_version": found_version,
+                                    "verification_result": verification_result,
+                                },
                             )
+            else:
+                logger.debug(
+                    "Device already verified in cache",
+                    extra={
+                        "operation": "capability_verification",
+                        "function": func.__name__,
+                        "device": device.name,
+                        "device_ip": device.ip_address,
+                        "cache_status": "verified",
+                    },
+                )
 
             # Execute the original function
             try:
+                logger.debug(
+                    "Executing decorated function",
+                    extra={
+                        "operation": "capability_verification",
+                        "function": func.__name__,
+                        "device": device.name,
+                        "device_ip": device.ip_address,
+                    },
+                )
                 result = func(*args, **kwargs)
 
                 # Add capability verification metadata if requested and result is NetworkOperationResult
@@ -184,15 +286,44 @@ def verify_capabilities(
                         add_capability_verification_to_metadata(
                             result, cached_result
                         )
+                        logger.debug(
+                            "Added capability verification metadata to result",
+                            extra={
+                                "operation": "capability_verification",
+                                "function": func.__name__,
+                                "device": device.name,
+                                "device_ip": device.ip_address,
+                                "metadata_added": True,
+                            },
+                        )
 
+                logger.debug(
+                    "Function execution completed successfully",
+                    extra={
+                        "operation": "capability_verification",
+                        "function": func.__name__,
+                        "device": device.name,
+                        "device_ip": device.ip_address,
+                        "result_status": (
+                            result.status
+                            if hasattr(result, "status")
+                            else "unknown"
+                        ),
+                    },
+                )
                 return result
 
             except Exception as e:
                 logger.error(
-                    "Error executing function %s for device %s: %s",
-                    func.__name__,
-                    device.name,
-                    str(e),
+                    "Error executing decorated function",
+                    extra={
+                        "operation": "capability_verification",
+                        "function": func.__name__,
+                        "device": device.name,
+                        "device_ip": device.ip_address,
+                        "error": str(e),
+                        "error_type": type(e).__name__,
+                    },
                 )
                 raise
 
@@ -212,21 +343,68 @@ def _extract_device_from_args(*args, **kwargs) -> Optional[Device]:
     Returns:
         Device object if found, None otherwise
     """
+    logger.debug(
+        "Extracting device from function arguments",
+        extra={
+            "operation": "device_extraction",
+            "args_count": len(args),
+            "kwargs_keys": list(kwargs.keys()),
+        },
+    )
+
     # Check positional arguments
-    for arg in args:
+    for i, arg in enumerate(args):
         if isinstance(arg, Device):
+            logger.debug(
+                "Found device in positional arguments",
+                extra={
+                    "operation": "device_extraction",
+                    "device": arg.name,
+                    "device_ip": arg.ip_address,
+                    "device_nos": arg.nos,
+                    "position": i,
+                },
+            )
             return arg
 
     # Check keyword arguments
     for key, value in kwargs.items():
         if isinstance(value, Device):
+            logger.debug(
+                "Found device in keyword arguments",
+                extra={
+                    "operation": "device_extraction",
+                    "device": value.name,
+                    "device_ip": value.ip_address,
+                    "device_nos": value.nos,
+                    "key": key,
+                },
+            )
             return value
         # Common parameter names for device
         if key in ["device", "target_device", "device_obj"] and isinstance(
             value, Device
         ):
+            logger.debug(
+                "Found device in common parameter names",
+                extra={
+                    "operation": "device_extraction",
+                    "device": value.name,
+                    "device_ip": value.ip_address,
+                    "device_nos": value.nos,
+                    "key": key,
+                },
+            )
             return value
 
+    logger.warning(
+        "No device found in function arguments",
+        extra={
+            "operation": "device_extraction",
+            "args_count": len(args),
+            "kwargs_keys": list(kwargs.keys()),
+        },
+    )
     return None
 
 
@@ -248,6 +426,18 @@ def _create_capability_error_result(
     Returns:
         NetworkOperationResult with error status
     """
+    logger.debug(
+        "Creating capability error result",
+        extra={
+            "operation": "error_result_creation",
+            "device": device.name if device else "unknown",
+            "device_ip": device.ip_address if device else "unknown",
+            "operation_type": operation_type,
+            "error_message": error_message,
+            "has_verification_result": verification_result is not None,
+        },
+    )
+
     error_response = ErrorResponse(
         type="CAPABILITY_VERIFICATION_FAILED",
         message=error_message,
@@ -271,5 +461,27 @@ def _create_capability_error_result(
     # Add verification result to metadata if available
     if verification_result:
         add_capability_verification_to_metadata(result, verification_result)
+        logger.debug(
+            "Added verification result to error response metadata",
+            extra={
+                "operation": "error_result_creation",
+                "device": device.name if device else "unknown",
+                "device_ip": device.ip_address if device else "unknown",
+                "operation_type": operation_type,
+                "metadata_added": True,
+            },
+        )
+
+    logger.info(
+        "Created capability error result",
+        extra={
+            "operation": "error_result_creation",
+            "device": device.name if device else "unknown",
+            "device_ip": device.ip_address if device else "unknown",
+            "operation_type": operation_type,
+            "error_type": "CAPABILITY_VERIFICATION_FAILED",
+            "status": "FAILED",
+        },
+    )
 
     return result

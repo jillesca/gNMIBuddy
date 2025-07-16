@@ -15,6 +15,7 @@ from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.utils.vrf_utils import get_non_default_vrf_names
 from src.processors.deviceprofile_processor import DeviceProfileProcessor
+from src.decorators.smart_capability_verification import verify_required_models
 from src.logging.config import get_logger, log_operation
 
 logger = get_logger(__name__)
@@ -32,6 +33,7 @@ def deviceprofile_request():
     )
 
 
+@verify_required_models()
 def get_device_profile(device: Device) -> NetworkOperationResult:
     response = get_gnmi_data(device, deviceprofile_request())
 

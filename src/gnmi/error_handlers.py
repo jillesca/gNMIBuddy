@@ -1,13 +1,186 @@
 #!/usr/bin/env python3
 """Error handling functions for network operations"""
-from typing import Optional, Union
+from typing import Optional, Union, Set
 import re
 import grpc
 from src.schemas.models import Device
+from src.schemas.openconfig_models import OpenConfigModel
+from src.schemas.responses import (
+    NetworkOperationResult,
+    OperationStatus,
+    ErrorResponse,
+)
 from src.logging.config import get_logger
 from src.schemas.responses import ErrorResponse, FeatureNotFoundResponse
 
 logger = get_logger(__name__)
+
+
+def handle_model_verification_error(
+    device: Device,
+    model: OpenConfigModel,
+    error_details: str,
+    operation_type: str = "unknown",
+) -> NetworkOperationResult:
+    """
+    Handle model verification errors for specific OpenConfig models.
+
+    Args:
+        device: Device object containing device information
+        model: OpenConfig model that failed verification
+        error_details: Detailed error message describing the failure
+        operation_type: Type of operation that required the model
+
+    Returns:
+        NetworkOperationResult with error status and model-specific details
+    """
+    model_name = model.value
+    error_message = (
+        f"Device {device.name} does not support required OpenConfig model "
+        f"'{model_name}' for {operation_type}: {error_details}"
+    )
+
+    logger.error(error_message)
+
+    # Create remediation suggestions based on the model
+    remediation_suggestions = _get_model_remediation_suggestions(model)
+
+    error_response = ErrorResponse(
+        type="MODEL_NOT_SUPPORTED",
+        message=error_message,
+        details={
+            "device_name": device.name,
+            "device_ip": device.ip_address,
+            "device_port": device.port,
+            "required_model": model_name,
+            "operation_type": operation_type,
+            "error_details": error_details,
+            "remediation_suggestions": remediation_suggestions,
+        },
+    )
+
+    return NetworkOperationResult(
+        device_name=device.name,
+        ip_address=device.ip_address,
+        nos=device.nos,
+        operation_type=operation_type,
+        status=OperationStatus.FAILED,
+        data={},
+        metadata={
+            "capability_verification": {
+                "verified": False,
+                "failed_model": model_name,
+                "error": error_details,
+            }
+        },
+        error_response=error_response,
+    )
+
+
+def handle_partial_verification_failure(
+    device: Device,
+    failed_models: Set[OpenConfigModel],
+    successful_models: Set[OpenConfigModel],
+    operation_type: str = "unknown",
+) -> NetworkOperationResult:
+    """
+    Handle partial verification failures where some models work and others don't.
+
+    Args:
+        device: Device object containing device information
+        failed_models: Set of OpenConfig models that failed verification
+        successful_models: Set of OpenConfig models that passed verification
+        operation_type: Type of operation that required the models
+
+    Returns:
+        NetworkOperationResult with error status and partial verification details
+    """
+    failed_model_names = [model.value for model in failed_models]
+    successful_model_names = [model.value for model in successful_models]
+
+    error_message = (
+        f"Device {device.name} partial model verification failure for {operation_type}. "
+        f"Failed models: {failed_model_names}. "
+        f"Successful models: {successful_model_names}"
+    )
+
+    logger.error(error_message)
+
+    # Generate remediation suggestions for failed models
+    all_suggestions = []
+    for model in failed_models:
+        suggestions = _get_model_remediation_suggestions(model)
+        all_suggestions.extend(suggestions)
+
+    error_response = ErrorResponse(
+        type="PARTIAL_MODEL_VERIFICATION_FAILURE",
+        message=error_message,
+        details={
+            "device_name": device.name,
+            "device_ip": device.ip_address,
+            "device_port": device.port,
+            "failed_models": failed_model_names,
+            "successful_models": successful_model_names,
+            "operation_type": operation_type,
+            "remediation_suggestions": all_suggestions,
+        },
+    )
+
+    return NetworkOperationResult(
+        device_name=device.name,
+        ip_address=device.ip_address,
+        nos=device.nos,
+        operation_type=operation_type,
+        status=OperationStatus.FAILED,
+        data={},
+        metadata={
+            "capability_verification": {
+                "verified": False,
+                "failed_models": failed_model_names,
+                "successful_models": successful_model_names,
+            }
+        },
+        error_response=error_response,
+    )
+
+
+def _get_model_remediation_suggestions(model: OpenConfigModel) -> list[str]:
+    """
+    Get remediation suggestions for a specific OpenConfig model.
+
+    Args:
+        model: OpenConfig model that failed verification
+
+    Returns:
+        List of remediation suggestions for the model
+    """
+    suggestions = {
+        OpenConfigModel.SYSTEM: [
+            "Ensure the device supports OpenConfig system model",
+            "Check device firmware version - newer versions may include system support",
+            "Verify gNMI service is properly configured with OpenConfig system schema",
+        ],
+        OpenConfigModel.INTERFACES: [
+            "Ensure the device supports OpenConfig interfaces model",
+            "Check if interface management is available via OpenConfig",
+            "Verify interface configuration is accessible through gNMI",
+        ],
+        OpenConfigModel.NETWORK_INSTANCE: [
+            "Ensure the device supports OpenConfig network-instance model",
+            "Check VPN/VRF configuration is accessible via OpenConfig",
+            "Verify routing protocol configuration is available through gNMI",
+            "Update device firmware to a version that supports network-instance model",
+        ],
+    }
+
+    return suggestions.get(
+        model,
+        [
+            "Check device documentation for OpenConfig support",
+            "Verify gNMI service configuration",
+            "Consider updating device firmware",
+        ],
+    )
 
 
 def handle_capability_error(

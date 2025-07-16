@@ -9,6 +9,8 @@ model version verification.
 import re
 from typing import Tuple, Optional
 from dataclasses import dataclass
+from ..schemas.openconfig_models import OpenConfigModel, get_model_requirement
+from ..schemas.verification_results import VerificationStatus
 
 
 @dataclass
@@ -31,6 +33,30 @@ class VersionInfo:
     pre_release: Optional[str] = None
     build: Optional[str] = None
     original: str = ""
+
+
+@dataclass
+class VersionValidationResult:
+    """
+    Result of validating a model version against requirements.
+
+    Attributes:
+        model: The OpenConfig model being validated
+        status: The validation status
+        found_version: The version found on the device
+        required_version: The minimum required version
+        message: Human-readable validation message
+        warning_message: Optional warning message for version issues
+        error_message: Optional error message for failures
+    """
+
+    model: OpenConfigModel
+    status: VerificationStatus
+    found_version: Optional[str] = None
+    required_version: str = ""
+    message: str = ""
+    warning_message: Optional[str] = None
+    error_message: Optional[str] = None
 
 
 def parse_version_string(
@@ -226,3 +252,112 @@ def format_version_comparison_message(
             return f"Version {found_version} is older than minimum requirement {required_version}"
     except ValueError as e:
         return f"Unable to compare versions: {e}"
+
+
+def validate_model_version(
+    model: OpenConfigModel, found_version: str
+) -> VersionValidationResult:
+    """
+    Validate a found model version against the required version for the model.
+
+    Args:
+        model: The OpenConfig model to validate
+        found_version: The version found on the device
+
+    Returns:
+        VersionValidationResult with validation status and messages
+
+    Raises:
+        ValueError: If the model is not supported or version cannot be parsed
+    """
+    try:
+        # Get the model requirement from the registry
+        requirement = get_model_requirement(model)
+        required_version = requirement.min_version
+
+        # Parse both versions to ensure they're valid
+        parse_version_string(found_version)
+        parse_version_string(required_version)
+
+        # Compare versions
+        comparison = compare_versions(found_version, required_version)
+
+        warning_message = None
+        if comparison >= 0:
+            # Version meets or exceeds requirement
+            status = VerificationStatus.SUPPORTED
+            message = f"Model {model.value} version {found_version} meets minimum requirement {required_version}"
+        else:
+            # Version is older than requirement
+            status = VerificationStatus.VERSION_WARNING
+            message = f"Model {model.value} version {found_version} is older than minimum requirement {required_version}"
+            warning_message = (
+                f"Device has {model.value} v{found_version} but minimum required is v{required_version}. "
+                f"Some features may not work correctly."
+            )
+
+        return VersionValidationResult(
+            model=model,
+            status=status,
+            found_version=found_version,
+            required_version=required_version,
+            message=message,
+            warning_message=warning_message,
+        )
+
+    except ValueError as e:
+        # Version parsing failed
+        error_message = (
+            f"Failed to validate {model.value} version {found_version}: {e}"
+        )
+        return VersionValidationResult(
+            model=model,
+            status=VerificationStatus.ERROR,
+            found_version=found_version,
+            required_version=get_model_requirement(model).min_version,
+            message=error_message,
+            error_message=error_message,
+        )
+    except KeyError:
+        # Model not found in registry
+        error_message = f"Model {model.value} is not supported by this version of gNMIBuddy"
+        return VersionValidationResult(
+            model=model,
+            status=VerificationStatus.ERROR,
+            found_version=found_version,
+            message=error_message,
+            error_message=error_message,
+        )
+
+
+def get_model_specific_version_message(
+    model: OpenConfigModel, found_version: str, required_version: str
+) -> str:
+    """
+    Get a model-specific version comparison message with context.
+
+    Args:
+        model: The OpenConfig model
+        found_version: Version found on device
+        required_version: Minimum required version
+
+    Returns:
+        Formatted comparison message with model context
+    """
+    try:
+        requirement = get_model_requirement(model)
+        comparison = compare_versions(found_version, required_version)
+
+        if comparison >= 0:
+            return (
+                f"{model.value} v{found_version} is supported "
+                f"(minimum required: v{required_version}). "
+                f"Used for: {requirement.description}"
+            )
+        else:
+            return (
+                f"{model.value} v{found_version} is older than required v{required_version}. "
+                f"This may cause issues with: {requirement.description}"
+            )
+    except (ValueError, KeyError) as e:
+        return f"Unable to validate {model.value} version {found_version}: {e}"

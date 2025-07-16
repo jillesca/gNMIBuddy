@@ -16,6 +16,7 @@ from src.processors.protocols.mpls.mpls_processor import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
+from src.decorators.smart_capability_verification import verify_required_models
 from src.logging.config import get_logger, log_operation
 
 logger = get_logger(__name__)
@@ -29,6 +30,7 @@ def mpls_request():
     )
 
 
+@verify_required_models()
 def get_mpls_info(
     device: Device, include_details: bool = False
 ) -> NetworkOperationResult:

@@ -20,11 +20,13 @@ from src.processors.interfaces.data_processor import (
 from src.processors.interfaces.single_interface_processor import (
     process_single_interface_data,
 )
+from src.decorators.smart_capability_verification import verify_required_models
 from src.logging.config import get_logger, log_operation
 
 logger = get_logger(__name__)
 
 
+@verify_required_models()
 @log_operation("get_interfaces")
 def get_interfaces(
     device: Device,

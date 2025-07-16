@@ -14,6 +14,7 @@ from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.processors.system_info_processor import SystemInfoProcessor
+from src.decorators.smart_capability_verification import verify_required_models
 from src.logging.config import get_logger, log_operation
 
 logger = get_logger(__name__)
@@ -28,6 +29,7 @@ def system_request():
     )
 
 
+@verify_required_models()
 def get_system_info(device: Device) -> NetworkOperationResult:
     """
     Get system information from a device.

@@ -4,6 +4,18 @@
 
 The capability verification system in gNMIBuddy ensures that network devices support the required OpenConfig models before attempting to collect data. This prevents errors and provides clear feedback about device compatibility.
 
+## Multi-Model Support
+
+The system now supports verification of multiple OpenConfig models simultaneously, allowing for more complex operations that require multiple schemas.
+
+### Supported Models
+
+| Model                         | Purpose                                       | Minimum Version |
+| ----------------------------- | --------------------------------------------- | --------------- |
+| `openconfig-system`           | System-level configuration and state data     | 0.17.1          |
+| `openconfig-interfaces`       | Interface configuration and statistics        | 4.0.0           |
+| `openconfig-network-instance` | Network instance configuration and state data | 1.3.0           |
+
 ## How It Works
 
 ### Automatic Verification
@@ -13,31 +25,35 @@ The system automatically verifies device capabilities when you run commands that
 ```bash
 # This command will automatically verify openconfig-network-instance capability
 uv run gnmictl.py --inventory xrd_sandbox.json --device xrd-1 routing
+
+# This command will verify openconfig-interfaces capability
+uv run gnmictl.py --inventory xrd_sandbox.json --device xrd-1 interfaces
+
+# This command will verify openconfig-system capability
+uv run gnmictl.py --inventory xrd_sandbox.json --device xrd-1 system
 ```
 
 ### Verification Process
 
-1. **Capability Query**: The system queries the device for its supported gNMI models
-2. **Model Search**: It searches for the required OpenConfig model (e.g., `openconfig-network-instance`)
-3. **Version Check**: It verifies the model version meets minimum requirements
-4. **Caching**: Results are cached for performance optimization
-5. **Execution**: If verification passes, the command proceeds; otherwise, it fails gracefully
+1. **Path Analysis**: The system analyzes gNMI paths to determine required models
+2. **Multi-Model Detection**: Identifies all OpenConfig models needed for the operation
+3. **Capability Query**: Queries the device for its supported gNMI models
+4. **Model Search**: Searches for each required OpenConfig model
+5. **Version Check**: Verifies each model version meets minimum requirements
+6. **Caching**: Results are cached for performance optimization
+7. **Execution**: If verification passes, the command proceeds; otherwise, it fails gracefully
 
-## Supported Models and Requirements
+### Smart Decorator
 
-### openconfig-network-instance
+The `@verify_required_models` decorator automatically detects required models from function parameters:
 
-- **Required Version**: 1.3.0 or higher
-- **Used By**: `routing`, `vpn` commands
-- **Purpose**: Network instance configuration and state data
-
-### Future Models
-
-Additional OpenConfig models will be added as needed:
-
-- `openconfig-interfaces` for interface operations
-- `openconfig-system` for system information
-- `openconfig-bgp` for BGP-specific operations
+```python
+@verify_required_models()
+def collect_routing_data(device: Device, gnmi_request: GnmiRequest):
+    # Function automatically verified for openconfig-network-instance
+    # based on paths in gnmi_request
+    pass
+```
 
 ## What to Expect
 

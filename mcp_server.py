@@ -4,11 +4,14 @@ MCP entry point for gNMIBuddy - Registers network tool functions as MCP tools.
 Uses a decorator factory to register API functions without duplicating signatures and docstrings.
 """
 import os
+import sys
 import logging
 from functools import wraps
-from mcp.server.fastmcp import FastMCP
 
 import api
+from mcp.server.fastmcp import FastMCP
+from src.utils.version_utils import load_gnmibuddy_version
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mcp")
@@ -17,6 +20,12 @@ logger = logging.getLogger("mcp")
 mcp = FastMCP("gNMIBuddy")
 logger.info("Started MCP server for gNMIBuddy")
 logger.debug("Network Inventory: %s", os.environ.get("NETWORK_INVENTORY"))
+
+
+# Load and log gNMIBuddy version
+gnmibuddy_version = load_gnmibuddy_version()
+logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
+logger.info("Python version: %s", sys.version)
 
 
 def register_as_mcp_tool(func):

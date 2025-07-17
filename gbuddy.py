@@ -14,6 +14,7 @@ apply_thread_safety_patches()
 from api import get_devices
 from src.cmd import run_cli_mode
 from src.logging.config import LoggingConfig, get_logger
+from src.utils.version_utils import load_gnmibuddy_version
 
 
 def main():
@@ -47,6 +48,11 @@ def main():
     )
     logger = get_logger(__name__)
 
+    # Load and log gNMIBuddy version
+    gnmibuddy_version = load_gnmibuddy_version()
+    logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
+    logger.info("Python version: %s", sys.version)
+
     try:
         result, parser = run_cli_mode()
 
@@ -63,10 +69,9 @@ def main():
             result = get_devices()
 
         if result is not None:
-            # logger.debug("Command result: %s...", json.dumps(result)[:1000])
             print(json.dumps(result, indent=2))
     except Exception as e:
-        print(f"Error executing command: {e}")
+        logger.error("Error executing command: %s", e)
         return
 
 

@@ -1,6 +1,12 @@
 import os
+import platform
 import tomllib
 from typing import Any
+
+
+def get_python_version() -> str:
+    """Get the current Python version."""
+    return platform.python_version()
 
 
 def load_gnmibuddy_version() -> str:

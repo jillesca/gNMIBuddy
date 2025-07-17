@@ -14,7 +14,7 @@ def display_all_commands(detailed=False):
 
     _print_header()
     _print_available_commands(COMMANDS, detailed)
-    print_usage_examples()
+    _print_usage_examples()
 
 
 def _print_header():

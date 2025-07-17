@@ -8,6 +8,7 @@ from src.logging.config import get_logger
 from src.cmd.commands import COMMANDS
 from src.cmd.display import display_all_commands
 from src.inventory import initialize_inventory
+from src.cmd.cli_utils import display_program_banner
 
 logger = get_logger(__name__)
 
@@ -94,6 +95,7 @@ def parse_args(
     # Debug: Print arguments that will be parsed
     if args is None:
         args = sys.argv[1:]
+        display_program_banner()
     logger.debug("DEBUG: Parsing arguments: %s", args)
 
     try:

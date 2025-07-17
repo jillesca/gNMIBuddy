@@ -15,7 +15,7 @@ from api import get_devices
 from src.cmd import run_cli_mode
 from src.logging.config import LoggingConfig, get_logger
 from src.utils.version_utils import load_gnmibuddy_version
-from src.cmd.cli_utils import display_program_banner, get_python_version
+from src.cmd.cli_utils import get_python_version
 
 
 def main():
@@ -57,8 +57,8 @@ def main():
         gnmibuddy_version = load_gnmibuddy_version()
         logger.info("Python version: %s", get_python_version())
         logger.info("gNMIBuddy version: %s", gnmibuddy_version)
-    else:
-        display_program_banner()
+    # else:
+    # display_program_banner()
 
     try:
         result, parser = run_cli_mode()

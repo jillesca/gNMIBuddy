@@ -13,13 +13,25 @@ DESCRIPTION = (
     "Designed primarily for LLMs with Model Context Protocol (MCP) integration, it also provides a full CLI for direct use."
 )
 
+HELP: str = "Help: https://github.com/jillesca/gNMIBuddy"
+
 python_version = get_python_version()
 gnmibuddy_version = load_gnmibuddy_version()
 
 
 def display_program_banner():
-    """Display the program title, description, Python version, and gNMIBuddy version."""
-    print(ASCII_TITLE)
-    print(DESCRIPTION)
-    print(f"\nPython Version: {python_version}")
-    print(f"gNMIBuddy Version: {gnmibuddy_version}\n")
+    """
+    Display or return the program title, description, Python version, and gNMIBuddy version.
+    Args:
+        return_str (bool): If True, return the banner as a string. If False, print it.
+    Returns:
+        str: Banner string if return_str is True, else None.
+    """
+    banner = (
+        f"{ASCII_TITLE}\n"
+        f"{DESCRIPTION}\n"
+        f"{HELP}\n"
+        f"\nPython Version: {python_version}\n"
+        f"gNMIBuddy Version: {gnmibuddy_version}\n"
+    )
+    return banner

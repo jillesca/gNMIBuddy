@@ -4,11 +4,13 @@ import argparse
 import sys
 from typing import Optional, Tuple, Dict, Any
 
-from src.logging.config import get_logger
 from src.cmd.commands import COMMANDS
-from src.cmd.display import display_all_commands
+from src.logging.config import get_logger
 from src.inventory import initialize_inventory
-from src.cmd.cli_utils import display_program_banner
+from src.cmd.display import display_all_commands
+from src.utils.version_utils import load_gnmibuddy_version
+from src.cmd.cli_utils import display_program_banner, get_python_version
+
 
 logger = get_logger(__name__)
 
@@ -53,6 +55,10 @@ def run_cli_mode() -> (
                 enable_structured=getattr(args, "structured_logging", False),
             )
 
+        gnmibuddy_version = load_gnmibuddy_version()
+        logger.info("Python version: %s", get_python_version())
+        logger.info("gNMIBuddy version: %s", gnmibuddy_version)
+
         # Special handling for list-commands to show all available commands
         if args.command == "list-commands":
             logger.info("Listing all available commands")
@@ -64,17 +70,15 @@ def run_cli_mode() -> (
         if hasattr(args, "inventory") and args.inventory:
             initialize_inventory(args.inventory)
 
-        # Execute the specified command
         result = execute_command(args)
 
-        # Return result for use in main.py or other callers
         return result, parser
 
     except SystemExit as e:
-        # Catch the SystemExit exception from argparse
-        print(
-            f"Command line argument error. Use --help for usage information."
-        )
+        if e.code != 0:
+            print(
+                f"Command line argument error. Use --help for usage information."
+            )
         return None, None
 
 
@@ -92,17 +96,13 @@ def parse_args(
     """
     parser = create_parser()
 
-    # Debug: Print arguments that will be parsed
     if args is None:
         args = sys.argv[1:]
-        display_program_banner()
     logger.debug("DEBUG: Parsing arguments: %s", args)
 
     try:
-        # Parse arguments
         parsed_args = parser.parse_args(args)
 
-        # Debug: Print parsed arguments
         logger.debug(
             "DEBUG: Successfully parsed arguments: %s", vars(parsed_args)
         )
@@ -135,7 +135,6 @@ def parse_args(
                 ),
             )
 
-        # Log the parsed command
         if hasattr(parsed_args, "command") and parsed_args.command:
             device_info = (
                 f", device={parsed_args.device}"
@@ -162,8 +161,23 @@ def create_parser() -> argparse.ArgumentParser:
     Returns:
         The configured ArgumentParser instance
     """
-    parser = argparse.ArgumentParser(description="Network Information CLI")
+    banner = display_program_banner()
 
+    class BannerHelpFormatter(argparse.RawDescriptionHelpFormatter):
+        def __init__(self, *args, banner=None, **kwargs):
+            self.banner = banner or ""
+            super().__init__(*args, **kwargs)
+
+        def format_help(self):
+            help_text = super().format_help()
+            return f"{self.banner}\n{help_text}"
+
+    parser = argparse.ArgumentParser(
+        description=None,  # We'll handle the banner in the formatter
+        formatter_class=lambda *args, **kwargs: BannerHelpFormatter(
+            *args, banner=banner, **kwargs
+        ),
+    )
     # Global options
     parser.add_argument(
         "--log-level",

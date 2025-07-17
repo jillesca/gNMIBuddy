@@ -14,8 +14,6 @@ apply_thread_safety_patches()
 from api import get_devices
 from src.cmd import run_cli_mode
 from src.logging.config import LoggingConfig, get_logger
-from src.utils.version_utils import load_gnmibuddy_version
-from src.cmd.cli_utils import get_python_version
 
 
 def main():
@@ -48,17 +46,6 @@ def main():
         enable_structured=args.structured_logging,
     )
     logger = get_logger(__name__)
-
-    if not (
-        "-h" in remaining_args
-        or "--help" in remaining_args
-        or not remaining_args
-    ):
-        gnmibuddy_version = load_gnmibuddy_version()
-        logger.info("Python version: %s", get_python_version())
-        logger.info("gNMIBuddy version: %s", gnmibuddy_version)
-    # else:
-    # display_program_banner()
 
     try:
         result, parser = run_cli_mode()

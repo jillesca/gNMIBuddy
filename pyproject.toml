@@ -1,7 +1,7 @@
 [project]
 name = "gNMIBuddy"
 version = "0.1.0"
-description = "A CLI tool for managing gNMI subscriptions"
+description = "An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with Model Context Protocol (MCP) integration, it also provides a full CLI for direct use."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

@@ -25,7 +25,7 @@ def main():
     parser.add_argument("--log-level", type=str)
     parser.add_argument("--module-log-levels", type=str)
     parser.add_argument("--structured-logging", action="store_true")
-    args, _ = parser.parse_known_args(sys.argv[1:])
+    args, remaining_args = parser.parse_known_args(sys.argv[1:])
 
     # Parse module-specific log levels
     module_levels = {}
@@ -63,10 +63,9 @@ def main():
             result = get_devices()
 
         if result is not None:
-            # logger.debug("Command result: %s...", json.dumps(result)[:1000])
             print(json.dumps(result, indent=2))
     except Exception as e:
-        print(f"Error executing command: {e}")
+        logger.error("Error executing command: %s", e)
         return
 
 

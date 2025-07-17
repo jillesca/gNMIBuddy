@@ -182,6 +182,28 @@ uv run gbuddy.py --device xrd-2 logging --keywords "bgp|error"
 uv run gbuddy.py --all-devices interface
 ```
 
+## 📋 Response Format
+
+Replies from `gNMIBuddy` adhere to the `NetworkOperationResult` schema, ensuring consistent and structured responses for all network operations. This schema provides detailed information about the operation, including status, data, metadata, and error handling.
+
+### `NetworkOperationResult` Schema
+
+```python
+@dataclass
+class NetworkOperationResult:
+    device_name: str
+    ip_address: str
+    nos: str
+    operation_type: str
+    status: OperationStatus
+    data: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    error_response: Optional[ErrorResponse] = None
+    feature_not_found_response: Optional[FeatureNotFoundResponse] = None
+```
+
+For more details, see the [response schema definition](src/schemas/responses.py).
+
 ## 🏗️ Architecture
 
 ### Schema Organization

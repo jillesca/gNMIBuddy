@@ -26,7 +26,7 @@ def main():
     parser.add_argument("--log-level", type=str)
     parser.add_argument("--module-log-levels", type=str)
     parser.add_argument("--structured-logging", action="store_true")
-    args, _ = parser.parse_known_args(sys.argv[1:])
+    args, remaining_args = parser.parse_known_args(sys.argv[1:])
 
     # Parse module-specific log levels
     module_levels = {}
@@ -48,10 +48,15 @@ def main():
     )
     logger = get_logger(__name__)
 
-    # Load and log gNMIBuddy version
-    gnmibuddy_version = load_gnmibuddy_version()
-    logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
-    logger.info("Python version: %s", sys.version)
+    if not (
+        "-h" in remaining_args
+        or "--help" in remaining_args
+        or not remaining_args
+    ):
+        # Load and log gNMIBuddy version
+        gnmibuddy_version = load_gnmibuddy_version()
+        logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
+        logger.info("Python version: %s", sys.version)
 
     try:
         result, parser = run_cli_mode()

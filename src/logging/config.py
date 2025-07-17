@@ -7,8 +7,8 @@ import os
 import sys
 import logging
 import json
-from typing import Dict, Optional, Any, Union
 from datetime import datetime
+from typing import Dict, Optional, Any, Union
 
 
 # Application-specific logger names for easy filtering
@@ -180,7 +180,7 @@ class LoggingConfig:
         cls._configured = True
 
         app_logger = logging.getLogger(LoggerNames.APP_ROOT)
-        app_logger.info(
+        app_logger.debug(
             "Logging configured",
             extra={
                 "global_level": global_level or "info",
@@ -328,7 +328,7 @@ def log_operation(operation_name: str, device_name: Optional[str] = None):
             if actual_device_name:
                 extra["device_name"] = actual_device_name
 
-            logger.info(f"Starting {operation_name}", extra=extra)
+            logger.info("Starting %s", operation_name, extra=extra)
 
             try:
                 result = func(*args, **kwargs)
@@ -336,7 +336,7 @@ def log_operation(operation_name: str, device_name: Optional[str] = None):
                 duration = (datetime.now() - start_time).total_seconds() * 1000
                 extra["duration_ms"] = round(duration, 2)
 
-                logger.info(f"Completed {operation_name}", extra=extra)
+                logger.info("Completed %s", operation_name, extra=extra)
                 return result
 
             except Exception as e:
@@ -345,7 +345,7 @@ def log_operation(operation_name: str, device_name: Optional[str] = None):
                 extra["error"] = str(e)
 
                 logger.error(
-                    f"Failed {operation_name}", extra=extra, exc_info=True
+                    "Failed %s", operation_name, extra=extra, exc_info=True
                 )
                 raise
 

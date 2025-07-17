@@ -52,20 +52,20 @@ Run the application:
 
 ```bash
 # Creates virtual environment, installs dependencies, and shows help
-uv run gbuddy.py --help
+uv run gnmibuddy.py --help
 ```
 
 ### Basic Usage
 
 ```bash
 # List available devices
-uv run gbuddy.py list-devices
+uv run gnmibuddy.py list-devices
 
 # Get routing info from a device
-uv run gbuddy.py --device xrd-1 routing --protocol bgp
+uv run gnmibuddy.py --device xrd-1 routing --protocol bgp
 
 # Check all interfaces across all devices
-uv run gbuddy.py --all-devices interface
+uv run gnmibuddy.py --all-devices interface
 ```
 
 ## 🤖 LLM Integration (MCP)
@@ -164,22 +164,22 @@ And pick a command. Use the `--help` flag for detailed command options.
 
 ```bash
 # Routing with BGP details
-uv run gbuddy.py --device xrd-1 routing --protocol bgp --detail
+uv run gnmibuddy.py --device xrd-1 routing --protocol bgp --detail
 
 # Specific interface
-uv run gbuddy.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
+uv run gnmibuddy.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
 
 # MPLS details
-uv run gbuddy.py --device xrd-1 mpls --detail
+uv run gnmibuddy.py --device xrd-1 mpls --detail
 
 # VRF information
-uv run gbuddy.py --device xrd-3 vpn --vrf customer-a
+uv run gnmibuddy.py --device xrd-3 vpn --vrf customer-a
 
 # Filtered logs
-uv run gbuddy.py --device xrd-2 logging --keywords "bgp|error"
+uv run gnmibuddy.py --device xrd-2 logging --keywords "bgp|error"
 
 # Run on all devices
-uv run gbuddy.py --all-devices interface
+uv run gnmibuddy.py --all-devices interface
 ```
 
 ## 📋 Response Format

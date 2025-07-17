@@ -99,22 +99,22 @@ The system automatically reads configuration from the CLI and applies appropriat
 
 ```bash
 # Set global log level
-python gbuddy.py --log-level debug --device xrd-1 interfaces
+python gnmibuddy.py --log-level debug --device xrd-1 interfaces
 
 # Available levels: debug, info, warning, error
-python gbuddy.py --log-level warning --device xrd-1 routing
+python gnmibuddy.py --log-level warning --device xrd-1 routing
 ```
 
 ### Module-Specific Logging
 
 ```bash
 # Control specific modules
-python gbuddy.py --log-level info \
+python gnmibuddy.py --log-level info \
   --module-log-levels "gnmibuddy.collectors=debug,pygnmi=error" \
   --device xrd-1 interfaces
 
 # Multiple modules
-python gbuddy.py --log-level info \
+python gnmibuddy.py --log-level info \
   --module-log-levels "gnmibuddy.collectors.interfaces=debug,gnmibuddy.gnmi=warning,pygnmi=error" \
   --device xrd-1 interfaces
 ```
@@ -123,7 +123,7 @@ python gbuddy.py --log-level info \
 
 ```bash
 # Enable JSON structured logging
-python gbuddy.py --log-level info --structured-logging \
+python gnmibuddy.py --log-level info --structured-logging \
   --device xrd-1 interfaces
 
 # Output example:
@@ -134,13 +134,13 @@ python gbuddy.py --log-level info --structured-logging \
 
 ```bash
 # Show current log levels
-python gbuddy.py --device xrd-1 log-level show
+python gnmibuddy.py --device xrd-1 log-level show
 
 # Set log level for specific module
-python gbuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug
+python gnmibuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug
 
 # List available modules
-python gbuddy.py --device xrd-1 log-level modules
+python gnmibuddy.py --device xrd-1 log-level modules
 ```
 
 ## Module-Specific Logging
@@ -162,7 +162,7 @@ python gbuddy.py --device xrd-1 log-level modules
 #### Debugging Interface Issues
 
 ```bash
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.collectors.interfaces=debug" \
   --device xrd-1 interfaces
 ```
@@ -170,7 +170,7 @@ python gbuddy.py --log-level warning \
 #### Debugging gNMI Connection Issues
 
 ```bash
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.gnmi=debug,pygnmi=info" \
   --device xrd-1 system
 ```
@@ -178,7 +178,7 @@ python gbuddy.py --log-level warning \
 #### Quiet Mode (Minimal Logging)
 
 ```bash
-python gbuddy.py --log-level error \
+python gnmibuddy.py --log-level error \
   --module-log-levels "pygnmi=error,grpc=error" \
   --device xrd-1 interfaces
 ```
@@ -186,7 +186,7 @@ python gbuddy.py --log-level error \
 #### Verbose Mode (Full Debugging)
 
 ```bash
-python gbuddy.py --log-level debug \
+python gnmibuddy.py --log-level debug \
   --device xrd-1 interfaces
 ```
 
@@ -254,13 +254,13 @@ Example output:
 
 ```bash
 # Show current module log levels
-python gbuddy.py --device xrd-1 log-level show
+python gnmibuddy.py --device xrd-1 log-level show
 
 # Set log level for a specific module
-python gbuddy.py --device xrd-1 log-level set gnmibuddy.collectors.routing debug
+python gnmibuddy.py --device xrd-1 log-level set gnmibuddy.collectors.routing debug
 
 # List all available modules for logging control
-python gbuddy.py --device xrd-1 log-level modules
+python gnmibuddy.py --device xrd-1 log-level modules
 ```
 
 ### Programmatic Control
@@ -367,7 +367,7 @@ ERROR   - Serious problem that prevented operation completion
 
 ```bash
 # Reduce external library noise
-python gbuddy.py --log-level info \
+python gnmibuddy.py --log-level info \
   --module-log-levels "pygnmi=error,grpc=error" \
   --device xrd-1 interfaces
 ```
@@ -380,7 +380,7 @@ python gbuddy.py --log-level info \
 
 ```bash
 # Enable debug for specific modules only
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.collectors.interfaces=debug,gnmibuddy.gnmi=debug" \
   --device xrd-1 interfaces
 ```
@@ -393,7 +393,7 @@ python gbuddy.py --log-level warning \
 
 ```bash
 # Enable detailed gNMI and pygnmi logging
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.gnmi=debug,pygnmi=info" \
   --device xrd-1 system
 ```
@@ -406,7 +406,7 @@ python gbuddy.py --log-level warning \
 
 ```bash
 # Enable structured logging to see operation timings
-python gbuddy.py --log-level info --structured-logging \
+python gnmibuddy.py --log-level info --structured-logging \
   --device xrd-1 interfaces
 ```
 
@@ -415,7 +415,7 @@ python gbuddy.py --log-level info --structured-logging \
 #### BGP Issues
 
 ```bash
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.collectors.routing=debug" \
   --device xrd-1 routing --protocol bgp
 ```
@@ -423,7 +423,7 @@ python gbuddy.py --log-level warning \
 #### Interface State Issues
 
 ```bash
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.collectors.interfaces=debug" \
   --device xrd-1 interfaces --interface GigabitEthernet0/0/0/0
 ```
@@ -431,7 +431,7 @@ python gbuddy.py --log-level warning \
 #### Inventory Problems
 
 ```bash
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.inventory=debug" \
   --device xrd-1 system
 ```

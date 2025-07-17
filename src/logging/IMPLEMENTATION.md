@@ -16,7 +16,7 @@ This implementation provides a comprehensive, OpenTelemetry-compatible logging s
 
 ```bash
 # Control noise from specific modules
-python gbuddy.py --log-level info \
+python gnmibuddy.py --log-level info \
   --module-log-levels "gnmibuddy.collectors=debug,pygnmi=error,grpc=error" \
   --device xrd-1 interfaces
 ```
@@ -29,7 +29,7 @@ python gbuddy.py --log-level info \
 - `pygnmi` - External pygnmi library (noise reduction)
 - `grpc` - External gRPC library (noise reduction)
 
-### 3. **CLI Integration** (`src/cmd/parser.py`, `gbuddy.py`)
+### 3. **CLI Integration** (`src/cmd/parser.py`, `gnmibuddy.py`)
 
 New CLI options:
 
@@ -44,9 +44,9 @@ New CLI options:
 New `log-level` command:
 
 ```bash
-python gbuddy.py --device xrd-1 log-level show      # Show current levels
-python gbuddy.py --device xrd-1 log-level modules   # List available modules
-python gbuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug  # Change level
+python gnmibuddy.py --device xrd-1 log-level show      # Show current levels
+python gnmibuddy.py --device xrd-1 log-level modules   # List available modules
+python gnmibuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug  # Change level
 ```
 
 ### 5. **OpenTelemetry Compatibility**
@@ -132,12 +132,12 @@ def get_interfaces(device, interface=None):
 
 ```bash
 # Debug specific data collection issues
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.collectors.interfaces=debug" \
   --device xrd-1 interfaces
 
 # Debug gNMI connection problems
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "gnmibuddy.gnmi=debug,pygnmi=info" \
   --device xrd-1 system
 ```
@@ -146,12 +146,12 @@ python gbuddy.py --log-level warning \
 
 ```bash
 # Structured logs for log aggregation
-python gbuddy.py --log-level info --structured-logging \
+python gnmibuddy.py --log-level info --structured-logging \
   --module-log-levels "pygnmi=error,grpc=error" \
   --device xrd-1 interfaces
 
 # Minimal noise for automated systems
-python gbuddy.py --log-level warning \
+python gnmibuddy.py --log-level warning \
   --module-log-levels "pygnmi=error,grpc=error" \
   --device xrd-1 interfaces
 ```
@@ -160,10 +160,10 @@ python gbuddy.py --log-level warning \
 
 ```bash
 # Check current configuration
-python gbuddy.py --device xrd-1 log-level show
+python gnmibuddy.py --device xrd-1 log-level show
 
 # Adjust levels without restart
-python gbuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug
+python gnmibuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug
 ```
 
 ## Files Created/Modified
@@ -179,7 +179,7 @@ python gbuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug
 - `src/utils/logging_config.py` - Complete rewrite with OTel support
 - `src/cmd/parser.py` - Added logging CLI options
 - `src/cmd/commands.py` - Added log-level command
-- `gbuddy.py` - Integrated new logging system
+- `gnmibuddy.py` - Integrated new logging system
 
 ### Updated Files (consistent logger usage):
 

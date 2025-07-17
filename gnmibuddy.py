@@ -48,17 +48,17 @@ def main():
     )
     logger = get_logger(__name__)
 
+    # Load and log gNMIBuddy version
+    gnmibuddy_version = load_gnmibuddy_version()
+    logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
+    logger.info("Python version: %s", sys.version)
+
     try:
         result, parser = run_cli_mode()
 
         # If result is None, there was an error or help was displayed
         if result is None:
             return
-
-        # Load and log gNMIBuddy version
-        gnmibuddy_version = load_gnmibuddy_version()
-        logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
-        logger.info("Python version: %s", sys.version)
 
         # Process command results - check if result is a dictionary with a command key
         if (

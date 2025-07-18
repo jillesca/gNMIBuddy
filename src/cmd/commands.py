@@ -83,7 +83,12 @@ def device_info(
 
     # Handle batch operations
     batch_devices = []
-    if all_devices:
+    # Check both command-level --all-devices and global --all-devices
+    effective_all_devices = all_devices or getattr(
+        ctx.obj, "all_devices", False
+    )
+
+    if effective_all_devices:
         batch_devices = DeviceListParser.get_all_inventory_devices()
         if not batch_devices:
             click.echo("No devices found in inventory", err=True)
@@ -180,7 +185,7 @@ def device_info(
 
 
 @click.command()
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @click.option("--detail", is_flag=True, help="Show detailed profile analysis")
 @click.option(
     "--output",
@@ -189,13 +194,111 @@ def device_info(
     default="json",
     help="Output format (json, yaml)",
 )
+@click.option(
+    "--devices", type=str, help="Comma-separated list of device names"
+)
+@click.option(
+    "--device-file",
+    type=click.Path(exists=True),
+    help="Path to file containing device names (one per line)",
+)
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory",
+)
 @click.pass_context
-def device_profile(ctx, device, detail, output):
-    """Get device profile information from a network device"""
-    logger.info("Getting device profile for device: %s", device)
+def device_profile(
+    ctx, device, detail, output, devices, device_file, all_devices
+):
+    """Get device profile information from a network device
+
+    \b
+    Examples:
+      gnmibuddy device profile --device R1
+      gnmibuddy device profile --device R1 --detail
+      gnmibuddy device profile --devices R1,R2,R3
+      gnmibuddy device profile --all-devices
+      gnmibuddy d profile --device R1  # Using alias
+    """
     from src.collectors.profile import get_device_profile
     from src.inventory.manager import InventoryManager
     from src.cmd.cli_utils import output_result
+    from src.cmd.formatters import format_output
+    from src.cmd.batch import DeviceListParser, BatchOperationExecutor
+
+    # Handle batch operations
+    batch_devices = []
+    if all_devices:
+        batch_devices = DeviceListParser.get_all_inventory_devices()
+        if not batch_devices:
+            click.echo("No devices found in inventory", err=True)
+            raise click.Abort()
+    elif devices:
+        batch_devices = DeviceListParser.parse_device_list(devices)
+    elif device_file:
+        batch_devices = DeviceListParser.parse_device_file(device_file)
+
+    if batch_devices:
+        # Batch operation
+        max_workers = getattr(ctx.obj, "max_workers", 5)
+        executor = BatchOperationExecutor(max_workers=max_workers)
+
+        def single_device_operation(device_name: str):
+            device_obj, success = InventoryManager.get_device(device_name)
+            if not success:
+                raise Exception(f"Device not found: {device_obj.error}")
+            return get_device_profile(device_obj)
+
+        click.echo(
+            f"Executing batch operation on {len(batch_devices)} devices..."
+        )
+        summary = executor.execute_batch_operation(
+            devices=batch_devices,
+            operation_func=single_device_operation,
+            show_progress=True,
+        )
+
+        # Format batch results
+        batch_data = {
+            "summary": {
+                "total_devices": summary.total_devices,
+                "successful": summary.successful,
+                "failed": summary.failed,
+                "success_rate": summary.success_rate,
+                "execution_time": summary.execution_time,
+            },
+            "results": [
+                {
+                    "device": result.device_name,
+                    "success": result.success,
+                    "data": (
+                        result.data.data
+                        if result.success and hasattr(result.data, "data")
+                        else result.data if result.success else None
+                    ),
+                    "error": result.error if not result.success else None,
+                    "execution_time": result.execution_time,
+                }
+                for result in summary.results
+            ],
+        }
+
+        # Output in requested format
+        formatted_output = format_output(batch_data, output.lower())
+        click.echo(formatted_output)
+
+        return summary
+
+    # Single device operation
+    if not device:
+        click.echo(
+            "Error: --device is required for single device operations",
+            err=True,
+        )
+        raise click.Abort()
+
+    logger.info("Getting device profile for device: %s", device)
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -270,7 +373,7 @@ def device_list(ctx, detail, output):
 
 # Network group commands
 @click.command()
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @click.option(
     "--protocol",
     type=click.Choice(["bgp", "isis", "ospf"]),
@@ -286,8 +389,23 @@ def device_list(ctx, detail, output):
     default="json",
     help="Output format (json, yaml)",
 )
+@click.option(
+    "--devices", type=str, help="Comma-separated list of device names"
+)
+@click.option(
+    "--device-file",
+    type=click.Path(exists=True),
+    help="Path to file containing device names (one per line)",
+)
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory",
+)
 @click.pass_context
-def network_routing(ctx, device, protocol, detail, output):
+def network_routing(
+    ctx, device, protocol, detail, output, devices, device_file, all_devices
+):
     """Get routing information from a network device
 
     \b
@@ -296,12 +414,88 @@ def network_routing(ctx, device, protocol, detail, output):
       gnmibuddy network routing --device R1 --protocol bgp
       gnmibuddy network routing --device R1 --detail
       gnmibuddy network routing --device R1 --output yaml
+      gnmibuddy network routing --devices R1,R2,R3
+      gnmibuddy network routing --all-devices
       gnmibuddy n routing --device R1  # Using alias
     """
-    logger.info("Getting routing information for device: %s", device)
     from src.collectors.routing import get_routing_info
     from src.inventory.manager import InventoryManager
     from src.cmd.cli_utils import output_result
+    from src.cmd.formatters import format_output
+    from src.cmd.batch import DeviceListParser, BatchOperationExecutor
+
+    # Handle batch operations
+    batch_devices = []
+    if all_devices:
+        batch_devices = DeviceListParser.get_all_inventory_devices()
+        if not batch_devices:
+            click.echo("No devices found in inventory", err=True)
+            raise click.Abort()
+    elif devices:
+        batch_devices = DeviceListParser.parse_device_list(devices)
+    elif device_file:
+        batch_devices = DeviceListParser.parse_device_file(device_file)
+
+    if batch_devices:
+        # Batch operation
+        max_workers = getattr(ctx.obj, "max_workers", 5)
+        executor = BatchOperationExecutor(max_workers=max_workers)
+
+        def single_device_operation(device_name: str):
+            device_obj, success = InventoryManager.get_device(device_name)
+            if not success:
+                raise Exception(f"Device not found: {device_obj.error}")
+            return get_routing_info(device_obj)
+
+        click.echo(
+            f"Executing batch operation on {len(batch_devices)} devices..."
+        )
+        summary = executor.execute_batch_operation(
+            devices=batch_devices,
+            operation_func=single_device_operation,
+            show_progress=True,
+        )
+
+        # Format batch results
+        batch_data = {
+            "summary": {
+                "total_devices": summary.total_devices,
+                "successful": summary.successful,
+                "failed": summary.failed,
+                "success_rate": summary.success_rate,
+                "execution_time": summary.execution_time,
+            },
+            "results": [
+                {
+                    "device": result.device_name,
+                    "success": result.success,
+                    "data": (
+                        result.data.data
+                        if result.success and hasattr(result.data, "data")
+                        else result.data if result.success else None
+                    ),
+                    "error": result.error if not result.success else None,
+                    "execution_time": result.execution_time,
+                }
+                for result in summary.results
+            ],
+        }
+
+        # Output in requested format
+        formatted_output = format_output(batch_data, output.lower())
+        click.echo(formatted_output)
+
+        return summary
+
+    # Single device operation
+    if not device:
+        click.echo(
+            "Error: --device is required for single device operations",
+            err=True,
+        )
+        raise click.Abort()
+
+    logger.info("Getting routing information for device: %s", device)
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -315,7 +509,7 @@ def network_routing(ctx, device, protocol, detail, output):
 
 
 @click.command()
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @click.option(
     "--name", help="Filter by interface name (e.g., GigabitEthernet0/0/0/1)"
 )
@@ -329,8 +523,23 @@ def network_routing(ctx, device, protocol, detail, output):
     default="json",
     help="Output format (json, yaml)",
 )
+@click.option(
+    "--devices", type=str, help="Comma-separated list of device names"
+)
+@click.option(
+    "--device-file",
+    type=click.Path(exists=True),
+    help="Path to file containing device names (one per line)",
+)
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory",
+)
 @click.pass_context
-def network_interface(ctx, device, name, detail, output):
+def network_interface(
+    ctx, device, name, detail, output, devices, device_file, all_devices
+):
     """Get interface information from a network device
 
     \b
@@ -339,12 +548,93 @@ def network_interface(ctx, device, name, detail, output):
       gnmibuddy network interface --device R1 --name GigabitEthernet0/0/0/1
       gnmibuddy network interface --device R1 --detail
       gnmibuddy network interface --device R1 --output yaml
+      gnmibuddy network interface --devices R1,R2,R3
+      gnmibuddy network interface --all-devices
       gnmibuddy n interface --device R1  # Using alias
     """
-    logger.info("Getting interface information for device: %s", device)
     from src.collectors.interfaces import get_interfaces
     from src.inventory.manager import InventoryManager
     from src.cmd.cli_utils import output_result
+    from src.cmd.formatters import format_output
+    from src.cmd.batch import DeviceListParser, BatchOperationExecutor
+
+    # Handle batch operations
+    batch_devices = []
+    # Check both command-level --all-devices and global --all-devices
+    effective_all_devices = all_devices or getattr(
+        ctx.obj, "all_devices", False
+    )
+
+    if effective_all_devices:
+        batch_devices = DeviceListParser.get_all_inventory_devices()
+        if not batch_devices:
+            click.echo("No devices found in inventory", err=True)
+            raise click.Abort()
+    elif devices:
+        batch_devices = DeviceListParser.parse_device_list(devices)
+    elif device_file:
+        batch_devices = DeviceListParser.parse_device_file(device_file)
+
+    if batch_devices:
+        # Batch operation
+        max_workers = getattr(ctx.obj, "max_workers", 5)
+        executor = BatchOperationExecutor(max_workers=max_workers)
+
+        def single_device_operation(device_name: str):
+            device_obj, success = InventoryManager.get_device(device_name)
+            if not success:
+                raise Exception(f"Device not found: {device_obj.error}")
+            return get_interfaces(device_obj, interface=name)
+
+        click.echo(
+            f"Executing batch operation on {len(batch_devices)} devices..."
+        )
+        summary = executor.execute_batch_operation(
+            devices=batch_devices,
+            operation_func=single_device_operation,
+            show_progress=True,
+        )
+
+        # Format batch results
+        batch_data = {
+            "summary": {
+                "total_devices": summary.total_devices,
+                "successful": summary.successful,
+                "failed": summary.failed,
+                "success_rate": summary.success_rate,
+                "execution_time": summary.execution_time,
+            },
+            "results": [
+                {
+                    "device": result.device_name,
+                    "success": result.success,
+                    "data": (
+                        result.data.data
+                        if result.success and hasattr(result.data, "data")
+                        else result.data if result.success else None
+                    ),
+                    "error": result.error if not result.success else None,
+                    "execution_time": result.execution_time,
+                }
+                for result in summary.results
+            ],
+        }
+
+        # Output in requested format
+        formatted_output = format_output(batch_data, output.lower())
+        click.echo(formatted_output)
+
+        return summary
+
+    # Single device operation
+    if not device:
+        click.echo(
+            "Error: --device is required for single device operations",
+            err=True,
+        )
+        raise click.Abort()
+
+    logger.info("Getting interface information for device: %s", device)
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -358,7 +648,7 @@ def network_interface(ctx, device, name, detail, output):
 
 
 @click.command()
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @click.option("--detail", is_flag=True, help="Show detailed MPLS information")
 @click.option(
     "--output",
@@ -367,13 +657,111 @@ def network_interface(ctx, device, name, detail, output):
     default="json",
     help="Output format (json, yaml)",
 )
+@click.option(
+    "--devices", type=str, help="Comma-separated list of device names"
+)
+@click.option(
+    "--device-file",
+    type=click.Path(exists=True),
+    help="Path to file containing device names (one per line)",
+)
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory",
+)
 @click.pass_context
-def network_mpls(ctx, device, detail, output):
-    """Get MPLS information from a network device"""
-    logger.info("Getting MPLS information for device: %s", device)
+def network_mpls(
+    ctx, device, detail, output, devices, device_file, all_devices
+):
+    """Get MPLS information from a network device
+
+    \b
+    Examples:
+      gnmibuddy network mpls --device R1
+      gnmibuddy network mpls --device R1 --detail
+      gnmibuddy network mpls --devices R1,R2,R3
+      gnmibuddy network mpls --all-devices
+      gnmibuddy n mpls --device R1  # Using alias
+    """
     from src.collectors.mpls import get_mpls_info
     from src.inventory.manager import InventoryManager
     from src.cmd.cli_utils import output_result
+    from src.cmd.formatters import format_output
+    from src.cmd.batch import DeviceListParser, BatchOperationExecutor
+
+    # Handle batch operations
+    batch_devices = []
+    if all_devices:
+        batch_devices = DeviceListParser.get_all_inventory_devices()
+        if not batch_devices:
+            click.echo("No devices found in inventory", err=True)
+            raise click.Abort()
+    elif devices:
+        batch_devices = DeviceListParser.parse_device_list(devices)
+    elif device_file:
+        batch_devices = DeviceListParser.parse_device_file(device_file)
+
+    if batch_devices:
+        # Batch operation
+        max_workers = getattr(ctx.obj, "max_workers", 5)
+        executor = BatchOperationExecutor(max_workers=max_workers)
+
+        def single_device_operation(device_name: str):
+            device_obj, success = InventoryManager.get_device(device_name)
+            if not success:
+                raise Exception(f"Device not found: {device_obj.error}")
+            return get_mpls_info(device_obj, include_details=detail)
+
+        click.echo(
+            f"Executing batch operation on {len(batch_devices)} devices..."
+        )
+        summary = executor.execute_batch_operation(
+            devices=batch_devices,
+            operation_func=single_device_operation,
+            show_progress=True,
+        )
+
+        # Format batch results
+        batch_data = {
+            "summary": {
+                "total_devices": summary.total_devices,
+                "successful": summary.successful,
+                "failed": summary.failed,
+                "success_rate": summary.success_rate,
+                "execution_time": summary.execution_time,
+            },
+            "results": [
+                {
+                    "device": result.device_name,
+                    "success": result.success,
+                    "data": (
+                        result.data.data
+                        if result.success and hasattr(result.data, "data")
+                        else result.data if result.success else None
+                    ),
+                    "error": result.error if not result.success else None,
+                    "execution_time": result.execution_time,
+                }
+                for result in summary.results
+            ],
+        }
+
+        # Output in requested format
+        formatted_output = format_output(batch_data, output.lower())
+        click.echo(formatted_output)
+
+        return summary
+
+    # Single device operation
+    if not device:
+        click.echo(
+            "Error: --device is required for single device operations",
+            err=True,
+        )
+        raise click.Abort()
+
+    logger.info("Getting MPLS information for device: %s", device)
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -387,7 +775,7 @@ def network_mpls(ctx, device, detail, output):
 
 
 @click.command()
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @click.option("--vrf", help="Filter by VRF name (e.g., CUSTOMER_A)")
 @click.option("--detail", is_flag=True, help="Show detailed VPN information")
 @click.option(
@@ -397,13 +785,117 @@ def network_mpls(ctx, device, detail, output):
     default="json",
     help="Output format (json, yaml)",
 )
+@click.option(
+    "--devices", type=str, help="Comma-separated list of device names"
+)
+@click.option(
+    "--device-file",
+    type=click.Path(exists=True),
+    help="Path to file containing device names (one per line)",
+)
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory",
+)
 @click.pass_context
-def network_vpn(ctx, device, vrf, detail, output):
-    """Get VPN/VRF information from a network device"""
-    logger.info("Getting VPN information for device: %s", device)
+def network_vpn(
+    ctx, device, vrf, detail, output, devices, device_file, all_devices
+):
+    """Get VPN/VRF information from a network device
+
+    \b
+    Examples:
+      gnmibuddy network vpn --device R1
+      gnmibuddy network vpn --device R1 --vrf CUSTOMER_A
+      gnmibuddy network vpn --device R1 --detail
+      gnmibuddy network vpn --devices R1,R2,R3
+      gnmibuddy network vpn --all-devices
+      gnmibuddy n vpn --device R1  # Using alias
+    """
     from src.collectors.vpn import get_vpn_info
     from src.inventory.manager import InventoryManager
     from src.cmd.cli_utils import output_result
+    from src.cmd.formatters import format_output
+    from src.cmd.batch import DeviceListParser, BatchOperationExecutor
+
+    # Handle batch operations
+    batch_devices = []
+    # Check both command-level --all-devices and global --all-devices
+    effective_all_devices = all_devices or getattr(
+        ctx.obj, "all_devices", False
+    )
+
+    if effective_all_devices:
+        batch_devices = DeviceListParser.get_all_inventory_devices()
+        if not batch_devices:
+            click.echo("No devices found in inventory", err=True)
+            raise click.Abort()
+    elif devices:
+        batch_devices = DeviceListParser.parse_device_list(devices)
+    elif device_file:
+        batch_devices = DeviceListParser.parse_device_file(device_file)
+
+    if batch_devices:
+        # Batch operation
+        max_workers = getattr(ctx.obj, "max_workers", 5)
+        executor = BatchOperationExecutor(max_workers=max_workers)
+
+        def single_device_operation(device_name: str):
+            device_obj, success = InventoryManager.get_device(device_name)
+            if not success:
+                raise Exception(f"Device not found: {device_obj.error}")
+            return get_vpn_info(device_obj, vrf=vrf)
+
+        click.echo(
+            f"Executing batch operation on {len(batch_devices)} devices..."
+        )
+        summary = executor.execute_batch_operation(
+            devices=batch_devices,
+            operation_func=single_device_operation,
+            show_progress=True,
+        )
+
+        # Format batch results
+        batch_data = {
+            "summary": {
+                "total_devices": summary.total_devices,
+                "successful": summary.successful,
+                "failed": summary.failed,
+                "success_rate": summary.success_rate,
+                "execution_time": summary.execution_time,
+            },
+            "results": [
+                {
+                    "device": result.device_name,
+                    "success": result.success,
+                    "data": (
+                        result.data.data
+                        if result.success and hasattr(result.data, "data")
+                        else result.data if result.success else None
+                    ),
+                    "error": result.error if not result.success else None,
+                    "execution_time": result.execution_time,
+                }
+                for result in summary.results
+            ],
+        }
+
+        # Output in requested format
+        formatted_output = format_output(batch_data, output.lower())
+        click.echo(formatted_output)
+
+        return summary
+
+    # Single device operation
+    if not device:
+        click.echo(
+            "Error: --device is required for single device operations",
+            err=True,
+        )
+        raise click.Abort()
+
+    logger.info("Getting VPN information for device: %s", device)
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -489,7 +981,7 @@ def topology_neighbors(ctx, device, detail, output):
 
 # Ops group commands
 @click.command()
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @click.option(
     "--minutes",
     type=int,
@@ -506,13 +998,121 @@ def topology_neighbors(ctx, device, detail, output):
     default="json",
     help="Output format (json, yaml)",
 )
+@click.option(
+    "--devices", type=str, help="Comma-separated list of device names"
+)
+@click.option(
+    "--device-file",
+    type=click.Path(exists=True),
+    help="Path to file containing device names (one per line)",
+)
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory",
+)
 @click.pass_context
-def ops_logs(ctx, device, minutes, show_all_logs, output):
-    """Get log information from a network device"""
-    logger.info("Getting logs for device: %s", device)
+def ops_logs(
+    ctx,
+    device,
+    minutes,
+    show_all_logs,
+    output,
+    devices,
+    device_file,
+    all_devices,
+):
+    """Get log information from a network device
+
+    \b
+    Examples:
+      gnmibuddy ops logs --device R1
+      gnmibuddy ops logs --device R1 --minutes 20
+      gnmibuddy ops logs --device R1 --show-all-logs
+      gnmibuddy ops logs --devices R1,R2,R3
+      gnmibuddy ops logs --all-devices
+      gnmibuddy o logs --device R1  # Using alias
+    """
     from src.collectors.logs import get_logs
     from src.inventory.manager import InventoryManager
     from src.cmd.cli_utils import output_result
+    from src.cmd.formatters import format_output
+    from src.cmd.batch import DeviceListParser, BatchOperationExecutor
+
+    # Handle batch operations
+    batch_devices = []
+    if all_devices:
+        batch_devices = DeviceListParser.get_all_inventory_devices()
+        if not batch_devices:
+            click.echo("No devices found in inventory", err=True)
+            raise click.Abort()
+    elif devices:
+        batch_devices = DeviceListParser.parse_device_list(devices)
+    elif device_file:
+        batch_devices = DeviceListParser.parse_device_file(device_file)
+
+    if batch_devices:
+        # Batch operation
+        max_workers = getattr(ctx.obj, "max_workers", 5)
+        executor = BatchOperationExecutor(max_workers=max_workers)
+
+        def single_device_operation(device_name: str):
+            device_obj, success = InventoryManager.get_device(device_name)
+            if not success:
+                raise Exception(f"Device not found: {device_obj.error}")
+            return get_logs(
+                device_obj, minutes=minutes, show_all_logs=show_all_logs
+            )
+
+        click.echo(
+            f"Executing batch operation on {len(batch_devices)} devices..."
+        )
+        summary = executor.execute_batch_operation(
+            devices=batch_devices,
+            operation_func=single_device_operation,
+            show_progress=True,
+        )
+
+        # Format batch results
+        batch_data = {
+            "summary": {
+                "total_devices": summary.total_devices,
+                "successful": summary.successful,
+                "failed": summary.failed,
+                "success_rate": summary.success_rate,
+                "execution_time": summary.execution_time,
+            },
+            "results": [
+                {
+                    "device": result.device_name,
+                    "success": result.success,
+                    "data": (
+                        result.data.data
+                        if result.success and hasattr(result.data, "data")
+                        else result.data if result.success else None
+                    ),
+                    "error": result.error if not result.success else None,
+                    "execution_time": result.execution_time,
+                }
+                for result in summary.results
+            ],
+        }
+
+        # Output in requested format
+        formatted_output = format_output(batch_data, output.lower())
+        click.echo(formatted_output)
+
+        return summary
+
+    # Single device operation
+    if not device:
+        click.echo(
+            "Error: --device is required for single device operations",
+            err=True,
+        )
+        raise click.Abort()
+
+    logger.info("Getting logs for device: %s", device)
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -526,7 +1126,7 @@ def ops_logs(ctx, device, minutes, show_all_logs, output):
 
 
 @click.command()
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @click.option(
     "--test-query",
     type=click.Choice(["basic", "full"]),
@@ -540,11 +1140,108 @@ def ops_logs(ctx, device, minutes, show_all_logs, output):
     default="json",
     help="Output format (json, yaml)",
 )
+@click.option(
+    "--devices", type=str, help="Comma-separated list of device names"
+)
+@click.option(
+    "--device-file",
+    type=click.Path(exists=True),
+    help="Path to file containing device names (one per line)",
+)
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory",
+)
 @click.pass_context
-def ops_test_all(ctx, device, test_query, output):
-    """Test all APIs on a network device"""
-    logger.info("Testing all APIs for device: %s", device)
+def ops_test_all(
+    ctx, device, test_query, output, devices, device_file, all_devices
+):
+    """Test all APIs on a network device
+
+    \b
+    Examples:
+      gnmibuddy ops test-all --device R1
+      gnmibuddy ops test-all --device R1 --test-query full
+      gnmibuddy ops test-all --devices R1,R2,R3
+      gnmibuddy ops test-all --all-devices
+      gnmibuddy o test-all --device R1  # Using alias
+    """
     from src.cmd.cli_utils import output_result
+    from src.cmd.formatters import format_output
+    from src.cmd.batch import DeviceListParser, BatchOperationExecutor
+
+    # Handle batch operations
+    batch_devices = []
+    if all_devices:
+        batch_devices = DeviceListParser.get_all_inventory_devices()
+        if not batch_devices:
+            click.echo("No devices found in inventory", err=True)
+            raise click.Abort()
+    elif devices:
+        batch_devices = DeviceListParser.parse_device_list(devices)
+    elif device_file:
+        batch_devices = DeviceListParser.parse_device_file(device_file)
+
+    if batch_devices:
+        # Batch operation
+        max_workers = getattr(ctx.obj, "max_workers", 5)
+        executor = BatchOperationExecutor(max_workers=max_workers)
+
+        def single_device_operation(device_name: str):
+            # This is a placeholder implementation
+            # TODO: Implement actual test-all functionality
+            return {
+                "device": device_name,
+                "test_type": test_query,
+                "status": "completed",
+            }
+
+        click.echo(
+            f"Executing batch operation on {len(batch_devices)} devices..."
+        )
+        summary = executor.execute_batch_operation(
+            devices=batch_devices,
+            operation_func=single_device_operation,
+            show_progress=True,
+        )
+
+        # Format batch results
+        batch_data = {
+            "summary": {
+                "total_devices": summary.total_devices,
+                "successful": summary.successful,
+                "failed": summary.failed,
+                "success_rate": summary.success_rate,
+                "execution_time": summary.execution_time,
+            },
+            "results": [
+                {
+                    "device": result.device_name,
+                    "success": result.success,
+                    "data": result.data if result.success else None,
+                    "error": result.error if not result.success else None,
+                    "execution_time": result.execution_time,
+                }
+                for result in summary.results
+            ],
+        }
+
+        # Output in requested format
+        formatted_output = format_output(batch_data, output.lower())
+        click.echo(formatted_output)
+
+        return summary
+
+    # Single device operation
+    if not device:
+        click.echo(
+            "Error: --device is required for single device operations",
+            err=True,
+        )
+        raise click.Abort()
+
+    logger.info("Testing all APIs for device: %s", device)
 
     # This is a placeholder implementation
     # TODO: Implement actual test-all functionality

@@ -59,13 +59,16 @@ uv run gnmibuddy.py --help
 
 ```bash
 # List available devices
-uv run gnmibuddy.py list-devices
+uv run gnmibuddy.py device list
+
+# Get system information from a device
+uv run gnmibuddy.py device info --device xrd-1
 
 # Get routing info from a device
-uv run gnmibuddy.py --device xrd-1 routing --protocol bgp
+uv run gnmibuddy.py network routing --device xrd-1 --protocol bgp
 
 # Check all interfaces across all devices
-uv run gnmibuddy.py --all-devices interface
+uv run gnmibuddy.py --all-devices network interface
 ```
 
 ## 🤖 LLM Integration (MCP)
@@ -151,35 +154,62 @@ Then test with the provided `xrd_sandbox.json` inventory file.
 
 Want to see how this MCP tool integrates with actual AI agents? Check out [sp_oncall](https://github.com/jillesca/sp_oncall) - a graph of agents that use gNMIBuddy to demonstrate real-world network operations scenarios.
 
-## 💻 CLI Reference
+## �� CLI Reference
+
+### Command Structure
+
+The CLI uses a hierarchical command structure organized into logical groups:
+
+```bash
+uv run gnmibuddy [GLOBAL_OPTIONS] <group> <command> [COMMAND_OPTIONS]
+```
+
+**Command Groups:**
+
+- **`device` (alias: `d`)**: Device management and information
+- **`network` (alias: `n`)**: Network protocol analysis
+- **`topology` (alias: `t`)**: Network topology discovery
+- **`ops` (alias: `o`)**: Operational tasks and testing
+- **`manage` (alias: `m`)**: CLI and system management
 
 ### Global Options
 
 - `--inventory PATH`: Custom inventory file (or set `NETWORK_INVENTORY` env var)
-- `--device DEVICE_NAME`: Single device from inventory
+- `--all-devices`: Run command on all devices concurrently
+- `--max-workers N`: Maximum concurrent workers (default: 5)
+- `--log-level LEVEL`: Set logging level (debug, info, warning, error)
 
-And pick a command. Use the `--help` flag for detailed command options.
+For complete options and detailed command information, use:
+
+```bash
+uv run gnmibuddy.py --help
+uv run gnmibuddy.py <group> --help
+uv run gnmibuddy.py <group> <command> --help
+```
 
 ### Examples
 
 ```bash
-# Routing with BGP details
-uv run gnmibuddy.py --device xrd-1 routing --protocol bgp --detail
+# Device information commands
+uv run gnmibuddy.py device info --device xrd-1
+uv run gnmibuddy.py device profile --device xrd-2
+uv run gnmibuddy.py device list
 
-# Specific interface
-uv run gnmibuddy.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
+# Network protocol commands
+uv run gnmibuddy.py network routing --device xrd-1 --protocol bgp --detail
+uv run gnmibuddy.py network interface --device xrd-2 --name GigabitEthernet0/0/0/0
+uv run gnmibuddy.py network mpls --device xrd-1 --detail
+uv run gnmibuddy.py network vpn --device xrd-3 --vrf customer-a
 
-# MPLS details
-uv run gnmibuddy.py --device xrd-1 mpls --detail
+# Topology commands
+uv run gnmibuddy.py topology neighbors --device xrd-1
+uv run gnmibuddy.py topology adjacency --device xrd-2
 
-# VRF information
-uv run gnmibuddy.py --device xrd-3 vpn --vrf customer-a
-
-# Filtered logs
-uv run gnmibuddy.py --device xrd-2 logging --keywords "bgp|error"
+# Operational commands
+uv run gnmibuddy.py ops logs --device xrd-2 --keywords "bgp|error"
 
 # Run on all devices
-uv run gnmibuddy.py --all-devices interface
+uv run gnmibuddy.py --all-devices network interface
 ```
 
 ## 📋 Response Format

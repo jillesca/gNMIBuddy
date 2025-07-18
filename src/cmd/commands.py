@@ -14,7 +14,14 @@ logger = get_logger(__name__)
 )
 @click.pass_context
 def device_info(ctx, device, detail):
-    """Get system information from a network device"""
+    """Get system information from a network device
+
+    \b
+    Examples:
+      gnmibuddy device info --device R1
+      gnmibuddy device info --device PE1 --detail
+      gnmibuddy d info --device R1  # Using alias
+    """
     logger.info("Getting system information for device: %s", device)
     from src.collectors.system import get_system_info
     from src.inventory.manager import InventoryManager
@@ -91,7 +98,15 @@ def device_list(ctx, detail):
 )
 @click.pass_context
 def network_routing(ctx, device, protocol, detail):
-    """Get routing information from a network device"""
+    """Get routing information from a network device
+
+    \b
+    Examples:
+      gnmibuddy network routing --device R1
+      gnmibuddy network routing --device R1 --protocol bgp
+      gnmibuddy network routing --device R1 --detail
+      gnmibuddy n routing --device R1  # Using alias
+    """
     logger.info("Getting routing information for device: %s", device)
     from src.collectors.routing import get_routing_info
     from src.inventory.manager import InventoryManager
@@ -118,7 +133,15 @@ def network_routing(ctx, device, protocol, detail):
 )
 @click.pass_context
 def network_interface(ctx, device, name, detail):
-    """Get interface information from a network device"""
+    """Get interface information from a network device
+
+    \b
+    Examples:
+      gnmibuddy network interface --device R1
+      gnmibuddy network interface --device R1 --name GigabitEthernet0/0/0/1
+      gnmibuddy network interface --device R1 --detail
+      gnmibuddy n interface --device R1  # Using alias
+    """
     logger.info("Getting interface information for device: %s", device)
     from src.collectors.interfaces import get_interface_info
 

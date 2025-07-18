@@ -18,9 +18,15 @@ def show_help_with_banner(ctx, param, value):
         return
 
     # Show banner only for main command help
+    from src.cmd.display import GroupedHelpFormatter
+
     banner = display_program_banner()
     click.echo(banner)
-    click.echo(ctx.get_help())
+
+    # Use our custom grouped help formatter
+    formatter = GroupedHelpFormatter()
+    grouped_help = formatter.format_grouped_help(show_examples=True)
+    click.echo(grouped_help)
     ctx.exit()
 
 
@@ -83,9 +89,15 @@ def cli(
 
     # If no command provided, show banner and help
     if ctx.invoked_subcommand is None:
+        from src.cmd.display import GroupedHelpFormatter
+
         banner = display_program_banner()
         click.echo(banner)
-        click.echo(ctx.get_help())
+
+        # Use our custom grouped help formatter
+        formatter = GroupedHelpFormatter()
+        grouped_help = formatter.format_grouped_help(show_examples=True)
+        click.echo(grouped_help)
         return
 
     # Create CLI context for dependency injection
@@ -165,9 +177,23 @@ def register_commands():
     manage_group.add_command(manage_log_level, name="log-level")
 
 
-# Add command groups to main CLI
+# Add command groups to main CLI with aliases
+group_aliases = {
+    "device": "d",
+    "network": "n",
+    "topology": "t",
+    "ops": "o",
+    "manage": "m",
+}
+
 for group_name, group in COMMAND_GROUPS.items():
+    # Add the main group name
     cli.add_command(group, name=group_name)
+
+    # Add alias if available
+    alias = group_aliases.get(group_name)
+    if alias:
+        cli.add_command(group, name=alias)
 
 # Register all commands
 register_commands()

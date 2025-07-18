@@ -13,6 +13,8 @@ def device(ctx):
 
     Commands for managing and querying individual devices including
     system information, device profiles, and device listings.
+
+    Run 'gnmibuddy device COMMAND --help' for more information on a specific command.
     """
     pass
 

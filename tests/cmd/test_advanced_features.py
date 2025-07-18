@@ -12,7 +12,6 @@ from click.testing import CliRunner
 from src.cmd.formatters import (
     JSONFormatter,
     YAMLFormatter,
-    TableFormatter,
     FormatterManager,
     format_output,
     get_available_output_formats,
@@ -107,55 +106,6 @@ class TestOutputFormatters:
         assert "devices:" in result
         assert "- name: R1" in result
 
-    def test_table_formatter_dict(self):
-        """Test table formatting with dictionary data"""
-        formatter = TableFormatter()
-        data = {"device": "R1", "status": "up", "uptime": "30 days"}
-
-        result = formatter.format(data)
-
-        assert "Key" in result
-        assert "Value" in result
-        assert "device" in result
-        assert "R1" in result
-        assert "|" in result  # Table separator
-
-    def test_table_formatter_list_of_dicts(self):
-        """Test table formatting with list of dictionaries"""
-        formatter = TableFormatter()
-        data = [
-            {"device": "R1", "status": "up", "interfaces": 24},
-            {"device": "R2", "status": "down", "interfaces": 48},
-        ]
-
-        result = formatter.format(data)
-
-        assert "device" in result
-        assert "status" in result
-        assert "interfaces" in result
-        assert "R1" in result
-        assert "R2" in result
-        assert "|" in result
-
-    def test_table_formatter_simple_list(self):
-        """Test table formatting with simple list"""
-        formatter = TableFormatter()
-        data = ["item1", "item2", "item3"]
-
-        result = formatter.format(data)
-
-        assert "Value" in result
-        assert "item1" in result
-        assert "item2" in result
-        assert "-" in result  # Table separator
-
-    def test_table_formatter_empty_data(self):
-        """Test table formatting with empty data"""
-        formatter = TableFormatter()
-
-        assert "No data available" in formatter.format({})
-        assert "No data available" in formatter.format([])
-
     def test_formatter_manager(self):
         """Test FormatterManager functionality"""
         manager = FormatterManager()
@@ -164,7 +114,6 @@ class TestOutputFormatters:
         formats = manager.get_available_formats()
         assert "json" in formats
         assert "yaml" in formats
-        assert "table" in formats
 
         # Test getting formatters
         json_formatter = manager.get_formatter("json")
@@ -173,16 +122,13 @@ class TestOutputFormatters:
         yaml_formatter = manager.get_formatter("yaml")
         assert isinstance(yaml_formatter, YAMLFormatter)
 
-        table_formatter = manager.get_formatter("table")
-        assert isinstance(table_formatter, TableFormatter)
-
     def test_formatter_manager_unknown_format(self):
         """Test FormatterManager with unknown format"""
         manager = FormatterManager()
 
-        # Should fall back to default format
+        # Should fall back to default format (json)
         formatter = manager.get_formatter("unknown")
-        assert isinstance(formatter, TableFormatter)
+        assert isinstance(formatter, JSONFormatter)
 
     def test_format_output_function(self):
         """Test format_output convenience function"""
@@ -207,7 +153,6 @@ class TestOutputFormatters:
         assert isinstance(formats, list)
         assert "json" in formats
         assert "yaml" in formats
-        assert "table" in formats
 
 
 class TestVersionInformation:
@@ -619,7 +564,7 @@ class TestPerformanceAndOptimization:
             ]
         }
 
-        formatters = [JSONFormatter(), YAMLFormatter(), TableFormatter()]
+        formatters = [JSONFormatter(), YAMLFormatter()]
 
         for formatter in formatters:
             start_time = time.time()

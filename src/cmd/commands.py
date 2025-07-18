@@ -139,7 +139,7 @@ def device_info(
     formatted_output = format_output(result, output.lower())
     click.echo(formatted_output)
 
-    return result
+    return None
 
 
 @click.command()

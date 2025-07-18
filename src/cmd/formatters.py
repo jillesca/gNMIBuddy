@@ -2,10 +2,11 @@
 """Output formatting system for CLI with support for multiple formats"""
 import json
 import yaml
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from abc import ABC, abstractmethod
 from io import StringIO
-import sys
+from dataclasses import is_dataclass, asdict
+from enum import Enum
 from src.logging.config import get_logger
 
 logger = get_logger(__name__)
@@ -31,14 +32,37 @@ class JSONFormatter(OutputFormatter):
     def format(self, data: Any, indent: int = 2, **kwargs) -> str:
         """Format data as pretty-printed JSON"""
         try:
+            # Convert complex objects to dictionary representation
+            serializable_data = self._make_serializable(data)
             return json.dumps(
-                data, indent=indent, ensure_ascii=False, default=str
+                serializable_data,
+                indent=indent,
+                ensure_ascii=False,
+                default=str,
             )
         except Exception as e:
             logger.error("Error formatting JSON output: %s", e)
             return json.dumps(
                 {"error": f"JSON formatting failed: {str(e)}"}, indent=indent
             )
+
+    def _make_serializable(self, obj: Any) -> Any:
+        """Convert complex objects to JSON-serializable format"""
+        if is_dataclass(obj):
+            # Convert dataclass to dict, then recursively process the result
+            data_dict = asdict(obj)
+            return self._make_serializable(data_dict)
+        elif isinstance(obj, Enum):
+            return obj.value
+        elif isinstance(obj, dict):
+            return {
+                key: self._make_serializable(value)
+                for key, value in obj.items()
+            }
+        elif isinstance(obj, (list, tuple)):
+            return [self._make_serializable(item) for item in obj]
+        else:
+            return obj
 
     def get_format_name(self) -> str:
         return "json"
@@ -50,18 +74,39 @@ class YAMLFormatter(OutputFormatter):
     def format(self, data: Any, **kwargs) -> str:
         """Format data as YAML"""
         try:
+            # Convert complex objects to dictionary representation
+            serializable_data = self._make_serializable(data)
             output = StringIO()
             yaml.dump(
-                data,
+                serializable_data,
                 output,
                 default_flow_style=False,
                 allow_unicode=True,
                 sort_keys=False,
+                indent=2,
             )
             return output.getvalue()
         except Exception as e:
             logger.error("Error formatting YAML output: %s", e)
             return f"error: YAML formatting failed: {str(e)}\n"
+
+    def _make_serializable(self, obj: Any) -> Any:
+        """Convert complex objects to YAML-serializable format"""
+        if is_dataclass(obj):
+            # Convert dataclass to dict, then recursively process the result
+            data_dict = asdict(obj)
+            return self._make_serializable(data_dict)
+        elif isinstance(obj, Enum):
+            return obj.value
+        elif isinstance(obj, dict):
+            return {
+                key: self._make_serializable(value)
+                for key, value in obj.items()
+            }
+        elif isinstance(obj, (list, tuple)):
+            return [self._make_serializable(item) for item in obj]
+        else:
+            return obj
 
     def get_format_name(self) -> str:
         return "yaml"

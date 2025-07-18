@@ -7,10 +7,6 @@ import json
 
 from src.cmd.parser import cli, run_cli_mode
 from src.cmd.context import CLIContext
-from src.cmd.base import (
-    get_legacy_commands_dict,
-    create_backward_compatible_args,
-)
 
 
 class TestCLIMigration:
@@ -65,53 +61,6 @@ class TestCLIMigration:
         ctx.device = "R1"
         ctx.all_devices = True
         assert ctx.validate_device_options("routing") == False
-
-    def test_backward_compatible_args_creation(self):
-        """Test that backward-compatible args objects are created correctly"""
-        ctx = CLIContext(
-            device="R1",
-            log_level="debug",
-            all_devices=False,
-            max_workers=5,
-            inventory="/path/to/inventory.json",
-        )
-
-        args = create_backward_compatible_args(
-            ctx, protocol="bgp", detail=True
-        )
-
-        assert args.device == "R1"
-        assert args.log_level == "debug"
-        assert args.all_devices == False
-        assert args.max_workers == 5
-        assert args.inventory == "/path/to/inventory.json"
-        assert args.protocol == "bgp"
-        assert args.detail == True
-
-    def test_legacy_commands_dictionary(self):
-        """Test that legacy commands are properly loaded"""
-        legacy_commands = get_legacy_commands_dict()
-
-        expected_commands = [
-            "routing",
-            "interface",
-            "mpls",
-            "vpn",
-            "system",
-            "deviceprofile",
-            "topology-adjacency",
-            "topology-neighbors",
-            "logging",
-            "list-devices",
-            "list-commands",
-            "test-all",
-            "log-level",
-        ]
-
-        for cmd_name in expected_commands:
-            assert cmd_name in legacy_commands
-            assert hasattr(legacy_commands[cmd_name], "execute")
-            assert hasattr(legacy_commands[cmd_name], "help")
 
     @patch("src.cmd.parser.get_legacy_commands_dict")
     def test_legacy_command_execution(self, mock_get_commands):
@@ -224,19 +173,6 @@ class TestCLIMigration:
         # The actual parsing is done in _configure_logging
         assert ctx.module_log_levels == "gnmi=debug,collectors=warning"
 
-    def test_cli_context_to_dict(self):
-        """Test CLI context to dictionary conversion"""
-        ctx = CLIContext(
-            device="R1", log_level="debug", all_devices=True, max_workers=8
-        )
-
-        ctx_dict = ctx.to_dict()
-
-        assert ctx_dict["device"] == "R1"
-        assert ctx_dict["log_level"] == "debug"
-        assert ctx_dict["all_devices"] == True
-        assert ctx_dict["max_workers"] == 8
-
 
 class TestClickFunctionality:
     """Test Click-specific functionality"""
@@ -277,38 +213,6 @@ class TestClickFunctionality:
         assert result.exit_code == 0
 
 
-class TestCompatibilityFunctions:
-    """Test legacy compatibility functions"""
-
-    def test_parse_args_compatibility(self):
-        """Test that parse_args function maintains compatibility"""
-        from src.cmd.parser import parse_args
-
-        args, parser = parse_args()
-
-        # Should return mock objects that don't break existing code
-        assert hasattr(args, "command")
-        assert hasattr(args, "device")
-        assert hasattr(parser, "print_help")
-
-    def test_execute_command_compatibility(self):
-        """Test that execute_command function maintains compatibility"""
-        from src.cmd.parser import execute_command
-
-        # Should not crash and return None for compatibility
-        mock_args = Mock()
-        result = execute_command(mock_args)
-        assert result is None
-
-    def test_create_parser_compatibility(self):
-        """Test that create_parser function maintains compatibility"""
-        from src.cmd.parser import create_parser
-
-        parser = create_parser()
-        assert hasattr(parser, "print_help")
-        assert hasattr(parser, "parse_args")
-
-
 class TestPerformance:
     """Test performance characteristics of the new CLI"""
 
@@ -325,18 +229,6 @@ class TestPerformance:
         # Should complete help in reasonable time (less than 2 seconds)
         assert (end_time - start_time) < 2.0
         assert result.exit_code == 0
-
-    def test_command_registration_performance(self):
-        """Test that command registration is efficient"""
-        import time
-
-        start_time = time.time()
-        legacy_commands = get_legacy_commands_dict()
-        end_time = time.time()
-
-        # Should load commands quickly
-        assert (end_time - start_time) < 1.0
-        assert len(legacy_commands) > 0
 
 
 if __name__ == "__main__":

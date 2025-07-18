@@ -82,19 +82,6 @@ class CLIContext:
 
         return True
 
-    def to_dict(self):
-        """Convert context to dictionary for backward compatibility"""
-        return {
-            "log_level": self.log_level,
-            "module_log_levels": self.module_log_levels,
-            "structured_logging": self.structured_logging,
-            "quiet_external": self.quiet_external,
-            "device": self.device,
-            "all_devices": self.all_devices,
-            "max_workers": self.max_workers,
-            "inventory": self.inventory,
-        }
-
 
 class ServiceRegistry:
     """Registry for services used by commands"""

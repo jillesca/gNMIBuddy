@@ -401,66 +401,6 @@ def _handle_inventory_error(error_msg: str, show_help: bool = False):
         click.echo(result.output, err=True)
 
 
-# Legacy compatibility functions (minimal implementation for existing code)
-def execute_command(args):
-    """
-    Legacy compatibility function for execute_command
-    This is a minimal stub for any remaining legacy code
-    """
-    logger.warning(
-        "execute_command called - this is a legacy compatibility stub"
-    )
-    return None
-
-
-def parse_args(args=None):
-    """Legacy compatibility function for parse_args"""
-    logger.warning("parse_args called - this is a legacy compatibility stub")
-
-    # Create a mock args object for compatibility
-    class MockArgs:
-        def __init__(self):
-            self.command = None
-            self.device = None
-            self.all_devices = False
-            self.max_workers = 5
-            self.log_level = "info"
-            self.module_log_levels = None
-            self.structured_logging = False
-            self.inventory = None
-
-    class MockParser:
-        def print_help(self):
-            from click.testing import CliRunner
-
-            runner = CliRunner()
-            result = runner.invoke(cli, ["--help"])
-            print(result.output)
-
-    return MockArgs(), MockParser()
-
-
-def create_parser():
-    """Legacy compatibility function for create_parser"""
-    logger.warning(
-        "create_parser called - this is a legacy compatibility stub"
-    )
-
-    # Create a mock parser for compatibility
-    class MockParser:
-        def print_help(self):
-            from click.testing import CliRunner
-
-            runner = CliRunner()
-            result = runner.invoke(cli, ["--help"])
-            print(result.output)
-
-        def parse_args(self, args=None):
-            return parse_args(args)
-
-    return MockParser()
-
-
 if __name__ == "__main__":
     # For testing purposes
     cli.main(standalone_mode=True)

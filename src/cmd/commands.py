@@ -352,16 +352,7 @@ def network_interface(ctx, device, name, detail, output):
         click.echo(f"Error: {device_obj['error']}", err=True)
         raise click.Abort()
 
-    # Note: Current interface collector expects args object - this is a legacy pattern
-    # TODO: Update interface collector to accept Device object directly
-    class Args:
-        def __init__(self):
-            self.device = device
-            self.name = name
-            self.detail = detail
-
-    args = Args()
-    result = get_interfaces(args)
+    result = get_interfaces(device_obj, interface=name)
     output_result(result, output)
     return result
 
@@ -420,16 +411,7 @@ def network_vpn(ctx, device, vrf, detail, output):
         click.echo(f"Error: {device_obj['error']}", err=True)
         raise click.Abort()
 
-    # Note: Current VPN collector expects args object - this is a legacy pattern
-    # TODO: Update VPN collector to accept Device object directly
-    class Args:
-        def __init__(self):
-            self.device = device
-            self.vrf = vrf
-            self.detail = detail
-
-    args = Args()
-    result = get_vpn_info(args)
+    result = get_vpn_info(device_obj, vrf_name=vrf)
     output_result(result, output)
     return result
 
@@ -538,16 +520,7 @@ def ops_logs(ctx, device, minutes, show_all_logs, output):
         click.echo(f"Error: {device_obj['error']}", err=True)
         raise click.Abort()
 
-    # Note: Current logs collector expects args object - this is a legacy pattern
-    # TODO: Update logs collector to accept Device object directly
-    class Args:
-        def __init__(self):
-            self.device = device
-            self.minutes = minutes
-            self.show_all_logs = show_all_logs
-
-    args = Args()
-    result = get_logs(args)
+    result = get_logs(device_obj, minutes=minutes, show_all_logs=show_all_logs)
     output_result(result, output)
     return result
 

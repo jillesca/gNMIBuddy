@@ -87,6 +87,16 @@ class CLIErrorHandler:
                 for suggestion in suggestions[:3]:
                     error_msg.append(f"  {suggestion}")
 
+            # Always show available commands in the group
+            if group_commands:
+                error_msg.extend(
+                    [
+                        "",
+                        f"Available commands in '{context}':",
+                        *[f"  {cmd}" for cmd in sorted(group_commands)],
+                    ]
+                )
+
             error_msg.extend(
                 [
                     "",
@@ -265,10 +275,16 @@ class CLIErrorHandler:
         # Resolve alias to full name if needed
         group_name = self.group_aliases.get(group_name, group_name)
 
-        group = COMMAND_GROUPS.get(group_name)
-        if group and hasattr(group, "commands"):
-            return list(group.commands.keys())
-        return []
+        # Hard-coded mapping for known groups (more reliable)
+        group_commands = {
+            "device": ["info", "profile", "list"],
+            "network": ["routing", "interface", "mpls", "vpn"],
+            "topology": ["neighbors", "adjacency"],
+            "ops": ["logs", "test-all"],
+            "manage": ["list-commands", "log-level"],
+        }
+
+        return group_commands.get(group_name, [])
 
     def get_common_mistake_suggestions(self) -> List[str]:
         """Get suggestions for common CLI mistakes"""
@@ -316,18 +332,139 @@ def handle_click_exception(
         # Handle usage errors with better messaging
         error_msg = str(exception)
 
+        # Debug: Print what we're actually getting
+        logger.debug(f"Handling Click error: {error_msg}")
+        logger.debug(f"Command: {command_name}, Group: {group_name}")
+
         # Check for common patterns and enhance the message
-        if "No such command" in error_msg:
+        if "Got unexpected extra argument" in error_msg:
+            # Extract the unexpected argument
+            import re
+
+            match = re.search(
+                r"Got unexpected extra argument \(([^)]+)\)", error_msg
+            )
+            if match:
+                unexpected_arg = match.group(1)
+                click.echo("\n❌ Command Error", err=True)
+                click.echo("═" * 50, err=True)
+                click.echo(
+                    f"\nUnexpected argument: '{unexpected_arg}'", err=True
+                )
+
+                # Provide specific guidance
+                if command_name == "info" and group_name == "device":
+                    click.echo("\n💡 How to fix this:", err=True)
+                    click.echo(
+                        f"  Use: gnmibuddy device info --device {unexpected_arg}",
+                        err=True,
+                    )
+                    click.echo(
+                        f"  Not: gnmibuddy device info {unexpected_arg}",
+                        err=True,
+                    )
+                    click.echo(
+                        "\n📝 The device name must be specified with the --device flag.",
+                        err=True,
+                    )
+
+                elif command_name == "routing" and group_name == "network":
+                    click.echo("\n💡 How to fix this:", err=True)
+                    click.echo(
+                        f"  Use: gnmibuddy network routing --device {unexpected_arg}",
+                        err=True,
+                    )
+                    click.echo(
+                        f"  Not: gnmibuddy network routing {unexpected_arg}",
+                        err=True,
+                    )
+
+                elif command_name == "interface" and group_name == "network":
+                    click.echo("\n💡 How to fix this:", err=True)
+                    click.echo(
+                        f"  Use: gnmibuddy network interface --device {unexpected_arg}",
+                        err=True,
+                    )
+                    click.echo(
+                        f"  Not: gnmibuddy network interface {unexpected_arg}",
+                        err=True,
+                    )
+
+                else:
+                    click.echo("\n💡 How to fix this:", err=True)
+                    click.echo(
+                        f"  The command '{command_name}' doesn't accept positional arguments.",
+                        err=True,
+                    )
+                    click.echo(
+                        f"  Try using an option like --device {unexpected_arg}",
+                        err=True,
+                    )
+
+                click.echo("\n📖 Examples:", err=True)
+                if command_name == "info" and group_name == "device":
+                    click.echo("  gnmibuddy device info --device R1", err=True)
+                    click.echo(
+                        "  gnmibuddy device info --device PE1 --detail",
+                        err=True,
+                    )
+                    click.echo(
+                        "  gnmibuddy device info --all-devices", err=True
+                    )
+                elif command_name and group_name:
+                    click.echo(
+                        f"  gnmibuddy {group_name} {command_name} --device R1",
+                        err=True,
+                    )
+                    click.echo(
+                        f"  gnmibuddy {group_name} {command_name} --all-devices",
+                        err=True,
+                    )
+
+                return
+
+        elif "No such command" in error_msg or "Unknown command" in error_msg:
             # Extract the command name from the error
             import re
 
-            match = re.search(r"No such command '([^']+)'", error_msg)
-            if match:
-                bad_command = match.group(1)
+            # Try multiple patterns
+            patterns = [
+                r"No such command '([^']+)'",
+                r"Unknown command '([^']+)'",
+                r"No such command \"([^\"]+)\"",
+                r"Unknown command \"([^\"]+)\"",
+            ]
+
+            bad_command = None
+            for pattern in patterns:
+                match = re.search(pattern, error_msg)
+                if match:
+                    bad_command = match.group(1)
+                    break
+
+            if bad_command:
+                # Use the group_name from parameters, not from error message
                 enhanced_msg = error_handler.handle_unknown_command(
                     bad_command, group_name or "root"
                 )
                 click.echo(enhanced_msg, err=True)
+                return
+            else:
+                # Fallback - try to parse group from context
+                click.echo(f"\n❌ Unknown Command", err=True)
+                click.echo("═" * 50, err=True)
+                click.echo(f"\n{error_msg}", err=True)
+
+                if group_name:
+                    click.echo(
+                        f"\n💡 Run 'gnmibuddy {group_name} --help' to see available commands.",
+                        err=True,
+                    )
+                else:
+                    click.echo(
+                        f"\n💡 Run 'gnmibuddy --help' to see available commands.",
+                        err=True,
+                    )
                 return
 
         elif "Missing option" in error_msg:
@@ -350,19 +487,38 @@ def handle_click_exception(
             if match:
                 option_name = match.group(1)
                 invalid_value = match.group(2).strip()
-                # This would need to be enhanced to get valid choices
+                click.echo(f"\n❌ Invalid Option Value", err=True)
+                click.echo("═" * 50, err=True)
                 click.echo(
-                    f"Error: Invalid value '{invalid_value}' for option '{option_name}'",
+                    f"\nInvalid value '{invalid_value}' for option '{option_name}'",
                     err=True,
                 )
                 click.echo(
-                    "Run the command with --help to see valid options.",
+                    "\n💡 Run the command with --help to see valid options.",
                     err=True,
                 )
                 return
 
-    # Fallback to original error message
-    click.echo(f"Error: {exception}", err=True)
+        elif "takes no arguments" in error_msg:
+            click.echo("\n❌ Command Error", err=True)
+            click.echo("═" * 50, err=True)
+            click.echo(
+                f"\nThe command '{command_name}' doesn't accept arguments.",
+                err=True,
+            )
+            click.echo("\n💡 How to fix this:", err=True)
+            click.echo(
+                f"  Use: gnmibuddy {group_name + ' ' if group_name else ''}{command_name}",
+                err=True,
+            )
+            click.echo(
+                "\n📖 If you need to specify options, use flags like --device, --output, etc.",
+                err=True,
+            )
+            return
+
+    # Fallback to original error message but make it cleaner
+    click.echo(f"\n❌ Error: {exception}", err=True)
 
 
 def suggest_command_from_typo(typo: str) -> Optional[str]:

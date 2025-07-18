@@ -281,6 +281,56 @@ def run_cli_mode():
                 f"Command failed with exit code: {e.exit_code}", err=True
             )
             return None, None
+    except click.exceptions.UsageError as e:
+        # Handle Click usage errors with enhanced error handling
+        from src.cmd.error_handler import handle_click_exception
+
+        # Extract command context information
+        command_name = ""
+        group_name = ""
+
+        if hasattr(e, "ctx") and e.ctx:
+            ctx = e.ctx
+            # The command that failed is the current context
+            command_name = ctx.info_name or ""
+            # The group is the parent context
+            if ctx.parent and ctx.parent.info_name != "gnmibuddy":
+                group_name = ctx.parent.info_name or ""
+
+        # For "No such command" errors, the command_name is actually the failing command,
+        # and we need to extract the unknown command from the error message
+        error_msg = str(e)
+        if "No such command" in error_msg:
+            import re
+
+            match = re.search(r"No such command '([^']+)'", error_msg)
+            if match:
+                unknown_command = match.group(1)
+                # In this case, group_name is actually the command_name from context
+                actual_group = command_name
+                actual_command = unknown_command
+                command_name = actual_command
+                group_name = actual_group
+
+        # Use enhanced error handler
+        handle_click_exception(e, command_name, group_name)
+
+        # Show help for the failing command if we have context
+        if hasattr(e, "ctx") and e.ctx:
+            click.echo("\n" + "─" * 50, err=True)
+            click.echo("Command Help:", err=True)
+            click.echo("─" * 50, err=True)
+            try:
+                help_text = e.ctx.get_help()
+                click.echo(help_text, err=True)
+            except Exception:
+                # Fallback if we can't get help
+                click.echo(
+                    f"Run 'gnmibuddy {group_name + ' ' if group_name else ''}{command_name} --help' for usage information.",
+                    err=True,
+                )
+
+        return None, None
     except SystemExit as e:
         if e.code != 0:
             click.echo(

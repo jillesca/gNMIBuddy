@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI entry point for gNMIBuddy - Click-based CLI with backward compatibility.
+CLI entry point for gNMIBuddy - Click-based CLI with clean architecture.
 """
 import sys
 
@@ -9,37 +9,58 @@ from src.utils.thread_safety import apply_thread_safety_patches
 # Apply thread safety patches first
 apply_thread_safety_patches()
 
-from api import get_devices
 from src.cmd import run_cli_mode
 from src.logging.config import get_logger
-from src.utils.serialization import to_json_string
 
 
-def main():
-    """
-    Main entry point for CLI mode using the new Click-based architecture.
-    """
-    try:
-        result, cli_context = run_cli_mode()
+def setup_error_handling() -> None:
+    """Configure global error handling for the application."""
 
-        if result is None:
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        """Global exception handler that logs unhandled exceptions."""
+        if issubclass(exc_type, KeyboardInterrupt):
+            # Don't log keyboard interrupts
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
 
-        if (
-            result is not None
-            and hasattr(result, "get")
-            and result.get("command") == "list-devices"
-        ):
-            result = get_devices()
+        logger = get_logger(__name__)
+        logger.error(
+            "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
+        )
+
+    sys.excepthook = handle_exception
+
+
+def handle_keyboard_interrupt() -> None:
+    """Handle keyboard interrupt gracefully."""
+    print("\nOperation cancelled by user.", file=sys.stderr)
+    sys.exit(1)
+
+
+def handle_general_exception(error: Exception) -> None:
+    """Handle general exceptions with proper logging."""
+    logger = get_logger(__name__)
+    logger.error("Error executing command: %s", error)
+    print(f"Error: {error}", file=sys.stderr)
+    sys.exit(1)
+
+
+def main() -> None:
+    """
+    Main entry point for CLI mode using the new Click-based architecture.
+
+    This function orchestrates the CLI execution with proper error handling
+    and follows the single responsibility principle.
+    """
+    setup_error_handling()
+
+    try:
+        run_cli_mode()
 
     except KeyboardInterrupt:
-        print("\nOperation cancelled by user.", file=sys.stderr)
-        sys.exit(1)
+        handle_keyboard_interrupt()
     except Exception as e:
-        logger = get_logger(__name__)
-        logger.error("Error executing command: %s", e)
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        handle_general_exception(e)
 
 
 if __name__ == "__main__":

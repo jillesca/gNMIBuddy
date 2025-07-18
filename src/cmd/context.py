@@ -61,7 +61,7 @@ class CLIContext:
 
     def validate_device_options(self, command_name: str) -> bool:
         """Validate device-related options for commands that need them"""
-        needs_device = command_name not in ["list-commands", "list-devices"]
+        needs_device = command_name not in ["list-commands", "list"]
 
         if not needs_device:
             return True

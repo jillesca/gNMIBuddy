@@ -103,7 +103,6 @@ def _get_vpn_bgp_info(device: Device):
             if not isinstance(vpn_resp, ErrorResponse) and not isinstance(
                 vpn_resp, FeatureNotFoundResponse
             ):
-                # Work directly with response data instead of calling to_dict()
                 if vpn_resp.data:
                     vpn_bgp_afi_safi_states.extend(vpn_resp.data)
     return vpn_info, vpn_bgp_afi_safi_states

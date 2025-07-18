@@ -208,7 +208,6 @@ def _get_isis(device) -> dict:
     )
     if isinstance(routing_responses, list) and routing_responses:
         first_response = routing_responses[0]
-        # Since get_routing_information now returns dict directly, no need for to_dict()
         if isinstance(first_response, dict):
             return first_response
         return {"error": "Unexpected routing response format"}

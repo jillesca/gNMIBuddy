@@ -30,6 +30,30 @@ def show_help_with_banner(ctx, param, value):
     ctx.exit()
 
 
+def show_version_callback(ctx, param, value):
+    """Custom version callback that shows simple version information"""
+    if not value or ctx.resilient_parsing:
+        return
+
+    from src.cmd.version import get_version_info
+
+    version_info = get_version_info(detailed=False)
+    click.echo(version_info)
+    ctx.exit()
+
+
+def show_detailed_version_callback(ctx, param, value):
+    """Custom version callback that shows detailed version information"""
+    if not value or ctx.resilient_parsing:
+        return
+
+    from src.cmd.version import get_version_info
+
+    version_info = get_version_info(detailed=True)
+    click.echo(version_info)
+    ctx.exit()
+
+
 @click.group(invoke_without_command=True)
 @click.option(
     "-h",
@@ -39,6 +63,23 @@ def show_help_with_banner(ctx, param, value):
     is_eager=True,
     callback=show_help_with_banner,
     help="Show this message and exit.",
+)
+@click.option(
+    "-V",
+    "--version",
+    is_flag=True,
+    expose_value=False,
+    is_eager=True,
+    callback=show_version_callback,
+    help="Show version information and exit.",
+)
+@click.option(
+    "--version-detailed",
+    is_flag=True,
+    expose_value=False,
+    is_eager=True,
+    callback=show_detailed_version_callback,
+    help="Show detailed version information and exit.",
 )
 @click.option(
     "--log-level",

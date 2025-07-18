@@ -6,7 +6,11 @@ from src.logging.config import get_logger
 logger = get_logger(__name__)
 
 
-@click.group()
+# Custom context settings to enable -h shorthand
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def device(ctx):
     """Device management commands
@@ -19,7 +23,7 @@ def device(ctx):
     pass
 
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def network(ctx):
     """Network protocol commands
@@ -30,7 +34,7 @@ def network(ctx):
     pass
 
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def topology(ctx):
     """Network topology commands
@@ -41,7 +45,7 @@ def topology(ctx):
     pass
 
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def ops(ctx):
     """Operational commands
@@ -52,7 +56,7 @@ def ops(ctx):
     pass
 
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def manage(ctx):
     """Management commands

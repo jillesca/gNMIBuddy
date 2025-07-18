@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-CLI entry point for gNMIBuddy - Provides command-line interface to network tools.
+CLI entry point for gNMIBuddy - Click-based CLI with backward compatibility.
 """
 import sys
 import json
-import argparse
 
 from src.utils.thread_safety import apply_thread_safety_patches
 
@@ -18,37 +17,11 @@ from src.logging.config import LoggingConfig, get_logger
 
 def main():
     """
-    Main entry point for CLI mode. Parses arguments and executes commands.
+    Main entry point for CLI mode using the new Click-based architecture.
     """
-    # Get log level from command line before initializing
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--log-level", type=str)
-    parser.add_argument("--module-log-levels", type=str)
-    parser.add_argument("--structured-logging", action="store_true")
-    args, remaining_args = parser.parse_known_args(sys.argv[1:])
-
-    # Parse module-specific log levels
-    module_levels = {}
-    if args.module_log_levels:
-        try:
-            for item in args.module_log_levels.split(","):
-                if "=" in item:
-                    module, level = item.strip().split("=", 1)
-                    module_levels[module.strip()] = level.strip()
-        except ValueError:
-            print(
-                "Warning: Invalid module-log-levels format. Use 'module1=debug,module2=warning'"
-            )
-
-    LoggingConfig.configure(
-        global_level=args.log_level,
-        module_levels=module_levels,
-        enable_structured=args.structured_logging,
-    )
-    logger = get_logger(__name__)
-
     try:
-        result, parser = run_cli_mode()
+        # Run the Click-based CLI
+        result, cli_context = run_cli_mode()
 
         # If result is None, there was an error or help was displayed
         if result is None:
@@ -56,17 +29,24 @@ def main():
 
         # Process command results - check if result is a dictionary with a command key
         if (
-            isinstance(result, dict)
+            result is not None
+            and hasattr(result, "get")
             and result.get("command") == "list-devices"
         ):
-
             result = get_devices()
 
+        # Output results as JSON if there are any
         if result is not None:
             print(json.dumps(result, indent=2))
+
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
+        logger = get_logger(__name__)
         logger.error("Error executing command: %s", e)
-        return
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

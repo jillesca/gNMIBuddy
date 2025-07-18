@@ -1,275 +1,358 @@
 #!/usr/bin/env python3
-"""Main CLI argument parser for network tools application"""
-import argparse
+"""Click-based CLI parser for gNMIBuddy"""
 import sys
-from typing import Optional, Tuple, Dict, Any
-
-from src.cmd.commands import COMMANDS
+import json
+from typing import Optional, Dict, Any, Tuple
+import click
 from src.logging.config import get_logger
+from src.cmd.context import CLIContext
+from src.cmd.base import (
+    command_registry,
+    get_legacy_commands_dict,
+    create_backward_compatible_args,
+)
 from src.inventory import initialize_inventory
-from src.cmd.display import display_all_commands
 from src.utils.version_utils import load_gnmibuddy_version
 from src.cmd.cli_utils import display_program_banner, get_python_version
-
 
 logger = get_logger(__name__)
 
 
-def run_cli_mode() -> (
-    Tuple[Optional[Dict[str, Any]], Optional[argparse.ArgumentParser]]
+def show_help_with_banner(ctx, param, value):
+    """Custom help callback that shows banner only for main command"""
+    if not value or ctx.resilient_parsing:
+        return
+
+    # Show banner only for main command help
+    banner = display_program_banner()
+    click.echo(banner)
+    click.echo(ctx.get_help())
+    ctx.exit()
+
+
+@click.group(invoke_without_command=True)
+@click.option(
+    "-h",
+    "--help",
+    is_flag=True,
+    expose_value=False,
+    is_eager=True,
+    callback=show_help_with_banner,
+    help="Show this message and exit.",
+)
+@click.option(
+    "--log-level",
+    type=click.Choice(
+        ["debug", "info", "warning", "error"], case_sensitive=False
+    ),
+    default="info",
+    help="Set the global logging level",
+)
+@click.option(
+    "--module-log-levels",
+    type=str,
+    help="Set specific log levels for modules (format: module1=debug,module2=warning)",
+)
+@click.option(
+    "--structured-logging", is_flag=True, help="Enable structured JSON logging"
+)
+@click.option(
+    "--quiet-external",
+    is_flag=True,
+    default=True,
+    help="Reduce noise from external libraries",
+)
+@click.option("--device", type=str, help="Device name from inventory")
+@click.option(
+    "--all-devices",
+    is_flag=True,
+    help="Run command on all devices in inventory concurrently",
+)
+@click.option(
+    "--max-workers",
+    type=int,
+    default=5,
+    help="Maximum number of concurrent workers when using --all-devices",
+)
+@click.option("--inventory", type=str, help="Path to inventory JSON file")
+@click.pass_context
+def cli(
+    ctx,
+    log_level,
+    module_log_levels,
+    structured_logging,
+    quiet_external,
+    device,
+    all_devices,
+    max_workers,
+    inventory,
 ):
-    """
-    Run the toolkit in CLI mode.
+    """gNMIBuddy CLI tool for network device management"""
 
-    This is the main entry point for CLI operations.
-    """
-    # Parse the command line arguments
+    # If no command provided, show banner and help
+    if ctx.invoked_subcommand is None:
+        banner = display_program_banner()
+        click.echo(banner)
+        click.echo(ctx.get_help())
+        return
+
+    # Create CLI context for dependency injection
+    cli_ctx = CLIContext(
+        log_level=log_level,
+        module_log_levels=module_log_levels,
+        structured_logging=structured_logging,
+        quiet_external=quiet_external,
+        device=device,
+        all_devices=all_devices,
+        max_workers=max_workers,
+        inventory=inventory,
+    )
+
+    # Store context in Click context object
+    ctx.ensure_object(dict)
+    ctx.obj = cli_ctx
+
+    # Initialize inventory if specified
+    if inventory:
+        initialize_inventory(inventory)
+
+    # Log version information
+    gnmibuddy_version = load_gnmibuddy_version()
+    logger.info("Python version: %s", get_python_version())
+    logger.info("gNMIBuddy version: %s", gnmibuddy_version)
+
+
+# Legacy command integration for backward compatibility
+def register_legacy_commands():
+    """Register legacy commands as Click commands for backward compatibility"""
     try:
-        args, parser = parse_args()
+        legacy_commands = get_legacy_commands_dict()
 
-        # If no command was specified, show help
-        if not hasattr(args, "command") or not args.command:
-            parser.print_help()
-            return None, parser
+        for cmd_name, legacy_cmd in legacy_commands.items():
+            # Create a closure to capture the current command properly
+            def create_command_wrapper(command_name, command_instance):
+                @click.command(name=command_name, help=command_instance.help)
+                @click.help_option("-h", "--help")
+                @click.pass_context
+                def legacy_command_wrapper(ctx, **kwargs):
+                    """Wrapper for legacy commands"""
+                    cli_ctx = ctx.obj
 
-        # Configure logging with the specified log level and module settings
-        if hasattr(args, "log_level") and args.log_level:
-            from src.logging.config import LoggingConfig
+                    # Validate device options if needed
+                    if not cli_ctx.validate_device_options(command_name):
+                        click.echo(
+                            f"Error: Device validation failed for command '{command_name}'",
+                            err=True,
+                        )
+                        raise click.Abort()
 
-            # Parse module-specific log levels
-            module_levels = {}
-            if hasattr(args, "module_log_levels") and args.module_log_levels:
+                    try:
+                        # Create backward-compatible args object
+                        args = create_backward_compatible_args(
+                            cli_ctx, **kwargs
+                        )
+                        args.command = command_name
+
+                        # Execute legacy command
+                        result = command_instance.execute(args)
+
+                        # Store result for processing
+                        cli_ctx._last_result = result
+
+                        return result
+
+                    except Exception as e:
+                        logger.error(
+                            "Error executing legacy command %s: %s",
+                            command_name,
+                            e,
+                        )
+                        click.echo(f"Error executing command: {e}", err=True)
+                        raise click.Abort()
+
+                # Add command-specific options based on legacy command configuration
                 try:
-                    for item in args.module_log_levels.split(","):
-                        if "=" in item:
-                            module, level = item.strip().split("=", 1)
-                            module_levels[module.strip()] = level.strip()
-                except ValueError:
+                    # Create a temporary parser to extract options
+                    import argparse
+
+                    temp_parser = argparse.ArgumentParser()
+                    command_instance.configure_parser(temp_parser)
+
+                    # Convert argparse options to Click options
+                    if hasattr(temp_parser, "_actions"):
+                        for action in temp_parser._actions:
+                            if action.dest == "help":
+                                continue
+
+                            option_names = action.option_strings
+                            if not option_names:
+                                continue
+
+                                # Convert argparse action to Click option
+                        click_kwargs = {"help": action.help or ""}
+
+                        # Check the action class type instead of action.action
+                        if action.__class__.__name__ == "_StoreTrueAction":
+                            click_kwargs["is_flag"] = True
+                        elif action.__class__.__name__ == "_StoreAction":
+                            if action.type:
+                                click_kwargs["type"] = action.type
+                            if action.default is not None:
+                                click_kwargs["default"] = action.default
+
+                            # Apply the option to the command
+                            option_decorator = click.option(
+                                *option_names, **click_kwargs
+                            )
+                            legacy_command_wrapper = option_decorator(
+                                legacy_command_wrapper
+                            )
+
+                except Exception as e:
                     logger.warning(
-                        "Invalid module-log-levels format. Use 'module1=debug,module2=warning'"
+                        "Could not extract options from legacy command %s: %s",
+                        command_name,
+                        e,
                     )
 
-            LoggingConfig.configure(
-                global_level=args.log_level.lower(),
-                module_levels=module_levels,
-                enable_structured=getattr(args, "structured_logging", False),
+                return legacy_command_wrapper
+
+            # Create and register the wrapped command
+            wrapped_command = create_command_wrapper(cmd_name, legacy_cmd)
+            cli.add_command(wrapped_command)
+
+    except Exception as e:
+        logger.error("Error registering legacy commands: %s", e)
+
+
+def run_cli_mode():
+    """
+    Run the CLI in Click mode
+
+    Returns:
+        Tuple of (result, parser_equivalent)
+    """
+    try:
+        # Register legacy commands
+        register_legacy_commands()
+
+        # Invoke the CLI
+        ctx = cli.make_context("gnmibuddy", sys.argv[1:])
+        result = cli.invoke(ctx)
+
+        # Get the result from the context if available
+        cli_result = getattr(ctx.obj, "_last_result", None)
+
+        return cli_result, ctx
+
+    except click.Abort:
+        return None, None
+    except click.exceptions.Exit as e:
+        # Click uses Exit exceptions for normal exits (like --help)
+        # Exit code 0 is success, anything else is an error
+        if e.exit_code == 0:
+            return None, None
+        else:
+            click.echo(
+                f"Command failed with exit code: {e.exit_code}", err=True
             )
-
-        gnmibuddy_version = load_gnmibuddy_version()
-        logger.info("Python version: %s", get_python_version())
-        logger.info("gNMIBuddy version: %s", gnmibuddy_version)
-
-        # Special handling for list-commands to show all available commands
-        if args.command == "list-commands":
-            logger.info("Listing all available commands")
-            # The execute_command will call display_all_commands
-            execute_command(args)
-            return None, parser
-
-        # Initialize inventory if specified
-        if hasattr(args, "inventory") and args.inventory:
-            initialize_inventory(args.inventory)
-
-        result = execute_command(args)
-
-        return result, parser
-
+            return None, None
     except SystemExit as e:
         if e.code != 0:
-            print(
-                f"Command line argument error. Use --help for usage information."
+            click.echo(
+                "Command line argument error. Use --help for usage information.",
+                err=True,
             )
+        return None, None
+    except Exception as e:
+        import traceback
+
+        logger.error("Error in CLI mode: %s", e)
+        logger.error("Traceback: %s", traceback.format_exc())
+        click.echo(f"Unexpected error: {e}", err=True)
         return None, None
 
 
-def parse_args(
-    args=None,
-) -> Tuple[argparse.Namespace, argparse.ArgumentParser]:
+def execute_command(args):
     """
-    Parse command line arguments.
+    Legacy compatibility function for execute_command
 
     Args:
-        args: Command line arguments to parse (defaults to sys.argv)
+        args: argparse-like namespace with command arguments
 
     Returns:
-        Tuple of (parsed args, parser instance)
+        Command result or None
     """
-    parser = create_parser()
-
-    if args is None:
-        args = sys.argv[1:]
-    logger.debug("DEBUG: Parsing arguments: %s", args)
-
-    try:
-        parsed_args = parser.parse_args(args)
-
-        logger.debug(
-            "DEBUG: Successfully parsed arguments: %s", vars(parsed_args)
-        )
-
-        # Configure logging with the specified log level and module settings
-        if hasattr(parsed_args, "log_level") and parsed_args.log_level:
-            from src.logging.config import LoggingConfig
-
-            # Parse module-specific log levels
-            module_levels = {}
-            if (
-                hasattr(parsed_args, "module_log_levels")
-                and parsed_args.module_log_levels
-            ):
-                try:
-                    for item in parsed_args.module_log_levels.split(","):
-                        if "=" in item:
-                            module, level = item.strip().split("=", 1)
-                            module_levels[module.strip()] = level.strip()
-                except ValueError:
-                    logger.warning(
-                        "Invalid module-log-levels format. Use 'module1=debug,module2=warning'"
-                    )
-
-            LoggingConfig.configure(
-                global_level=parsed_args.log_level.lower(),
-                module_levels=module_levels,
-                enable_structured=getattr(
-                    parsed_args, "structured_logging", False
-                ),
-            )
-
-        if hasattr(parsed_args, "command") and parsed_args.command:
-            device_info = (
-                f", device={parsed_args.device}"
-                if hasattr(parsed_args, "device")
-                else ""
-            )
-            logger.debug(
-                "Command line arguments parsed: command=%s%s",
-                parsed_args.command,
-                device_info,
-            )
-            logger.debug("All parsed arguments: %s", vars(parsed_args))
-
-        return parsed_args, parser
-    except Exception as e:
-        logger.error("DEBUG: Error parsing arguments: %s", e)
-        raise
-
-
-def create_parser() -> argparse.ArgumentParser:
-    """
-    Create and configure the main argument parser.
-
-    Returns:
-        The configured ArgumentParser instance
-    """
-    banner = display_program_banner()
-
-    class BannerHelpFormatter(argparse.RawDescriptionHelpFormatter):
-        def __init__(self, *args, banner=None, **kwargs):
-            self.banner = banner or ""
-            super().__init__(*args, **kwargs)
-
-        def format_help(self):
-            help_text = super().format_help()
-            return f"{self.banner}\n{help_text}"
-
-    parser = argparse.ArgumentParser(
-        description=None,  # We'll handle the banner in the formatter
-        formatter_class=lambda *args, **kwargs: BannerHelpFormatter(
-            *args, banner=banner, **kwargs
-        ),
+    # This function is kept for backward compatibility
+    # In the new Click architecture, command execution is handled by Click
+    logger.warning(
+        "execute_command called in Click mode - this is for legacy compatibility only"
     )
-    # Global options
-    parser.add_argument(
-        "--log-level",
-        type=str.lower,
-        choices=["debug", "info", "warning", "error"],
-        help="Set the global logging level (debug, info, warning, error)",
-        default="info",
-    )
-    parser.add_argument(
-        "--module-log-levels",
-        type=str,
-        help="Set specific log levels for modules (format: 'module1=debug,module2=warning'). Available modules: gnmibuddy.collectors.*, gnmibuddy.gnmi, gnmibuddy.inventory, etc.",
-    )
-    parser.add_argument(
-        "--structured-logging",
-        action="store_true",
-        help="Enable structured JSON logging (useful for observability tools)",
-    )
-    parser.add_argument(
-        "--quiet-external",
-        action="store_true",
-        help="Reduce noise from external libraries (pygnmi, grpc, etc.)",
-        default=True,
-    )
-    parser.add_argument(
-        "--device",
-        help="Device name from inventory (required for most commands)",
-        required=False,  # Make this optional to allow --all-devices
-    )
-    parser.add_argument(
-        "--all-devices",
-        action="store_true",
-        help="Run command on all devices in inventory concurrently",
-    )
-    parser.add_argument(
-        "--max-workers",
-        type=int,
-        default=5,
-        help="Maximum number of concurrent workers when using --all-devices (default: 5)",
-    )
-    parser.add_argument(
-        "--inventory",
-        help="Path to inventory JSON file (overrides NETWORK_INVENTORY env var)",
+    return None
+
+
+# Legacy compatibility functions
+def parse_args(args=None):
+    """Legacy compatibility function for parse_args"""
+    logger.warning(
+        "parse_args called in Click mode - this is for legacy compatibility only"
     )
 
-    # Add subcommands
-    subparsers = parser.add_subparsers(dest="command", help="Command type")
+    # Create a mock args object for compatibility
+    class MockArgs:
+        def __init__(self):
+            self.command = None
+            self.device = None
+            self.all_devices = False
+            self.max_workers = 5
+            self.log_level = "info"
+            self.module_log_levels = None
+            self.structured_logging = False
+            self.inventory = None
 
-    # Register all commands from the COMMANDS dictionary
-    for _, command in COMMANDS.items():
-        command.register(subparsers)
+    class MockParser:
+        def print_help(self):
+            from click.testing import CliRunner
 
-    return parser
+            runner = CliRunner()
+            result = runner.invoke(cli, ["--help"])
+            print(result.output)
+
+    return MockArgs(), MockParser()
 
 
-def execute_command(args: argparse.Namespace) -> Optional[Dict[str, Any]]:
-    """
-    Execute the command specified in the parsed arguments.
+def create_parser():
+    """Legacy compatibility function for create_parser"""
+    logger.warning(
+        "create_parser called in Click mode - this is for legacy compatibility only"
+    )
 
-    Args:
-        args: Parsed command line arguments
+    # Create a mock args object for compatibility
+    class MockArgs:
+        def __init__(self):
+            self.command = None
+            self.device = None
+            self.all_devices = False
+            self.max_workers = 5
+            self.log_level = "info"
+            self.module_log_levels = None
+            self.structured_logging = False
+            self.inventory = None
 
-    Returns:
-        Command result or None for special commands like list-commands
-    """
-    # Validate that either --device or --all-devices is present for commands that need it
-    needs_device = args.command not in ["list-commands", "list-devices"]
+    class MockParser:
+        def print_help(self):
+            from click.testing import CliRunner
 
-    if needs_device:
-        has_device = hasattr(args, "device") and args.device
-        has_all_devices = hasattr(args, "all_devices") and args.all_devices
+            runner = CliRunner()
+            result = runner.invoke(cli, ["--help"])
+            print(result.output)
 
-        if not (has_device or has_all_devices):
-            logger.error(
-                "Either --device or --all-devices is required for this command"
-            )
-            print(
-                "Error: Either --device or --all-devices is required for this command."
-            )
-            sys.exit(1)
+        def parse_args(self, args=None):
+            return MockArgs(), self
 
-        if has_device and has_all_devices:
-            logger.error("Cannot specify both --device and --all-devices")
-            print(
-                "Error: Cannot specify both --device and --all-devices options."
-            )
-            sys.exit(1)
+    return MockParser()
 
-    # Find and execute the command
-    if args.command in COMMANDS:
-        return COMMANDS[args.command].execute(args)
-    else:
-        logger.error("Unknown command: %s", args.command)
-        print(f"Error: Unknown command '{args.command}'")
-        sys.exit(1)
+
+if __name__ == "__main__":
+    # For testing purposes
+    cli.main(standalone_mode=True)

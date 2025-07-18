@@ -125,6 +125,7 @@ name = "gnmibuddy"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "click" },
     { name = "mcp", extra = ["cli"] },
     { name = "networkx" },
     { name = "pygnmi" },
@@ -138,6 +139,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "click", specifier = ">=8.1.8" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
     { name = "networkx", specifier = ">=3.4.2" },
     { name = "pygnmi", specifier = ">=0.8.15" },

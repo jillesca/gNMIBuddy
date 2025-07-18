@@ -182,12 +182,20 @@ def device_info(
 @click.command()
 @click.option("--device", required=True, help="Device name from inventory")
 @click.option("--detail", is_flag=True, help="Show detailed profile analysis")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def device_profile(ctx, device, detail):
+def device_profile(ctx, device, detail, output):
     """Get device profile information from a network device"""
     logger.info("Getting device profile for device: %s", device)
     from src.collectors.profile import get_device_profile
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -195,39 +203,69 @@ def device_profile(ctx, device, detail):
         click.echo(f"Error: {device_obj['error']}", err=True)
         raise click.Abort()
 
-    return get_device_profile(device_obj)
+    result = get_device_profile(device_obj)
+    output_result(result, output)
+    return result
 
 
 @click.command()
 @click.option(
     "--detail", is_flag=True, help="Show detailed device information"
 )
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def device_list(ctx, detail):
+def device_list(ctx, detail, output):
     """List all available devices in the inventory"""
     logger.info("Listing all available devices")
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     inventory = InventoryManager.get_instance()
     devices = inventory.get_devices()
 
     if not devices:
-        click.echo("No devices found in inventory.")
-        return None
+        result = {
+            "devices": [],
+            "count": 0,
+            "message": "No devices found in inventory",
+        }
+        output_result(result, output)
+        return result
 
     if detail:
+        # Create detailed device list
+        device_list = []
         for device_name, device_info in devices.items():
-            click.echo(f"\nDevice: {device_name}")
+            device_data = {"name": device_name}
             # Convert device object to dict-like display
-            device_data = device_info.__dict__
-            for key, value in device_data.items():
-                click.echo(f"  {key}: {value}")
-    else:
-        click.echo("Available devices:")
-        for device_name in devices.keys():
-            click.echo(f"  - {device_name}")
+            if hasattr(device_info, "__dict__"):
+                device_data.update(device_info.__dict__)
+            else:
+                device_data["info"] = str(device_info)
+            device_list.append(device_data)
 
-    return devices
+        result = {
+            "devices": device_list,
+            "count": len(device_list),
+            "detail": True,
+        }
+    else:
+        # Create simple device list
+        device_names = list(devices.keys())
+        result = {
+            "devices": device_names,
+            "count": len(device_names),
+            "detail": False,
+        }
+
+    output_result(result, output)
+    return result
 
 
 # Network group commands
@@ -241,8 +279,15 @@ def device_list(ctx, detail):
 @click.option(
     "--detail", is_flag=True, help="Show detailed routing information"
 )
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def network_routing(ctx, device, protocol, detail):
+def network_routing(ctx, device, protocol, detail, output):
     """Get routing information from a network device
 
     \b
@@ -250,11 +295,13 @@ def network_routing(ctx, device, protocol, detail):
       gnmibuddy network routing --device R1
       gnmibuddy network routing --device R1 --protocol bgp
       gnmibuddy network routing --device R1 --detail
+      gnmibuddy network routing --device R1 --output yaml
       gnmibuddy n routing --device R1  # Using alias
     """
     logger.info("Getting routing information for device: %s", device)
     from src.collectors.routing import get_routing_info
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -262,7 +309,9 @@ def network_routing(ctx, device, protocol, detail):
         click.echo(f"Error: {device_obj['error']}", err=True)
         raise click.Abort()
 
-    return get_routing_info(device_obj)
+    result = get_routing_info(device_obj)
+    output_result(result, output)
+    return result
 
 
 @click.command()
@@ -273,8 +322,15 @@ def network_routing(ctx, device, protocol, detail):
 @click.option(
     "--detail", is_flag=True, help="Show detailed interface information"
 )
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def network_interface(ctx, device, name, detail):
+def network_interface(ctx, device, name, detail, output):
     """Get interface information from a network device
 
     \b
@@ -282,11 +338,13 @@ def network_interface(ctx, device, name, detail):
       gnmibuddy network interface --device R1
       gnmibuddy network interface --device R1 --name GigabitEthernet0/0/0/1
       gnmibuddy network interface --device R1 --detail
+      gnmibuddy network interface --device R1 --output yaml
       gnmibuddy n interface --device R1  # Using alias
     """
     logger.info("Getting interface information for device: %s", device)
     from src.collectors.interfaces import get_interfaces
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -303,18 +361,28 @@ def network_interface(ctx, device, name, detail):
             self.detail = detail
 
     args = Args()
-    return get_interfaces(args)
+    result = get_interfaces(args)
+    output_result(result, output)
+    return result
 
 
 @click.command()
 @click.option("--device", required=True, help="Device name from inventory")
 @click.option("--detail", is_flag=True, help="Show detailed MPLS information")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def network_mpls(ctx, device, detail):
+def network_mpls(ctx, device, detail, output):
     """Get MPLS information from a network device"""
     logger.info("Getting MPLS information for device: %s", device)
     from src.collectors.mpls import get_mpls_info
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -322,19 +390,29 @@ def network_mpls(ctx, device, detail):
         click.echo(f"Error: {device_obj['error']}", err=True)
         raise click.Abort()
 
-    return get_mpls_info(device_obj, include_details=detail)
+    result = get_mpls_info(device_obj, include_details=detail)
+    output_result(result, output)
+    return result
 
 
 @click.command()
 @click.option("--device", required=True, help="Device name from inventory")
 @click.option("--vrf", help="Filter by VRF name (e.g., CUSTOMER_A)")
 @click.option("--detail", is_flag=True, help="Show detailed VPN information")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def network_vpn(ctx, device, vrf, detail):
+def network_vpn(ctx, device, vrf, detail, output):
     """Get VPN/VRF information from a network device"""
     logger.info("Getting VPN information for device: %s", device)
     from src.collectors.vpn import get_vpn_info
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -351,7 +429,9 @@ def network_vpn(ctx, device, vrf, detail):
             self.detail = detail
 
     args = Args()
-    return get_vpn_info(args)
+    result = get_vpn_info(args)
+    output_result(result, output)
+    return result
 
 
 # Topology group commands
@@ -360,11 +440,19 @@ def network_vpn(ctx, device, vrf, detail):
 @click.option(
     "--detail", is_flag=True, help="Show detailed topology information"
 )
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def topology_adjacency(ctx, device, detail):
+def topology_adjacency(ctx, device, detail, output):
     """Get IP adjacency topology information"""
     logger.info("Getting topology adjacency for device: %s", device)
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -373,12 +461,13 @@ def topology_adjacency(ctx, device, detail):
         raise click.Abort()
 
     # TODO: Implement actual topology adjacency collection
-    click.echo(f"Topology adjacency for device {device} (placeholder)")
-    return {
+    result = {
         "device": device,
         "operation": "topology_adjacency",
         "status": "placeholder",
     }
+    output_result(result, output)
+    return result
 
 
 @click.command()
@@ -386,11 +475,19 @@ def topology_adjacency(ctx, device, detail):
 @click.option(
     "--detail", is_flag=True, help="Show detailed neighbor information"
 )
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def topology_neighbors(ctx, device, detail):
+def topology_neighbors(ctx, device, detail, output):
     """Get topology neighbors information"""
     logger.info("Getting topology neighbors for device: %s", device)
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -399,12 +496,13 @@ def topology_neighbors(ctx, device, detail):
         raise click.Abort()
 
     # TODO: Implement actual topology neighbors collection
-    click.echo(f"Topology neighbors for device {device} (placeholder)")
-    return {
+    result = {
         "device": device,
         "operation": "topology_neighbors",
         "status": "placeholder",
     }
+    output_result(result, output)
+    return result
 
 
 # Ops group commands
@@ -419,12 +517,20 @@ def topology_neighbors(ctx, device, detail):
 @click.option(
     "--show-all-logs", is_flag=True, help="Show all available log entries"
 )
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def ops_logs(ctx, device, minutes, show_all_logs):
+def ops_logs(ctx, device, minutes, show_all_logs, output):
     """Get log information from a network device"""
     logger.info("Getting logs for device: %s", device)
     from src.collectors.logs import get_logs
     from src.inventory.manager import InventoryManager
+    from src.cmd.cli_utils import output_result
 
     # Get device object from inventory
     device_obj, success = InventoryManager.get_device(device)
@@ -441,7 +547,9 @@ def ops_logs(ctx, device, minutes, show_all_logs):
             self.show_all_logs = show_all_logs
 
     args = Args()
-    return get_logs(args)
+    result = get_logs(args)
+    output_result(result, output)
+    return result
 
 
 @click.command()
@@ -452,15 +560,24 @@ def ops_logs(ctx, device, minutes, show_all_logs):
     default="basic",
     help="Type of test to run",
 )
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    help="Output format (json, yaml)",
+)
 @click.pass_context
-def ops_test_all(ctx, device, test_query):
+def ops_test_all(ctx, device, test_query, output):
     """Test all APIs on a network device"""
     logger.info("Testing all APIs for device: %s", device)
-    click.echo(f"Running {test_query} tests on device: {device}")
+    from src.cmd.cli_utils import output_result
 
     # This is a placeholder implementation
     # TODO: Implement actual test-all functionality
-    return {"device": device, "test_type": test_query, "status": "completed"}
+    result = {"device": device, "test_type": test_query, "status": "completed"}
+    output_result(result, output)
+    return result
 
 
 # Management group commands

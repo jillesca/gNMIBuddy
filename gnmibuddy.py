@@ -32,9 +32,6 @@ def main():
         ):
             result = get_devices()
 
-        if result is not None:
-            print(to_json_string(result))
-
     except KeyboardInterrupt:
         print("\nOperation cancelled by user.", file=sys.stderr)
         sys.exit(1)

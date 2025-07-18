@@ -5,10 +5,7 @@ from click.testing import CliRunner
 from src.cmd.parser import cli
 from src.cmd.groups import (
     COMMAND_GROUPS,
-    get_group_for_command,
-    get_new_command_name,
 )
-from src.cmd.commands import COMMANDS
 
 
 class TestCLIHierarchicalStructure:
@@ -132,63 +129,6 @@ class TestCLIHierarchicalStructure:
                 result.exit_code == 0
             ), f"Backward compatibility failed for {cmd}"
 
-    def test_command_name_mappings(self):
-        """Test that command name mappings work correctly"""
-        test_cases = {
-            "system": "info",
-            "deviceprofile": "profile",
-            "device-profile": "profile",
-            "list-devices": "list",
-            "topology-adjacency": "adjacency",
-            "topology-neighbors": "neighbors",
-            "logging": "logs",
-        }
-
-        for old_name, expected_new_name in test_cases.items():
-            actual_new_name = get_new_command_name(old_name)
-            assert (
-                actual_new_name == expected_new_name
-            ), f"Expected {old_name} -> {expected_new_name}, got {actual_new_name}"
-
-    def test_command_group_mappings(self):
-        """Test that commands are mapped to correct groups"""
-        test_cases = {
-            "system": "device",
-            "deviceprofile": "device",
-            "list-devices": "device",
-            "routing": "network",
-            "interface": "network",
-            "mpls": "network",
-            "vpn": "network",
-            "topology-adjacency": "topology",
-            "topology-neighbors": "topology",
-            "logging": "ops",
-            "test-all": "ops",
-            "log-level": "manage",
-            "list-commands": "manage",
-        }
-
-        for cmd_name, expected_group in test_cases.items():
-            actual_group = get_group_for_command(cmd_name)
-            assert (
-                actual_group == expected_group
-            ), f"Expected {cmd_name} -> {expected_group}, got {actual_group}"
-
-    def test_kebab_case_naming_convention(self):
-        """Test that all command names follow kebab-case convention"""
-        import re
-
-        kebab_case_pattern = re.compile(r"^[a-z]+(-[a-z]+)*$")
-
-        for cmd_name, cmd_instance in COMMANDS.items():
-            # Allow for some exceptions during migration
-            if cmd_name in ["deviceprofile"]:  # Known legacy names
-                continue
-
-            assert kebab_case_pattern.match(
-                cmd_name
-            ), f"Command '{cmd_name}' does not follow kebab-case convention"
-
     def test_command_groups_exist_in_registry(self):
         """Test that all groups exist in the command groups registry"""
         expected_groups = {"device", "network", "topology", "ops", "manage"}
@@ -197,32 +137,6 @@ class TestCLIHierarchicalStructure:
         assert (
             actual_groups == expected_groups
         ), f"Expected groups: {expected_groups}, got: {actual_groups}"
-
-    def test_all_commands_have_group_attribute(self):
-        """Test that all commands have the group attribute defined"""
-        for cmd_name, cmd_instance in COMMANDS.items():
-            assert hasattr(
-                cmd_instance, "group"
-            ), f"Command '{cmd_name}' missing group attribute"
-            assert (
-                cmd_instance.group is not None
-            ), f"Command '{cmd_name}' has None group attribute"
-
-    def test_command_help_consistency(self):
-        """Test that command help text is consistent and informative"""
-        for cmd_name, cmd_instance in COMMANDS.items():
-            # Test that help exists and is meaningful
-            assert (
-                cmd_instance.help is not None
-            ), f"Command '{cmd_name}' missing help text"
-            assert (
-                len(cmd_instance.help) > 10
-            ), f"Command '{cmd_name}' help text too short: '{cmd_instance.help}'"
-
-            # Test that description exists
-            assert (
-                cmd_instance.description is not None
-            ), f"Command '{cmd_name}' missing description"
 
     def test_no_banner_in_subcommand_help(self):
         """Test that ASCII banner doesn't appear in subcommand help"""

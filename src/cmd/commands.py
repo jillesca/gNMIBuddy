@@ -6,6 +6,34 @@ from src.logging.config import get_logger
 logger = get_logger(__name__)
 
 
+def _handle_inventory_error_in_command(error_msg: str):
+    """
+    Handle inventory-related errors with clear user guidance in command context
+
+    Args:
+        error_msg: The original error message
+    """
+    click.echo("\n❌ Inventory Error", err=True)
+    click.echo("═" * 50, err=True)
+
+    click.echo("\nThe inventory file is required but not found.", err=True)
+    click.echo("\n💡 How to fix this:", err=True)
+    click.echo("  1. Use --inventory option:", err=True)
+    click.echo(
+        "     gnmibuddy --inventory path/to/your/devices.json device info --device R1",
+        err=True,
+    )
+    click.echo("\n  2. Or set environment variable:", err=True)
+    click.echo(
+        "     export NETWORK_INVENTORY=path/to/your/devices.json", err=True
+    )
+    click.echo("     gnmibuddy device info --device R1", err=True)
+
+    click.echo("\n📁 Example inventory files:", err=True)
+    click.echo("  • xrd_sandbox.json (in project root)", err=True)
+    click.echo("  • Any JSON file with device definitions", err=True)
+
+
 # Device group commands
 @click.command()
 @click.option("--device", help="Device name from inventory")
@@ -127,9 +155,18 @@ def device_info(
     logger.info("Getting system information for device: %s", device)
 
     # Get device object from inventory
-    device_obj, success = InventoryManager.get_device(device)
-    if not success:
-        click.echo(f"Error: {device_obj.error}", err=True)
+    try:
+        device_obj, success = InventoryManager.get_device(device)
+        if not success:
+            click.echo(f"Error: {device_obj['error']}", err=True)
+            raise click.Abort()
+    except FileNotFoundError as e:
+        # Handle inventory file not found with friendly error message
+        error_msg = str(e)
+        if "inventory file" in error_msg.lower():
+            _handle_inventory_error_in_command(error_msg)
+        else:
+            click.echo(f"File not found: {error_msg}", err=True)
         raise click.Abort()
 
         # Get the data

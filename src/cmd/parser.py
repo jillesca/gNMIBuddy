@@ -126,7 +126,20 @@ def cli(
     max_workers,
     inventory,
 ):
-    """gNMIBuddy CLI tool for network device management"""
+    """gNMIBuddy CLI tool for network device management
+
+    \b
+    INVENTORY REQUIREMENT:
+    You must provide device inventory via either:
+    • --inventory PATH_TO_FILE.json
+    • Set NETWORK_INVENTORY environment variable
+
+    \b
+    Examples:
+      gnmibuddy --inventory devices.json device info --device R1
+      export NETWORK_INVENTORY=./xrd_sandbox.json
+      gnmibuddy device info --device xrd-1
+    """
 
     # If no command provided, show banner and help
     if ctx.invoked_subcommand is None:
@@ -275,13 +288,67 @@ def run_cli_mode():
                 err=True,
             )
         return None, None
-    except Exception as e:
-        import traceback
-
-        logger.error("Error in CLI mode: %s", e)
-        logger.error("Traceback: %s", traceback.format_exc())
-        click.echo(f"Unexpected error: {e}", err=True)
+    except FileNotFoundError as e:
+        # Handle inventory-related errors gracefully
+        error_msg = str(e)
+        if "inventory file" in error_msg.lower():
+            _handle_inventory_error(error_msg)
+        else:
+            click.echo(f"File not found: {error_msg}", err=True)
         return None, None
+    except Exception as e:
+        # Handle other exceptions but check for inventory-related issues first
+        error_msg = str(e)
+        if "inventory" in error_msg.lower() and (
+            "not found" in error_msg.lower()
+            or "not specified" in error_msg.lower()
+        ):
+            _handle_inventory_error(error_msg)
+        else:
+            import traceback
+
+            logger.error("Error in CLI mode: %s", e)
+            logger.error("Traceback: %s", traceback.format_exc())
+            click.echo(f"Unexpected error: {e}", err=True)
+        return None, None
+
+
+def _handle_inventory_error(error_msg: str, show_help: bool = False):
+    """
+    Handle inventory-related errors with clear user guidance
+
+    Args:
+        error_msg: The original error message
+        show_help: Whether to show help after the error message
+    """
+    click.echo("\n❌ Inventory Error", err=True)
+    click.echo("═" * 50, err=True)
+
+    click.echo("\nThe inventory file is required but not found.", err=True)
+    click.echo("\n💡 How to fix this:", err=True)
+    click.echo("  1. Use --inventory option:", err=True)
+    click.echo(
+        "     gnmibuddy --inventory path/to/your/devices.json device info --device R1",
+        err=True,
+    )
+    click.echo("\n  2. Or set environment variable:", err=True)
+    click.echo(
+        "     export NETWORK_INVENTORY=path/to/your/devices.json", err=True
+    )
+    click.echo("     gnmibuddy device info --device R1", err=True)
+
+    click.echo("\n📁 Example inventory files:", err=True)
+    click.echo("  • xrd_sandbox.json (in project root)", err=True)
+    click.echo("  • Any JSON file with device definitions", err=True)
+
+    if show_help:
+        click.echo("\n" + "═" * 50, err=True)
+        click.echo("Command Help:", err=True)
+        from click.testing import CliRunner
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help"])
+        click.echo(result.output, err=True)
 
 
 # Legacy compatibility functions (minimal implementation for existing code)

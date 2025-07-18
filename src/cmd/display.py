@@ -60,6 +60,14 @@ class GroupedHelpFormatter:
         # Add usage section
         help_text.append("Usage: gnmibuddy [OPTIONS] COMMAND [ARGS]...")
         help_text.append("")
+
+        # Add inventory requirement information prominently
+        help_text.append("📋 INVENTORY REQUIREMENT:")
+        help_text.append("  You must provide device inventory via either:")
+        help_text.append("  • --inventory PATH_TO_FILE.json")
+        help_text.append("  • Set NETWORK_INVENTORY environment variable")
+        help_text.append("")
+
         help_text.append("Options:")
         help_text.append(
             "  -h, --help               Show this message and exit"
@@ -72,7 +80,7 @@ class GroupedHelpFormatter:
             "  --all-devices            Run command on all devices concurrently"
         )
         help_text.append(
-            "  --inventory TEXT         Path to inventory JSON file"
+            "  --inventory TEXT         Path to inventory JSON file (REQUIRED)"
         )
         help_text.append("")
 

@@ -342,7 +342,7 @@ def run_cli_mode():
         # Handle inventory-related errors gracefully
         error_msg = str(e)
         if "inventory file" in error_msg.lower():
-            _handle_inventory_error(error_msg)
+            handle_inventory_error(error_msg)
         else:
             click.echo(f"File not found: {error_msg}", err=True)
         return None, None
@@ -353,7 +353,7 @@ def run_cli_mode():
             "not found" in error_msg.lower()
             or "not specified" in error_msg.lower()
         ):
-            _handle_inventory_error(error_msg)
+            handle_inventory_error(error_msg)
         else:
             import traceback
 
@@ -363,7 +363,7 @@ def run_cli_mode():
         return None, None
 
 
-def _handle_inventory_error(error_msg: str, show_help: bool = False):
+def handle_inventory_error(error_msg: str, show_help: bool = False):
     """
     Handle inventory-related errors with clear user guidance
 

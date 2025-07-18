@@ -22,7 +22,10 @@ class TestFullCLIIntegration:
         # Test main help
         result = runner.invoke(cli, ["--help"])
         assert result.exit_code == 0
-        assert "gNMIBuddy CLI tool" in result.output
+        assert (
+            "An opinionated tool that retrieves essential network information"
+            in result.output
+        )
         assert (
             "Device management commands" in result.output
             or "device" in result.output
@@ -187,10 +190,18 @@ class TestFullCLIIntegration:
             result = runner.invoke(cli, [group, "--help"])
             assert result.exit_code == 0
 
-    @patch("src.inventory.manager.InventoryManager.get_all_device_names")
-    def test_inventory_integration(self, mock_get_all_devices):
+    @patch("src.inventory.manager.InventoryManager.get_instance")
+    def test_inventory_integration(self, mock_get_instance):
         """Test inventory integration"""
-        mock_get_all_devices.return_value = ["R1", "R2", "R3"]
+        # Mock the InventoryManager instance and its methods
+        mock_manager = Mock()
+        mock_manager.is_initialized.return_value = True
+        mock_manager.get_devices.return_value = {
+            "R1": Mock(),
+            "R2": Mock(),
+            "R3": Mock(),
+        }
+        mock_get_instance.return_value = mock_manager
 
         runner = CliRunner()
 

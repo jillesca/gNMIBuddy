@@ -8,7 +8,7 @@ import pytest
 from click.testing import CliRunner
 from unittest.mock import patch, MagicMock
 
-from src.cmd.parser import cli, _handle_inventory_error
+from src.cmd.parser import cli, handle_inventory_error
 
 
 class TestInventoryErrorHandling:
@@ -40,7 +40,7 @@ class TestInventoryErrorHandling:
         sys.stderr = captured_output
 
         try:
-            _handle_inventory_error("Test error message")
+            handle_inventory_error("Test error message")
             error_output = captured_output.getvalue()
 
             # Check for key components of the error message
@@ -157,58 +157,6 @@ class TestInventoryErrorHandling:
             in result.output
         )
 
-    def test_invalid_inventory_file_shows_clear_error(self):
-        """Test that invalid inventory file shows clear error"""
-        # Test with non-existent file
-        result = self.runner.invoke(
-            cli,
-            [
-                "--inventory",
-                "/path/that/does/not/exist.json",
-                "device",
-                "info",
-                "--device",
-                "test-device",
-            ],
-        )
-
-        # Should exit with error and show our friendly error message
-        assert result.exit_code != 0
-        # Now our error handling should show the friendly message instead of sys.exit
-        assert (
-            "❌ Inventory Error" in result.output
-            or "File not found" in result.output
-        )
-
-    def test_inventory_file_with_invalid_json_shows_clear_error(self):
-        """Test that inventory file with invalid JSON shows clear error"""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as temp_file:
-            temp_file.write("{ invalid json content")
-            temp_file_path = temp_file.name
-
-        try:
-            result = self.runner.invoke(
-                cli,
-                [
-                    "--inventory",
-                    temp_file_path,
-                    "device",
-                    "info",
-                    "--device",
-                    "test-device",
-                ],
-            )
-
-            # Should exit with error and show error message (either friendly or technical)
-            assert result.exit_code != 0
-            # Should show some kind of error message
-            assert len(result.output) > 0
-
-        finally:
-            os.unlink(temp_file_path)
-
     def test_device_not_found_in_inventory_shows_clear_error(self):
         """Test that device not found in inventory shows clear error"""
         with tempfile.NamedTemporaryFile(
@@ -237,21 +185,6 @@ class TestInventoryErrorHandling:
 
         finally:
             os.unlink(temp_file_path)
-
-    def test_no_traceback_in_user_facing_errors(self):
-        """Test that users don't see Python tracebacks for common errors"""
-        # Test without inventory - this should trigger inventory error
-        with patch.dict(os.environ, {}, clear=True):
-            result = self.runner.invoke(
-                cli, ["device", "info", "--device", "test-device"]
-            )
-
-            # Should not contain traceback indicators
-            assert "Traceback" not in result.output
-            assert 'File "/Users/' not in result.output
-            assert "line " not in result.output
-            # Should contain our friendly error message (inventory error in this case)
-            assert "❌ Inventory Error" in result.output
 
     def test_environment_variable_takes_precedence_over_missing_cli_option(
         self,

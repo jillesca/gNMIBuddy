@@ -358,10 +358,18 @@ class TestBatchOperations:
         with pytest.raises(Exception):  # Should raise ClickException
             DeviceListParser.parse_device_file("/nonexistent/file.txt")
 
-    @patch("src.inventory.manager.InventoryManager.get_all_device_names")
-    def test_device_list_parser_inventory(self, mock_get_devices):
+    @patch("src.inventory.manager.InventoryManager.get_instance")
+    def test_device_list_parser_inventory(self, mock_get_instance):
         """Test getting devices from inventory"""
-        mock_get_devices.return_value = ["R1", "R2", "R3"]
+        # Mock the InventoryManager instance and its methods
+        mock_manager = Mock()
+        mock_manager.is_initialized.return_value = True
+        mock_manager.get_devices.return_value = {
+            "R1": Mock(),
+            "R2": Mock(),
+            "R3": Mock(),
+        }
+        mock_get_instance.return_value = mock_manager
 
         devices = DeviceListParser.get_all_inventory_devices()
         assert devices == ["R1", "R2", "R3"]
@@ -494,29 +502,9 @@ class TestCLIIntegration:
         # Check that output contains YAML
         assert "hostname:" in result.output
 
-    @patch("src.collectors.system.get_system_info")
-    @patch("src.inventory.manager.InventoryManager.get_device")
-    def test_output_format_table(self, mock_get_device, mock_get_system_info):
-        """Test table output format"""
-        # Mock device and system info
-        mock_device = Mock()
-        mock_get_device.return_value = (mock_device, True)
-        mock_get_system_info.return_value = {
-            "hostname": "R1",
-            "version": "1.0",
-        }
 
-        runner = CliRunner()
-        result = runner.invoke(
-            cli, ["device", "info", "--device", "R1", "--output", "table"]
-        )
-
-        # Should not exit with error
-        if result.exit_code != 0:
-            print(f"Command failed with output: {result.output}")
-
-        # Check that output contains table format
-        assert "|" in result.output or "hostname" in result.output
+# Table output format is not supported in the current implementation
+# Only json and yaml are supported as per the Choice definition in commands.py
 
 
 class TestShellCompletion:

@@ -71,8 +71,10 @@ class TestErrorMessageQuality:
                 ), f"Command '{group_name} {command_name}' should provide error message"
 
                 # Should not crash with unhandled exceptions
-                assert result.exception is None or "Usage Error" in str(
-                    result.exception
+                # Click commands exit with SystemExit when missing required arguments,
+                # which is normal and expected behavior
+                assert result.exception is None or isinstance(
+                    result.exception, SystemExit
                 ), f"Command '{group_name} {command_name}' should handle missing arguments gracefully"
 
     def test_help_accessibility_for_error_recovery(self):
@@ -414,9 +416,12 @@ class TestPerformanceAndScalability:
         """Test that CLI has reasonable memory characteristics"""
         # This is a basic test - in a real environment you'd use more sophisticated profiling
 
-        # CLI should not consume excessive memory for basic operations
-        import psutil
-        import os
+        try:
+            # CLI should not consume excessive memory for basic operations
+            import psutil
+            import os
+        except ImportError:
+            pytest.skip("psutil not available - skipping memory usage test")
 
         # Get current process
         process = psutil.Process(os.getpid())
@@ -463,11 +468,9 @@ class TestErrorHandlingRobustness:
 
             # Should not have unhandled exceptions
             if result.exception:
-                # Exception should be handled properly (Click UsageError is OK)
-                exception_str = str(result.exception)
-                assert (
-                    "Usage Error" in exception_str
-                    or "Click" in type(result.exception).__name__
+                # Click commands use SystemExit for errors, which is normal and expected
+                assert isinstance(
+                    result.exception, SystemExit
                 ), f"Exception should be handled properly for {scenario}: {result.exception}"
 
     def test_resource_cleanup(self):

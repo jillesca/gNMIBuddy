@@ -3,7 +3,6 @@
 CLI entry point for gNMIBuddy - Click-based CLI with backward compatibility.
 """
 import sys
-import json
 
 from src.utils.thread_safety import apply_thread_safety_patches
 
@@ -12,7 +11,8 @@ apply_thread_safety_patches()
 
 from api import get_devices
 from src.cmd import run_cli_mode
-from src.logging.config import LoggingConfig, get_logger
+from src.logging.config import get_logger
+from src.utils.serialization import to_json_string
 
 
 def main():
@@ -20,14 +20,11 @@ def main():
     Main entry point for CLI mode using the new Click-based architecture.
     """
     try:
-        # Run the Click-based CLI
         result, cli_context = run_cli_mode()
 
-        # If result is None, there was an error or help was displayed
         if result is None:
             return
 
-        # Process command results - check if result is a dictionary with a command key
         if (
             result is not None
             and hasattr(result, "get")
@@ -35,9 +32,8 @@ def main():
         ):
             result = get_devices()
 
-        # Output results as JSON if there are any
         if result is not None:
-            print(json.dumps(result, indent=2))
+            print(to_json_string(result))
 
     except KeyboardInterrupt:
         print("\nOperation cancelled by user.", file=sys.stderr)

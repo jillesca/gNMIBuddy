@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
-"""Click-based CLI parser for gNMIBuddy"""
+"""Clean Click-based CLI parser for gNMIBuddy"""
 import sys
-import json
-from typing import Optional, Dict, Any, Tuple
-import click
 from src.logging.config import get_logger
 from src.cmd.context import CLIContext
-from src.cmd.base import (
-    command_registry,
-    get_legacy_commands_dict,
-    create_backward_compatible_args,
-)
+from src.cmd.groups import COMMAND_GROUPS
 from src.inventory import initialize_inventory
 from src.utils.version_utils import load_gnmibuddy_version
 from src.cmd.cli_utils import display_program_banner, get_python_version
+import click
 
 logger = get_logger(__name__)
 
@@ -62,7 +56,6 @@ def show_help_with_banner(ctx, param, value):
     default=True,
     help="Reduce noise from external libraries",
 )
-@click.option("--device", type=str, help="Device name from inventory")
 @click.option(
     "--all-devices",
     is_flag=True,
@@ -82,7 +75,6 @@ def cli(
     module_log_levels,
     structured_logging,
     quiet_external,
-    device,
     all_devices,
     max_workers,
     inventory,
@@ -102,7 +94,7 @@ def cli(
         module_log_levels=module_log_levels,
         structured_logging=structured_logging,
         quiet_external=quiet_external,
-        device=device,
+        device=None,  # Device is now handled at command level
         all_devices=all_devices,
         max_workers=max_workers,
         inventory=inventory,
@@ -122,107 +114,63 @@ def cli(
     logger.info("gNMIBuddy version: %s", gnmibuddy_version)
 
 
-# Legacy command integration for backward compatibility
-def register_legacy_commands():
-    """Register legacy commands as Click commands for backward compatibility"""
-    try:
-        legacy_commands = get_legacy_commands_dict()
+# Register command groups and commands
+def register_commands():
+    """Register all commands with their respective groups"""
+    # Import commands
+    from src.cmd.commands import (
+        device_info,
+        device_profile,
+        device_list,
+        network_routing,
+        network_interface,
+        network_mpls,
+        network_vpn,
+        topology_adjacency,
+        topology_neighbors,
+        ops_logs,
+        ops_test_all,
+        manage_list_commands,
+        manage_log_level,
+    )
 
-        for cmd_name, legacy_cmd in legacy_commands.items():
-            # Create a closure to capture the current command properly
-            def create_command_wrapper(command_name, command_instance):
-                @click.command(name=command_name, help=command_instance.help)
-                @click.help_option("-h", "--help")
-                @click.pass_context
-                def legacy_command_wrapper(ctx, **kwargs):
-                    """Wrapper for legacy commands"""
-                    cli_ctx = ctx.obj
+    # Get command groups
+    device_group = COMMAND_GROUPS["device"]
+    network_group = COMMAND_GROUPS["network"]
+    topology_group = COMMAND_GROUPS["topology"]
+    ops_group = COMMAND_GROUPS["ops"]
+    manage_group = COMMAND_GROUPS["manage"]
 
-                    # Validate device options if needed
-                    if not cli_ctx.validate_device_options(command_name):
-                        click.echo(
-                            f"Error: Device validation failed for command '{command_name}'",
-                            err=True,
-                        )
-                        raise click.Abort()
+    # Register device commands
+    device_group.add_command(device_info, name="info")
+    device_group.add_command(device_profile, name="profile")
+    device_group.add_command(device_list, name="list")
 
-                    try:
-                        # Create backward-compatible args object
-                        args = create_backward_compatible_args(
-                            cli_ctx, **kwargs
-                        )
-                        args.command = command_name
+    # Register network commands
+    network_group.add_command(network_routing, name="routing")
+    network_group.add_command(network_interface, name="interface")
+    network_group.add_command(network_mpls, name="mpls")
+    network_group.add_command(network_vpn, name="vpn")
 
-                        # Execute legacy command
-                        result = command_instance.execute(args)
+    # Register topology commands
+    topology_group.add_command(topology_adjacency, name="adjacency")
+    topology_group.add_command(topology_neighbors, name="neighbors")
 
-                        # Store result for processing
-                        cli_ctx._last_result = result
+    # Register ops commands
+    ops_group.add_command(ops_logs, name="logs")
+    ops_group.add_command(ops_test_all, name="test-all")
 
-                        return result
+    # Register manage commands
+    manage_group.add_command(manage_list_commands, name="list-commands")
+    manage_group.add_command(manage_log_level, name="log-level")
 
-                    except Exception as e:
-                        logger.error(
-                            "Error executing legacy command %s: %s",
-                            command_name,
-                            e,
-                        )
-                        click.echo(f"Error executing command: {e}", err=True)
-                        raise click.Abort()
 
-                # Add command-specific options based on legacy command configuration
-                try:
-                    # Create a temporary parser to extract options
-                    import argparse
+# Add command groups to main CLI
+for group_name, group in COMMAND_GROUPS.items():
+    cli.add_command(group, name=group_name)
 
-                    temp_parser = argparse.ArgumentParser()
-                    command_instance.configure_parser(temp_parser)
-
-                    # Convert argparse options to Click options
-                    if hasattr(temp_parser, "_actions"):
-                        for action in temp_parser._actions:
-                            if action.dest == "help":
-                                continue
-
-                            option_names = action.option_strings
-                            if not option_names:
-                                continue
-
-                                # Convert argparse action to Click option
-                        click_kwargs = {"help": action.help or ""}
-
-                        # Check the action class type instead of action.action
-                        if action.__class__.__name__ == "_StoreTrueAction":
-                            click_kwargs["is_flag"] = True
-                        elif action.__class__.__name__ == "_StoreAction":
-                            if action.type:
-                                click_kwargs["type"] = action.type
-                            if action.default is not None:
-                                click_kwargs["default"] = action.default
-
-                            # Apply the option to the command
-                            option_decorator = click.option(
-                                *option_names, **click_kwargs
-                            )
-                            legacy_command_wrapper = option_decorator(
-                                legacy_command_wrapper
-                            )
-
-                except Exception as e:
-                    logger.warning(
-                        "Could not extract options from legacy command %s: %s",
-                        command_name,
-                        e,
-                    )
-
-                return legacy_command_wrapper
-
-            # Create and register the wrapped command
-            wrapped_command = create_command_wrapper(cmd_name, legacy_cmd)
-            cli.add_command(wrapped_command)
-
-    except Exception as e:
-        logger.error("Error registering legacy commands: %s", e)
+# Register all commands
+register_commands()
 
 
 def run_cli_mode():
@@ -233,17 +181,13 @@ def run_cli_mode():
         Tuple of (result, parser_equivalent)
     """
     try:
-        # Register legacy commands
-        register_legacy_commands()
-
         # Invoke the CLI
         ctx = cli.make_context("gnmibuddy", sys.argv[1:])
         result = cli.invoke(ctx)
 
-        # Get the result from the context if available
-        cli_result = getattr(ctx.obj, "_last_result", None)
-
-        return cli_result, ctx
+        # In Click, the result is returned directly from cli.invoke()
+        # No need to get it from context._last_result
+        return result, ctx
 
     except click.Abort:
         return None, None
@@ -273,30 +217,21 @@ def run_cli_mode():
         return None, None
 
 
+# Legacy compatibility functions (minimal implementation for existing code)
 def execute_command(args):
     """
     Legacy compatibility function for execute_command
-
-    Args:
-        args: argparse-like namespace with command arguments
-
-    Returns:
-        Command result or None
+    This is a minimal stub for any remaining legacy code
     """
-    # This function is kept for backward compatibility
-    # In the new Click architecture, command execution is handled by Click
     logger.warning(
-        "execute_command called in Click mode - this is for legacy compatibility only"
+        "execute_command called - this is a legacy compatibility stub"
     )
     return None
 
 
-# Legacy compatibility functions
 def parse_args(args=None):
     """Legacy compatibility function for parse_args"""
-    logger.warning(
-        "parse_args called in Click mode - this is for legacy compatibility only"
-    )
+    logger.warning("parse_args called - this is a legacy compatibility stub")
 
     # Create a mock args object for compatibility
     class MockArgs:
@@ -324,21 +259,10 @@ def parse_args(args=None):
 def create_parser():
     """Legacy compatibility function for create_parser"""
     logger.warning(
-        "create_parser called in Click mode - this is for legacy compatibility only"
+        "create_parser called - this is a legacy compatibility stub"
     )
 
-    # Create a mock args object for compatibility
-    class MockArgs:
-        def __init__(self):
-            self.command = None
-            self.device = None
-            self.all_devices = False
-            self.max_workers = 5
-            self.log_level = "info"
-            self.module_log_levels = None
-            self.structured_logging = False
-            self.inventory = None
-
+    # Create a mock parser for compatibility
     class MockParser:
         def print_help(self):
             from click.testing import CliRunner
@@ -348,7 +272,7 @@ def create_parser():
             print(result.output)
 
         def parse_args(self, args=None):
-            return MockArgs(), self
+            return parse_args(args)
 
     return MockParser()
 

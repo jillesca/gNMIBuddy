@@ -137,9 +137,9 @@ def cli(
 
     \b
     Examples:
-      gnmibuddy --inventory devices.json device info --device R1
+      uv run gnmibuddy.py --inventory devices.json device info --device R1
       export NETWORK_INVENTORY=./xrd_sandbox.json
-      gnmibuddy device info --device xrd-1
+      uv run gnmibuddy.py device info --device xrd-1
     """
 
     # If no command provided, show banner and help
@@ -351,14 +351,14 @@ def handle_inventory_error(error_msg: str, show_help: bool = False):
     click.echo("\n💡 How to fix this:", err=True)
     click.echo("  1. Use --inventory option:", err=True)
     click.echo(
-        "     gnmibuddy --inventory path/to/your/devices.json device info --device R1",
+        "     uv run gnmibuddy.py --inventory path/to/your/devices.json device info --device R1",
         err=True,
     )
     click.echo("\n  2. Or set environment variable:", err=True)
     click.echo(
         "     export NETWORK_INVENTORY=path/to/your/devices.json", err=True
     )
-    click.echo("     gnmibuddy device info --device R1", err=True)
+    click.echo("     uv run gnmibuddy.py device info --device R1", err=True)
 
     click.echo("\n📁 Example inventory files:", err=True)
     click.echo("  • xrd_sandbox.json (in project root)", err=True)

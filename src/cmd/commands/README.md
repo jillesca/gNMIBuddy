@@ -67,9 +67,9 @@ def network_new_command(ctx, device, custom_option, output, devices, device_file
 
     \b
     Examples:
-      gnmibuddy network new-command --device R1
-      gnmibuddy network new-command --device R1 --custom-option value
-      gnmibuddy n new-command --device R1  # Using alias
+      uv run gnmibuddy.py network new-command --device R1
+      uv run gnmibuddy.py network new-command --device R1 --custom-option value
+      uv run gnmibuddy.py n new-command --device R1  # Using alias
     """
     def operation_func(device_obj, **kwargs):
         return get_new_data(device_obj, custom_option=custom_option)

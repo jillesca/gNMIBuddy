@@ -128,11 +128,11 @@ class CLIErrorHandler:
                     "",
                     "The --device option specifies which device to query.",
                     "Examples:",
-                    f"  gnmibuddy ... {command} --device R1",
-                    f"  gnmibuddy ... {command} --device PE1",
+                    f"  uv run gnmibuddy.py ... {command} --device R1",
+                    f"  uv run gnmibuddy.py ... {command} --device PE1",
                     "",
                     "To see available devices, run:",
-                    "  gnmibuddy device list",
+                    "  uv run gnmibuddy.py device list",
                 ]
             )
         elif option == "--name":
@@ -141,8 +141,8 @@ class CLIErrorHandler:
                     "",
                     "The --name option specifies the interface name.",
                     "Examples:",
-                    f"  gnmibuddy ... {command} --name GigabitEthernet0/0/0/1",
-                    f"  gnmibuddy ... {command} --name Loopback0",
+                    f"  uv run gnmibuddy.py ... {command} --name GigabitEthernet0/0/0/1",
+                    f"  uv run gnmibuddy.py ... {command} --name Loopback0",
                 ]
             )
         else:
@@ -292,7 +292,7 @@ class CLIErrorHandler:
             "Common mistakes and solutions:",
             "",
             "1. Forgot to specify device:",
-            "   gnmibuddy network routing --device R1",
+            "   uv run gnmibuddy.py network routing --device R1",
             "",
             "2. Using old flat command structure:",
             "   Old: gnmibuddy routing --device R1",
@@ -305,9 +305,9 @@ class CLIErrorHandler:
             "   Run 'gnmibuddy device list' to see available devices",
             "",
             "5. Want to see what's available:",
-            "   gnmibuddy --help              # All commands",
-            "   gnmibuddy device --help       # Device commands",
-            "   gnmibuddy network --help      # Network commands",
+            "   uv run gnmibuddy.py --help              # All commands",
+            "   uv run gnmibuddy.py device --help       # Device commands",
+            "   uv run gnmibuddy.py network --help      # Network commands",
         ]
 
 
@@ -403,21 +403,25 @@ def handle_click_exception(
 
                 click.echo("\n📖 Examples:", err=True)
                 if command_name == "info" and group_name == "device":
-                    click.echo("  gnmibuddy device info --device R1", err=True)
                     click.echo(
-                        "  gnmibuddy device info --device PE1 --detail",
+                        "  uv run gnmibuddy.py device info --device R1",
                         err=True,
                     )
                     click.echo(
-                        "  gnmibuddy device info --all-devices", err=True
+                        "  uv run gnmibuddy.py device info --device PE1 --detail",
+                        err=True,
+                    )
+                    click.echo(
+                        "  uv run gnmibuddy.py device info --all-devices",
+                        err=True,
                     )
                 elif command_name and group_name:
                     click.echo(
-                        f"  gnmibuddy {group_name} {command_name} --device R1",
+                        f"  uv run gnmibuddy.py {group_name} {command_name} --device R1",
                         err=True,
                     )
                     click.echo(
-                        f"  gnmibuddy {group_name} {command_name} --all-devices",
+                        f"  uv run gnmibuddy.py {group_name} {command_name} --all-devices",
                         err=True,
                     )
 

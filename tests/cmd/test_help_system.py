@@ -49,9 +49,11 @@ class TestHelpSystemStructure:
 
         # Check for examples section
         assert "Examples:" in help_text
-        assert "gnmibuddy device info --device R1" in help_text
-        assert "gnmibuddy network routing --device R1" in help_text
-        assert "gnmibuddy d info --device R1" in help_text  # Alias example
+        assert "uv run gnmibuddy.py device info --device R1" in help_text
+        assert "uv run gnmibuddy.py network routing --device R1" in help_text
+        assert (
+            "uv run gnmibuddy.py d info --device R1" in help_text
+        )  # Alias example
 
     def test_group_aliases_displayed(self):
         """Test that group aliases are displayed in help"""
@@ -157,8 +159,10 @@ class TestCommandHelp:
 
         assert result.exit_code == 0
         assert "Examples:" in result.output
-        assert "gnmibuddy device info --device R1" in result.output
-        assert "gnmibuddy d info --device R1" in result.output  # Alias example
+        assert "uv run gnmibuddy.py device info --device R1" in result.output
+        assert (
+            "uv run gnmibuddy.py d info --device R1" in result.output
+        )  # Alias example
 
     def test_network_routing_help_has_examples(self):
         """Test that network routing command help includes examples"""
@@ -167,9 +171,13 @@ class TestCommandHelp:
 
         assert result.exit_code == 0
         assert "Examples:" in result.output
-        assert "gnmibuddy network routing --device R1" in result.output
+        assert (
+            "uv run gnmibuddy.py network routing --device R1" in result.output
+        )
         assert "--protocol bgp" in result.output
-        assert "gnmibuddy n routing" in result.output  # Alias example
+        assert (
+            "uv run gnmibuddy.py n routing" in result.output
+        )  # Alias example
 
     def test_interface_help_has_examples(self):
         """Test that interface command help includes examples"""
@@ -179,7 +187,9 @@ class TestCommandHelp:
         assert result.exit_code == 0
         assert "Examples:" in result.output
         assert "GigabitEthernet0/0/0/1" in result.output
-        assert "gnmibuddy n interface" in result.output  # Alias example
+        assert (
+            "uv run gnmibuddy.py n interface" in result.output
+        )  # Alias example
 
 
 class TestErrorHandling:
@@ -213,7 +223,7 @@ class TestErrorHandling:
         error_msg = handler.handle_missing_option("info", "--device")
         assert "Missing required option '--device'" in error_msg
         assert (
-            "gnmibuddy device list" in error_msg
+            "uv run gnmibuddy.py device list" in error_msg
         )  # Suggestion to see devices
         assert "Examples:" in error_msg
 
@@ -340,8 +350,8 @@ class TestProgressiveDisclosure:
         assert "Network Protocols:" in result.output
 
         # Should provide guidance for getting more specific help
-        assert "Run 'gnmibuddy COMMAND --help'" in result.output
-        assert "Run 'gnmibuddy GROUP --help'" in result.output
+        assert "Run 'uv run gnmibuddy.py COMMAND --help'" in result.output
+        assert "Run 'uv run gnmibuddy.py GROUP --help'" in result.output
 
     def test_group_help_detail(self):
         """Test that group help provides appropriate detail"""
@@ -356,7 +366,9 @@ class TestProgressiveDisclosure:
         assert "list" in result.output
 
         # Should provide guidance for command-specific help
-        assert "Run 'gnmibuddy device COMMAND --help'" in result.output
+        assert (
+            "Run 'uv run gnmibuddy.py device COMMAND --help'" in result.output
+        )
 
     def test_command_help_specificity(self):
         """Test that command help is specific and actionable"""
@@ -371,7 +383,7 @@ class TestProgressiveDisclosure:
 
         # Should show examples
         assert "Examples:" in result.output
-        assert "gnmibuddy device info --device R1" in result.output
+        assert "uv run gnmibuddy.py device info --device R1" in result.output
 
 
 if __name__ == "__main__":

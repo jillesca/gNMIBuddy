@@ -144,26 +144,26 @@ class GroupedHelpFormatter:
             "",
             "Examples:",
             "  # Get system information from a device",
-            "  gnmibuddy device info --device R1",
+            "  uv run gnmibuddy.py device info --device R1",
             "",
             "  # Get routing information with protocol filter",
-            "  gnmibuddy network routing --device R1 --protocol bgp",
+            "  uv run gnmibuddy.py network routing --device R1 --protocol bgp",
             "",
             "  # List all devices in inventory",
-            "  gnmibuddy device list",
+            "  uv run gnmibuddy.py device list",
             "",
             "  # Get interface information for specific interface",
-            "  gnmibuddy network interface --device R1 --name GigabitEthernet0/0/0/1",
+            "  uv run gnmibuddy.py network interface --device R1 --name GigabitEthernet0/0/0/1",
             "",
             "  # Get topology neighbors",
-            "  gnmibuddy topology neighbors --device R1",
+            "  uv run gnmibuddy.py topology neighbors --device R1",
             "",
             "  # Run on all devices concurrently",
-            "  gnmibuddy --all-devices device info",
+            "  uv run gnmibuddy.py --all-devices device info",
             "",
             "  # Use command aliases for shorter commands",
-            "  gnmibuddy d info --device R1    # Same as 'device info'",
-            "  gnmibuddy n routing --device R1 # Same as 'network routing'",
+            "  uv run gnmibuddy.py d info --device R1    # Same as 'device info'",
+            "  uv run gnmibuddy.py n routing --device R1 # Same as 'network routing'",
             "",
         ]
         return examples
@@ -199,85 +199,85 @@ def format_command_help_with_examples(
         # Device commands
         "info": [
             "Examples:",
-            "  gnmibuddy device info --device R1",
-            "  gnmibuddy device info --device PE1 --detail",
-            "  gnmibuddy d info --device R1  # Using alias",
+            "  uv run gnmibuddy.py device info --device R1",
+            "  uv run gnmibuddy.py device info --device PE1 --detail",
+            "  uv run gnmibuddy.py d info --device R1  # Using alias",
         ],
         "profile": [
             "Examples:",
-            "  gnmibuddy device profile --device R1",
-            "  gnmibuddy device profile --device PE1 --detail",
-            "  gnmibuddy d profile --device R1  # Using alias",
+            "  uv run gnmibuddy.py device profile --device R1",
+            "  uv run gnmibuddy.py device profile --device PE1 --detail",
+            "  uv run gnmibuddy.py d profile --device R1  # Using alias",
         ],
         "list": [
             "Examples:",
-            "  gnmibuddy device list",
-            "  gnmibuddy device list --detail",
-            "  gnmibuddy d list  # Using alias",
+            "  uv run gnmibuddy.py device list",
+            "  uv run gnmibuddy.py device list --detail",
+            "  uv run gnmibuddy.py d list  # Using alias",
         ],
         # Network commands
         "routing": [
             "Examples:",
-            "  gnmibuddy network routing --device R1",
-            "  gnmibuddy network routing --device R1 --protocol bgp",
-            "  gnmibuddy network routing --device R1 --detail",
-            "  gnmibuddy n routing --device R1  # Using alias",
+            "  uv run gnmibuddy.py network routing --device R1",
+            "  uv run gnmibuddy.py network routing --device R1 --protocol bgp",
+            "  uv run gnmibuddy.py network routing --device R1 --detail",
+            "  uv run gnmibuddy.py n routing --device R1  # Using alias",
         ],
         "interface": [
             "Examples:",
-            "  gnmibuddy network interface --device R1",
-            "  gnmibuddy network interface --device R1 --name GigabitEthernet0/0/0/1",
-            "  gnmibuddy network interface --device R1 --detail",
-            "  gnmibuddy n interface --device R1  # Using alias",
+            "  uv run gnmibuddy.py network interface --device R1",
+            "  uv run gnmibuddy.py network interface --device R1 --name GigabitEthernet0/0/0/1",
+            "  uv run gnmibuddy.py network interface --device R1 --detail",
+            "  uv run gnmibuddy.py n interface --device R1  # Using alias",
         ],
         "mpls": [
             "Examples:",
-            "  gnmibuddy network mpls --device R1",
-            "  gnmibuddy network mpls --device R1 --detail",
-            "  gnmibuddy n mpls --device R1  # Using alias",
+            "  uv run gnmibuddy.py network mpls --device R1",
+            "  uv run gnmibuddy.py network mpls --device R1 --detail",
+            "  uv run gnmibuddy.py n mpls --device R1  # Using alias",
         ],
         "vpn": [
             "Examples:",
-            "  gnmibuddy network vpn --device R1",
-            "  gnmibuddy network vpn --device R1 --detail",
-            "  gnmibuddy n vpn --device R1  # Using alias",
+            "  uv run gnmibuddy.py network vpn --device R1",
+            "  uv run gnmibuddy.py network vpn --device R1 --detail",
+            "  uv run gnmibuddy.py n vpn --device R1  # Using alias",
         ],
         # Topology commands
         "neighbors": [
             "Examples:",
-            "  gnmibuddy topology neighbors --device R1",
-            "  gnmibuddy topology neighbors --device R1 --detail",
-            "  gnmibuddy t neighbors --device R1  # Using alias",
+            "  uv run gnmibuddy.py topology neighbors --device R1",
+            "  uv run gnmibuddy.py topology neighbors --device R1 --detail",
+            "  uv run gnmibuddy.py t neighbors --device R1  # Using alias",
         ],
         "adjacency": [
             "Examples:",
-            "  gnmibuddy topology adjacency --device R1",
-            "  gnmibuddy topology adjacency --device R1 --detail",
-            "  gnmibuddy t adjacency --device R1  # Using alias",
+            "  uv run gnmibuddy.py topology adjacency --device R1",
+            "  uv run gnmibuddy.py topology adjacency --device R1 --detail",
+            "  uv run gnmibuddy.py t adjacency --device R1  # Using alias",
         ],
         # Operations commands
         "logs": [
             "Examples:",
-            "  gnmibuddy ops logs --device R1",
-            "  gnmibuddy ops logs --device R1 --detail",
-            "  gnmibuddy o logs --device R1  # Using alias",
+            "  uv run gnmibuddy.py ops logs --device R1",
+            "  uv run gnmibuddy.py ops logs --device R1 --detail",
+            "  uv run gnmibuddy.py o logs --device R1  # Using alias",
         ],
         "test-all": [
             "Examples:",
-            "  gnmibuddy ops test-all --device R1",
-            "  gnmibuddy o test-all --device R1  # Using alias",
+            "  uv run gnmibuddy.py ops test-all --device R1",
+            "  uv run gnmibuddy.py o test-all --device R1  # Using alias",
         ],
         # Management commands
         "list-commands": [
             "Examples:",
-            "  gnmibuddy manage list-commands",
-            "  gnmibuddy manage list-commands --detail",
-            "  gnmibuddy m list-commands  # Using alias",
+            "  uv run gnmibuddy.py manage list-commands",
+            "  uv run gnmibuddy.py manage list-commands --detail",
+            "  uv run gnmibuddy.py m list-commands  # Using alias",
         ],
         "log-level": [
             "Examples:",
-            "  gnmibuddy manage log-level",
-            "  gnmibuddy m log-level  # Using alias",
+            "  uv run gnmibuddy.py manage log-level",
+            "  uv run gnmibuddy.py m log-level  # Using alias",
         ],
     }
 
@@ -310,7 +310,7 @@ def display_group_help(group_name: str, group_commands: List[str]) -> str:
     )
     if alias:
         help_text.append(
-            f"       gnmibuddy {alias} [OPTIONS] COMMAND [ARGS]...  # Short alias"
+            f"       uv run gnmibuddy.py {alias} [OPTIONS] COMMAND [ARGS]...  # Short alias"
         )
     help_text.append("")
     help_text.append(f"{group_desc}")

@@ -20,12 +20,12 @@ def network_vpn(
 
     \b
     Examples:
-      gnmibuddy network vpn --device R1
-      gnmibuddy network vpn --device R1 --vrf-name CUSTOMER_A
-      gnmibuddy network vpn --device R1 --detail
-      gnmibuddy network vpn --devices R1,R2,R3
-      gnmibuddy network vpn --all-devices
-      gnmibuddy n vpn --device R1  # Using alias
+      uv run gnmibuddy.py network vpn --device R1
+      uv run gnmibuddy.py network vpn --device R1 --vrf-name CUSTOMER_A
+      uv run gnmibuddy.py network vpn --device R1 --detail
+      uv run gnmibuddy.py network vpn --devices R1,R2,R3
+      uv run gnmibuddy.py network vpn --all-devices
+      uv run gnmibuddy.py n vpn --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

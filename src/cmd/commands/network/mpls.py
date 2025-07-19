@@ -20,11 +20,11 @@ def network_mpls(
 
     \b
     Examples:
-      gnmibuddy network mpls --device R1
-      gnmibuddy network mpls --device R1 --detail
-      gnmibuddy network mpls --devices R1,R2,R3
-      gnmibuddy network mpls --all-devices
-      gnmibuddy n mpls --device R1  # Using alias
+      uv run gnmibuddy.py network mpls --device R1
+      uv run gnmibuddy.py network mpls --device R1 --detail
+      uv run gnmibuddy.py network mpls --devices R1,R2,R3
+      uv run gnmibuddy.py network mpls --all-devices
+      uv run gnmibuddy.py n mpls --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

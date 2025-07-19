@@ -26,11 +26,11 @@ def ops_test_all(
 
     \b
     Examples:
-      gnmibuddy ops test-all --device R1
-      gnmibuddy ops test-all --device R1 --test-query full
-      gnmibuddy ops test-all --devices R1,R2,R3
-      gnmibuddy ops test-all --all-devices
-      gnmibuddy o test-all --device R1  # Using alias
+      uv run gnmibuddy.py ops test-all --device R1
+      uv run gnmibuddy.py ops test-all --device R1 --test-query full
+      uv run gnmibuddy.py ops test-all --devices R1,R2,R3
+      uv run gnmibuddy.py ops test-all --all-devices
+      uv run gnmibuddy.py o test-all --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

@@ -19,11 +19,11 @@ def device_profile(
 
     \b
     Examples:
-      gnmibuddy device profile --device R1
-      gnmibuddy device profile --device R1 --detail
-      gnmibuddy device profile --devices R1,R2,R3
-      gnmibuddy device profile --all-devices
-      gnmibuddy d profile --device R1  # Using alias
+      uv run gnmibuddy.py device profile --device R1
+      uv run gnmibuddy.py device profile --device R1 --detail
+      uv run gnmibuddy.py device profile --devices R1,R2,R3
+      uv run gnmibuddy.py device profile --all-devices
+      uv run gnmibuddy.py d profile --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

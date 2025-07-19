@@ -24,13 +24,13 @@ def network_interface(
 
     \b
     Examples:
-      gnmibuddy network interface --device R1
-      gnmibuddy network interface --device R1 --name GigabitEthernet0/0/0/1
-      gnmibuddy network interface --device R1 --detail
-      gnmibuddy network interface --device R1 --output yaml
-      gnmibuddy network interface --devices R1,R2,R3
-      gnmibuddy network interface --all-devices
-      gnmibuddy n interface --device R1  # Using alias
+      uv run gnmibuddy.py network interface --device R1
+      uv run gnmibuddy.py network interface --device R1 --name GigabitEthernet0/0/0/1
+      uv run gnmibuddy.py network interface --device R1 --detail
+      uv run gnmibuddy.py network interface --device R1 --output yaml
+      uv run gnmibuddy.py network interface --devices R1,R2,R3
+      uv run gnmibuddy.py network interface --all-devices
+      uv run gnmibuddy.py n interface --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

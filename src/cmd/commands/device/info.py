@@ -21,13 +21,13 @@ def device_info(
 
     \b
     Examples:
-      gnmibuddy device info --device R1
-      gnmibuddy device info --device PE1 --detail
-      gnmibuddy device info --device R1 --output json
-      gnmibuddy device info --device R1 --output yaml
-      gnmibuddy device info --devices R1,R2,R3
-      gnmibuddy device info --all-devices
-      gnmibuddy d info --device R1  # Using alias
+      uv run gnmibuddy.py device info --device R1
+      uv run gnmibuddy.py device info --device PE1 --detail
+      uv run gnmibuddy.py device info --device R1 --output json
+      uv run gnmibuddy.py device info --device R1 --output yaml
+      uv run gnmibuddy.py device info --devices R1,R2,R3
+      uv run gnmibuddy.py device info --all-devices
+      uv run gnmibuddy.py d info --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

@@ -34,12 +34,12 @@ def ops_logs(
 
     \b
     Examples:
-      gnmibuddy ops logs --device R1
-      gnmibuddy ops logs --device R1 --minutes 20
-      gnmibuddy ops logs --device R1 --show-all-logs
-      gnmibuddy ops logs --devices R1,R2,R3
-      gnmibuddy ops logs --all-devices
-      gnmibuddy o logs --device R1  # Using alias
+      uv run gnmibuddy.py ops logs --device R1
+      uv run gnmibuddy.py ops logs --device R1 --minutes 20
+      uv run gnmibuddy.py ops logs --device R1 --show-all-logs
+      uv run gnmibuddy.py ops logs --devices R1,R2,R3
+      uv run gnmibuddy.py ops logs --all-devices
+      uv run gnmibuddy.py o logs --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

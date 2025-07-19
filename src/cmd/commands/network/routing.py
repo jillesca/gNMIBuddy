@@ -26,13 +26,13 @@ def network_routing(
 
     \b
     Examples:
-      gnmibuddy network routing --device R1
-      gnmibuddy network routing --device R1 --protocol bgp
-      gnmibuddy network routing --device R1 --detail
-      gnmibuddy network routing --device R1 --output yaml
-      gnmibuddy network routing --devices R1,R2,R3
-      gnmibuddy network routing --all-devices
-      gnmibuddy n routing --device R1  # Using alias
+      uv run gnmibuddy.py network routing --device R1
+      uv run gnmibuddy.py network routing --device R1 --protocol bgp
+      uv run gnmibuddy.py network routing --device R1 --detail
+      uv run gnmibuddy.py network routing --device R1 --output yaml
+      uv run gnmibuddy.py network routing --devices R1,R2,R3
+      uv run gnmibuddy.py network routing --all-devices
+      uv run gnmibuddy.py n routing --device R1  # Using alias
     """
 
     def operation_func(device_obj, **kwargs):

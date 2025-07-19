@@ -156,7 +156,7 @@ def get_mpls_info(
 
 def get_vpn_info(
     device_name: str,
-    vrf: Optional[str] = None,
+    vrf_name: Optional[str] = None,
     include_details: bool = False,
 ) -> Dict[str, Any]:
     """
@@ -164,13 +164,13 @@ def get_vpn_info(
 
     Args:
         device_name: Name of the device in the inventory
-        vrf: Optional specific VRF name
+        vrf_name: Optional specific VRF name
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
         Structured VPN information
     """
-    return run(device_name, collect_vpn_info, vrf, include_details)
+    return run(device_name, collect_vpn_info, vrf_name, include_details)
 
 
 def get_devices() -> Dict[str, Any]:

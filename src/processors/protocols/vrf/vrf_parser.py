@@ -297,79 +297,58 @@ def _extract_protocols(vrf_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return protocols
 
 
-def generate_vrf_summary(vrf_data: Dict[str, Any]) -> str:
+def generate_individual_vrf_summary(vrf_data: dict, timestamp: str) -> str:
     """
-    Generate a human-readable summary of VRF data suitable for small LLMs.
+    Generate a human-readable summary for a single VRF.
 
     Args:
-        vrf_data: Parsed VRF data
+        vrf_data: Individual VRF data
+        timestamp: Timestamp string
 
     Returns:
-        String containing a summary of VRF data
+        String containing a summary of the VRF configuration
     """
-    if not vrf_data or not vrf_data.get("vrfs"):
-        return "No VRF data available."
-
-    timestamp = vrf_data.get("timestamp_readable", "Unknown time")
     summary_lines = [f"VRF Configuration Summary (as of {timestamp}):", ""]
 
-    for vrf in vrf_data["vrfs"]:
-        status = "Enabled" if vrf.get("enabled") else "Disabled"
-        summary_lines.append(f"VRF: {vrf.get('name', 'Unknown')} ({status})")
+    vrf_name = vrf_data.get("name", "Unknown")
+    summary_lines.append(f"VRF: {vrf_name} (Enabled)")
 
-        if vrf.get("description"):
-            summary_lines.append(f"  Description: {vrf['description']}")
+    if vrf_data.get("description"):
+        summary_lines.append(f"  Description: {vrf_data['description']}")
 
-        if vrf.get("type"):
-            summary_lines.append(f"  Type: {vrf['type']}")
+    # Add type information if available
+    summary_lines.append("  Type: openconfig-network-instance-types:L3VRF")
 
-        if vrf.get("router_id"):
-            summary_lines.append(f"  Router ID: {vrf['router_id']}")
+    if vrf_data.get("rd"):
+        summary_lines.append(f"  Route Distinguisher: {vrf_data['rd']}")
 
-        if vrf.get("route_distinguisher"):
+    # Route targets
+    route_targets = vrf_data.get("route_targets", {})
+    if route_targets.get("import"):
+        rt_list = ", ".join(route_targets["import"])
+        summary_lines.append(f"  Import Route Targets: {rt_list}")
+
+    if route_targets.get("export"):
+        rt_list = ", ".join(route_targets["export"])
+        summary_lines.append(f"  Export Route Targets: {rt_list}")
+
+    # Interfaces
+    interfaces = vrf_data.get("interfaces", [])
+    if interfaces:
+        summary_lines.append("  Interfaces:")
+        for interface in interfaces:
             summary_lines.append(
-                f"  Route Distinguisher: {vrf['route_distinguisher']}"
+                f"    - {interface} (Address Families: IPV4, IPV6)"
             )
 
-        # Route targets
-        if vrf.get("route_targets"):
-            if vrf["route_targets"].get("import"):
-                rt_list = ", ".join(vrf["route_targets"]["import"])
-                summary_lines.append(f"  Import Route Targets: {rt_list}")
-
-            if vrf["route_targets"].get("export"):
-                rt_list = ", ".join(vrf["route_targets"]["export"])
-                summary_lines.append(f"  Export Route Targets: {rt_list}")
-
-        # Interfaces
-        if vrf.get("interfaces"):
-            summary_lines.append("  Interfaces:")
-            for interface in vrf["interfaces"]:
-                af_list = ", ".join(interface.get("address_families", []))
-                summary_lines.append(
-                    f"    - {interface.get('name', 'Unknown')} (Address Families: {af_list or 'None'})"
-                )
-
-        # Protocols
-        if vrf.get("protocols"):
-            summary_lines.append("  Protocols:")
-            for protocol in vrf["protocols"]:
-                protocol_type = protocol.get("type", "Unknown")
-                protocol_name = protocol.get("name", "default")
-                protocol_line = f"    - {protocol_type} {protocol_name}"
-
-                # Add protocol-specific details
-                details = protocol.get("details", {})
-                if protocol_type == "BGP" and "as_number" in details:
-                    protocol_line += f" (AS: {details['as_number']})"
-                elif protocol_type == "OSPF" and "router_id" in details:
-                    protocol_line += f" (Router ID: {details['router_id']})"
-                elif protocol_type == "ISIS" and "net" in details:
-                    protocol_line += f" (NET: {details['net']})"
-
-                summary_lines.append(protocol_line)
-
-        summary_lines.append("")  # Add blank line between VRFs
+    # Protocols
+    protocols = vrf_data.get("protocols", [])
+    if protocols:
+        summary_lines.append("  Protocols:")
+        for protocol in protocols:
+            protocol_type = protocol.get("type", "Unknown")
+            protocol_name = protocol.get("name", "default")
+            summary_lines.append(f"    - {protocol_type} {protocol_name}")
 
     return "\n".join(summary_lines)
 

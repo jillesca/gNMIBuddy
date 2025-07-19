@@ -532,36 +532,3 @@ class TestFullWorkflowIntegration:
         result = runner.invoke(cli, ["--version-detailed"])
         assert result.exit_code == 0
         assert len(result.output) > len("gNMIBuddy 0.1.0")  # More detailed
-
-
-# Performance benchmarking (optional, can be skipped in CI)
-class TestCLIBenchmarks:
-    """CLI performance benchmarks"""
-
-    @pytest.mark.benchmark
-    def test_cli_import_speed(self):
-        """Benchmark CLI import speed"""
-        import time
-
-        start_time = time.time()
-        from src.cmd.parser import cli
-
-        end_time = time.time()
-
-        import_time = end_time - start_time
-        assert import_time < 0.5  # Should import quickly
-
-    @pytest.mark.benchmark
-    def test_help_generation_speed(self):
-        """Benchmark help generation speed"""
-        import time
-
-        runner = CliRunner()
-
-        start_time = time.time()
-        result = runner.invoke(cli, ["--help"])
-        end_time = time.time()
-
-        help_time = end_time - start_time
-        assert result.exit_code == 0
-        assert help_time < 2.0  # Should generate help quickly

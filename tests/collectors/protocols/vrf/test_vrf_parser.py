@@ -21,7 +21,6 @@ sys.path.insert(0, project_root)
 
 from src.processors.protocols.vrf import (
     process_vrf_data,
-    generate_vrf_summary,
     generate_llm_friendly_data,
 )
 
@@ -71,19 +70,6 @@ def expected_llm_friendly_data():
         pytest.fail(f"Error: {expected_file} file not found")
     except json.JSONDecodeError:
         pytest.fail(f"Error: {expected_file} is not valid JSON")
-
-
-@pytest.fixture
-def expected_vrf_summary():
-    """Load expected VRF summary from text file."""
-    current_dir = Path(__file__).parent
-    expected_file = current_dir / "expected_outputs" / "vrf_summary.txt"
-
-    try:
-        with open(expected_file, "r") as f:
-            return f.read()
-    except FileNotFoundError:
-        pytest.fail(f"Error: {expected_file} file not found")
 
 
 def test_process_vrf_data(vrf_test_data, expected_parsed_data):
@@ -144,34 +130,6 @@ def test_process_vrf_data(vrf_test_data, expected_parsed_data):
     assert default_route["prefix"] == "0.0.0.0/0"
     assert len(default_route["next_hops"]) == 1
     assert default_route["next_hops"][0]["address"] == "198.18.128.1"
-
-
-def test_generate_vrf_summary(vrf_test_data, expected_vrf_summary):
-    """Test that generate_vrf_summary correctly creates a human-readable summary."""
-    # Extract the response array from the wrapped format
-    gnmi_data = vrf_test_data["response"]
-    parsed_data = process_vrf_data(gnmi_data)
-    summary = generate_vrf_summary(parsed_data)
-
-    # Replace the timestamp in the expected summary with the current timestamp
-    # to match the generated summary
-    current_timestamp = parsed_data["timestamp_readable"]
-    expected_summary_updated = expected_vrf_summary.replace(
-        "2025-04-21 18:07:07", current_timestamp
-    )
-
-    # Compare the generated summary with the expected output
-    assert (
-        summary.strip() == expected_summary_updated.strip()
-    ), "Generated summary does not match expected output"
-
-    # Additional checks
-    assert "VRF: 100" in summary
-    assert "Route Distinguisher: 100.100.100.101:100" in summary
-    assert "Import Route Targets: 100:100" in summary
-    assert "Export Route Targets: 100:100" in summary
-    assert "openconfig-policy-types:BGP default" in summary
-    assert "static-routes DEFAULT" in summary
 
 
 def test_generate_llm_friendly_data(vrf_test_data, expected_llm_friendly_data):

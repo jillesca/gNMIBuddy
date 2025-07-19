@@ -776,7 +776,7 @@ def network_mpls(
 
 @click.command()
 @click.option("--device", help="Device name from inventory")
-@click.option("--vrf", help="Filter by VRF name (e.g., CUSTOMER_A)")
+@click.option("--vrf-name", help="Filter by VRF name (e.g., CUSTOMER_A)")
 @click.option("--detail", is_flag=True, help="Show detailed VPN information")
 @click.option(
     "--output",
@@ -800,14 +800,14 @@ def network_mpls(
 )
 @click.pass_context
 def network_vpn(
-    ctx, device, vrf, detail, output, devices, device_file, all_devices
+    ctx, device, vrf_name, detail, output, devices, device_file, all_devices
 ):
     """Get VPN/VRF information from a network device
 
     \b
     Examples:
       gnmibuddy network vpn --device R1
-      gnmibuddy network vpn --device R1 --vrf CUSTOMER_A
+      gnmibuddy network vpn --device R1 --vrf-name CUSTOMER_A
       gnmibuddy network vpn --device R1 --detail
       gnmibuddy network vpn --devices R1,R2,R3
       gnmibuddy network vpn --all-devices
@@ -845,7 +845,9 @@ def network_vpn(
             device_obj, success = InventoryManager.get_device(device_name)
             if not success:
                 raise Exception(f"Device not found: {device_obj.error}")
-            return get_vpn_info(device_obj, vrf=vrf)
+            return get_vpn_info(
+                device_obj, vrf_name=vrf_name, include_details=detail
+            )
 
         click.echo(
             f"Executing batch operation on {len(batch_devices)} devices..."
@@ -903,7 +905,9 @@ def network_vpn(
         click.echo(f"Error: {device_obj['error']}", err=True)
         raise click.Abort()
 
-    result = get_vpn_info(device_obj, vrf_name=vrf)
+    result = get_vpn_info(
+        device_obj, vrf_name=vrf_name, include_details=detail
+    )
     output_result(result, output)
     return result
 

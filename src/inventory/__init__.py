@@ -4,11 +4,11 @@ Inventory package.
 Provides functions and classes for managing network device inventory.
 """
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
-from .manager import InventoryManager
 from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
 from src.logging.config import get_logger
+from .manager import InventoryManager
 
 # Setup module logger
 logger = get_logger(__name__)
@@ -21,15 +21,12 @@ def initialize_inventory(cli_path: Optional[str] = None) -> None:
     Args:
         cli_path: Optional path provided via command-line argument
     """
-    # logger.info(
-    #     f"Initializing inventory with CLI path: {cli_path or 'default'}"
-    # )
     InventoryManager.initialize(cli_path)
 
 
 def get_device(
     device_name: str,
-) -> Tuple[Union[Device, DeviceErrorResult], bool]:
+) -> Union[Device, DeviceErrorResult]:
     """
     Get device information by name from the inventory.
 
@@ -37,11 +34,8 @@ def get_device(
         device_name: Name of the device in the inventory
 
     Returns:
-        Tuple of (device_info, success_flag)
-        If device is found, returns (device_info, True)
-        If device is not found, returns ({"error": error_message}, False)
+        Either the Device object if found, or DeviceErrorResult if an error occurred
     """
-    # logger.debug("Getting device from inventory: %s", device_name)
     return InventoryManager.get_device(device_name)
 
 
@@ -52,5 +46,4 @@ def list_available_devices() -> DeviceListResult:
     Returns:
         Dictionary with device names and their details
     """
-    logger.debug("Listing all available devices")
     return InventoryManager.list_devices()

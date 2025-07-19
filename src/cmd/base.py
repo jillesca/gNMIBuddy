@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Base classes and utilities for Click-based CLI command handling"""
 from typing import Any, Dict, Optional
-from src.logging.config import get_logger
+
 from src.cmd.context import CLIContext
+from src.logging.config import get_logger
 
 logger = get_logger(__name__)
 

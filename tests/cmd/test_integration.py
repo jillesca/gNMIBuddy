@@ -74,22 +74,43 @@ class TestFullCLIIntegration:
         assert result1.exit_code == 0
         assert result2.exit_code == 0
 
-    @patch("src.collectors.system.get_system_info")
+    @patch("src.collectors.system.get_gnmi_data")
     @patch("src.inventory.manager.InventoryManager.get_device")
     def test_output_format_integration(
-        self, mock_get_device, mock_get_system_info
+        self, mock_get_device, mock_get_gnmi_data
     ):
         """Test output formatting integration across all formats"""
-        # Mock device and system info
-        mock_device = Mock()
+        from src.schemas.responses import SuccessResponse
+
+        # Mock device with proper attributes
+        from src.schemas.models import Device
+
+        mock_device = Device(
+            name="R1",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="admin",
+            port=57777,
+        )
         mock_get_device.return_value = (mock_device, True)
-        test_data = {
-            "hostname": "R1",
-            "version": "1.0.0",
-            "uptime": "30 days",
-            "interfaces": ["GigE0/0/0", "GigE0/0/1"],
-        }
-        mock_get_system_info.return_value = test_data
+
+        # Mock gNMI response with proper structure
+        mock_gnmi_response = SuccessResponse(
+            data=[
+                {
+                    "openconfig-system:system": {
+                        "config": {"hostname": "R1"},
+                        "state": {
+                            "hostname": "R1",
+                            "current-datetime": "2023-01-01T00:00:00Z",
+                            "uptime": "30 days",
+                        },
+                    }
+                }
+            ]
+        )
+        mock_get_gnmi_data.return_value = mock_gnmi_response
 
         runner = CliRunner()
 

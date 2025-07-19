@@ -3,12 +3,14 @@
 Simplified network command service for executing commands with standardized error handling and formatting.
 """
 
-from typing import Dict, Any, Protocol, runtime_checkable
+from typing import Dict, Any, Protocol, runtime_checkable, Union
 
 import src.inventory
-from src.schemas.models import Device
 from src.logging.config import get_logger
-from src.schemas.responses import NetworkOperationResult
+from src.schemas.responses import (
+    NetworkOperationResult,
+)
+from src.schemas.models import Device, DeviceErrorResult
 
 logger = get_logger(__name__)
 
@@ -24,7 +26,7 @@ class NetworkCommand(Protocol):
 
 def run(
     device_name: str, command_func: NetworkCommand, *args: Any
-) -> Dict[str, Any]:
+) -> Union[Dict[str, Any], NetworkOperationResult]:
     """
     Execute a network command with standardized error handling and formatting.
 
@@ -39,11 +41,12 @@ def run(
     Returns:
         NetworkOperationResult: The result of the network operation
     """
-    device, success = src.inventory.get_device(device_name)
+    device = src.inventory.get_device(device_name)
 
-    if not success:
+    if isinstance(device, DeviceErrorResult):
         logger.warning("Failed to retrieve device: %s", device_name)
-        return device
+        # Return error dict for device errors
+        return {"error": device.msg, "device_name": device_name}
 
     logger.debug("Executing command on device: %s", device_name)
 

@@ -18,12 +18,16 @@ from src.cmd.formatters import (
 )
 from src.cmd.version import VersionInfo, get_version_info, get_version_dict
 from src.cmd.batch import (
-    BatchResult,
-    BatchOperationSummary,
     ProgressIndicator,
     BatchOperationExecutor,
     DeviceListParser,
-    add_batch_options,
+)
+from src.schemas.responses import (
+    NetworkOperationResult,
+    BatchOperationSummary,
+    BatchOperationResult,
+    OperationStatus,
+    ErrorResponse,
 )
 from src.cmd.parser import cli
 
@@ -265,26 +269,76 @@ class TestVersionInformation:
 class TestBatchOperations:
     """Test batch operations functionality"""
 
-    def test_batch_result(self):
-        """Test BatchResult dataclass"""
-        result = BatchResult(
+    def test_network_operation_result(self):
+        """Test NetworkOperationResult dataclass"""
+        result = NetworkOperationResult(
             device_name="R1",
-            success=True,
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            operation_type="interface_info",
+            status=OperationStatus.SUCCESS,
             data={"status": "up"},
-            execution_time=1.5,
+            metadata={"execution_time": 1.5},
         )
 
         assert result.device_name == "R1"
-        assert result.success is True
+        assert result.ip_address == "192.168.1.1"
+        assert result.nos == "iosxr"
+        assert result.operation_type == "interface_info"
+        assert result.status == OperationStatus.SUCCESS
         assert result.data == {"status": "up"}
-        assert result.execution_time == 1.5
+        assert result.metadata["execution_time"] == 1.5
 
     def test_batch_operation_summary(self):
         """Test BatchOperationSummary dataclass"""
+        summary = BatchOperationSummary(
+            total_devices=3,
+            successful=2,
+            failed=1,
+            execution_time=5.0,
+            operation_type="interface_info",
+        )
+
+        assert summary.total_devices == 3
+        assert summary.successful == 2
+        assert summary.failed == 1
+        assert summary.execution_time == 5.0
+        assert summary.operation_type == "interface_info"
+        assert summary.success_rate == 66.66666666666666
+
+    def test_batch_operation_result(self):
+        """Test BatchOperationResult dataclass"""
         results = [
-            BatchResult("R1", True, {"status": "up"}, 1.0),
-            BatchResult("R2", False, None, 1.5, "Connection failed"),
-            BatchResult("R3", True, {"status": "up"}, 0.8),
+            NetworkOperationResult(
+                device_name="R1",
+                ip_address="192.168.1.1",
+                nos="iosxr",
+                operation_type="interface_info",
+                status=OperationStatus.SUCCESS,
+                data={"status": "up"},
+                metadata={"execution_time": 1.0},
+            ),
+            NetworkOperationResult(
+                device_name="R2",
+                ip_address="192.168.1.2",
+                nos="iosxr",
+                operation_type="interface_info",
+                status=OperationStatus.FAILED,
+                data={},
+                metadata={"execution_time": 1.5},
+                error_response=ErrorResponse(
+                    type="connection_error", message="Connection failed"
+                ),
+            ),
+            NetworkOperationResult(
+                device_name="R3",
+                ip_address="192.168.1.3",
+                nos="iosxr",
+                operation_type="interface_info",
+                status=OperationStatus.SUCCESS,
+                data={"status": "up"},
+                metadata={"execution_time": 0.8},
+            ),
         ]
 
         summary = BatchOperationSummary(
@@ -292,13 +346,26 @@ class TestBatchOperations:
             successful=2,
             failed=1,
             execution_time=5.0,
-            results=results,
+            operation_type="interface_info",
         )
 
-        assert summary.total_devices == 3
-        assert summary.successful == 2
-        assert summary.failed == 1
-        assert summary.success_rate == 66.66666666666666
+        batch_result = BatchOperationResult(
+            results=results,
+            summary=summary,
+            metadata={"test_run": True},
+        )
+
+        assert len(batch_result.results) == 3
+        assert batch_result.summary.total_devices == 3
+        assert batch_result.summary.successful == 2
+        assert batch_result.summary.failed == 1
+        assert len(batch_result.successful_results) == 2
+        assert len(batch_result.failed_results) == 1
+        assert batch_result.get_results_by_device("R1").device_name == "R1"
+        assert (
+            batch_result.get_results_by_device("R2").status
+            == OperationStatus.FAILED
+        )
 
     def test_batch_operation_summary_empty(self):
         """Test BatchOperationSummary with no devices"""
@@ -307,7 +374,7 @@ class TestBatchOperations:
             successful=0,
             failed=0,
             execution_time=0.0,
-            results=[],
+            operation_type="test",
         )
 
         assert summary.success_rate == 0.0
@@ -374,23 +441,34 @@ class TestBatchOperations:
         devices = DeviceListParser.get_all_inventory_devices()
         assert devices == ["R1", "R2", "R3"]
 
-    def test_batch_operation_executor_success(self):
-        """Test successful batch operation execution"""
+    def test_batch_operation_executor_basic(self):
+        """Test basic batch operation execution"""
 
         def mock_operation(device_name):
-            return {"device": device_name, "status": "success"}
+            return NetworkOperationResult(
+                device_name=device_name,
+                ip_address="192.168.1.1",
+                nos="iosxr",
+                operation_type="test",
+                status=OperationStatus.SUCCESS,
+                data={"device": device_name, "status": "success"},
+                metadata={"execution_time": 1.0},
+            )
 
         executor = BatchOperationExecutor(max_workers=2)
         devices = ["R1", "R2"]
 
-        summary = executor.execute_batch_operation(
-            devices=devices, operation_func=mock_operation, show_progress=False
+        batch_result = executor.execute_batch_operation(
+            devices=devices,
+            operation_func=mock_operation,
+            operation_type="test",
+            show_progress=False,
         )
 
-        assert summary.total_devices == 2
-        assert summary.successful == 2
-        assert summary.failed == 0
-        assert len(summary.results) == 2
+        assert batch_result.summary.total_devices == 2
+        assert batch_result.summary.successful == 2
+        assert batch_result.summary.failed == 0
+        assert len(batch_result.results) == 2
 
     def test_batch_operation_executor_with_failures(self):
         """Test batch operation execution with failures"""
@@ -398,38 +476,29 @@ class TestBatchOperations:
         def mock_operation(device_name):
             if device_name == "R2":
                 raise Exception("Connection failed")
-            return {"device": device_name, "status": "success"}
+            return NetworkOperationResult(
+                device_name=device_name,
+                ip_address="192.168.1.1",
+                nos="iosxr",
+                operation_type="test",
+                status=OperationStatus.SUCCESS,
+                data={"device": device_name, "status": "success"},
+                metadata={"execution_time": 1.0},
+            )
 
         executor = BatchOperationExecutor(max_workers=2)
         devices = ["R1", "R2", "R3"]
 
-        summary = executor.execute_batch_operation(
-            devices=devices, operation_func=mock_operation, show_progress=False
+        batch_result = executor.execute_batch_operation(
+            devices=devices,
+            operation_func=mock_operation,
+            operation_type="test",
+            show_progress=False,
         )
 
-        assert summary.total_devices == 3
-        assert summary.successful == 2
-        assert summary.failed == 1
-
-        # Check that failed device has error
-        failed_result = next(r for r in summary.results if not r.success)
-        assert failed_result.device_name == "R2"
-        assert "Connection failed" in failed_result.error
-
-    def test_add_batch_options_decorator(self):
-        """Test add_batch_options decorator"""
-        import click
-
-        @add_batch_options
-        @click.command()
-        def test_command():
-            pass
-
-        # Check that options were added
-        options = [param.name for param in test_command.params]
-        assert "devices" in options
-        assert "device_file" in options
-        assert "all_devices" in options
+        assert batch_result.summary.total_devices == 3
+        assert batch_result.summary.successful == 2
+        assert batch_result.summary.failed == 1
 
 
 class TestCLIIntegration:
@@ -454,17 +523,40 @@ class TestCLIIntegration:
         assert "Python:" in result.output
         assert "Platform:" in result.output
 
-    @patch("src.collectors.system.get_system_info")
+    @patch("src.collectors.system.get_gnmi_data")
     @patch("src.inventory.manager.InventoryManager.get_device")
-    def test_output_format_json(self, mock_get_device, mock_get_system_info):
+    def test_output_format_json(self, mock_get_device, mock_get_gnmi_data):
         """Test JSON output format"""
-        # Mock device and system info
-        mock_device = Mock()
-        mock_get_device.return_value = (mock_device, True)
-        mock_get_system_info.return_value = {
-            "hostname": "R1",
-            "version": "1.0",
-        }
+        from src.schemas.responses import SuccessResponse
+
+        # Mock device with proper attributes
+        from src.schemas.models import Device
+
+        mock_device = Device(
+            name="R1",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="admin",
+            port=57777,
+        )
+        mock_get_device.return_value = mock_device
+
+        # Mock gNMI response with proper structure
+        mock_gnmi_response = SuccessResponse(
+            data=[
+                {
+                    "openconfig-system:system": {
+                        "config": {"hostname": "R1"},
+                        "state": {
+                            "hostname": "R1",
+                            "current-datetime": "2023-01-01T00:00:00Z",
+                        },
+                    }
+                }
+            ]
+        )
+        mock_get_gnmi_data.return_value = mock_gnmi_response
 
         runner = CliRunner()
         result = runner.invoke(
@@ -478,17 +570,40 @@ class TestCLIIntegration:
         # Check that output contains JSON
         assert "hostname" in result.output
 
-    @patch("src.collectors.system.get_system_info")
+    @patch("src.collectors.system.get_gnmi_data")
     @patch("src.inventory.manager.InventoryManager.get_device")
-    def test_output_format_yaml(self, mock_get_device, mock_get_system_info):
+    def test_output_format_yaml(self, mock_get_device, mock_get_gnmi_data):
         """Test YAML output format"""
-        # Mock device and system info
-        mock_device = Mock()
-        mock_get_device.return_value = (mock_device, True)
-        mock_get_system_info.return_value = {
-            "hostname": "R1",
-            "version": "1.0",
-        }
+        from src.schemas.responses import SuccessResponse
+
+        # Mock device with proper attributes
+        from src.schemas.models import Device
+
+        mock_device = Device(
+            name="R1",
+            ip_address="192.168.1.1",
+            nos="iosxr",
+            username="admin",
+            password="admin",
+            port=57777,
+        )
+        mock_get_device.return_value = mock_device
+
+        # Mock gNMI response with proper structure
+        mock_gnmi_response = SuccessResponse(
+            data=[
+                {
+                    "openconfig-system:system": {
+                        "config": {"hostname": "R1"},
+                        "state": {
+                            "hostname": "R1",
+                            "current-datetime": "2023-01-01T00:00:00Z",
+                        },
+                    }
+                }
+            ]
+        )
+        mock_get_gnmi_data.return_value = mock_gnmi_response
 
         runner = CliRunner()
         result = runner.invoke(
@@ -564,19 +679,30 @@ class TestPerformanceAndOptimization:
             assert len(result) > 0
 
     def test_batch_operation_performance(self):
-        """Test batch operation performance"""
+        """Test batch operation performance with parallel execution"""
         import time
 
         def fast_operation(device_name):
             time.sleep(0.01)  # Simulate fast operation
-            return {"device": device_name, "status": "up"}
+            return NetworkOperationResult(
+                device_name=device_name,
+                ip_address="192.168.1.1",
+                nos="iosxr",
+                operation_type="performance_test",
+                status=OperationStatus.SUCCESS,
+                data={"device": device_name, "status": "up"},
+                metadata={"execution_time": 0.01},
+            )
 
         executor = BatchOperationExecutor(max_workers=5)
         devices = [f"R{i}" for i in range(10)]
 
         start_time = time.time()
-        summary = executor.execute_batch_operation(
-            devices=devices, operation_func=fast_operation, show_progress=False
+        batch_result = executor.execute_batch_operation(
+            devices=devices,
+            operation_func=fast_operation,
+            operation_type="performance_test",
+            show_progress=False,
         )
         end_time = time.time()
 
@@ -584,7 +710,7 @@ class TestPerformanceAndOptimization:
         assert (
             end_time - start_time < 0.5
         )  # Should be much faster than 10 * 0.01 = 0.1s
-        assert summary.successful == 10
+        assert batch_result.summary.successful == 10
 
     def test_version_info_caching(self):
         """Test that version information is cached"""

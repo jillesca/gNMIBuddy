@@ -8,8 +8,13 @@ import os
 import unittest
 from unittest.mock import patch
 
+
 from src.inventory.manager import InventoryManager
-from src.schemas.models import Device
+from src.schemas.models import (
+    Device,
+    DeviceErrorResult,
+    DeviceListResult,
+)
 
 
 class TestInventoryManager(unittest.TestCase):
@@ -31,10 +36,10 @@ class TestInventoryManager(unittest.TestCase):
         InventoryManager.initialize(test_file)
 
         # Test getting an existing device
-        device, success = InventoryManager.get_device("test-device-1")
+        device = InventoryManager.get_device("test-device-1")
 
         # Assertions
-        self.assertTrue(success)
+        self.assertFalse(isinstance(device, DeviceErrorResult))
         self.assertIsInstance(device, Device)
         self.assertEqual(device.name, "test-device-1")
         self.assertEqual(device.ip_address, "10.0.0.1")
@@ -52,13 +57,12 @@ class TestInventoryManager(unittest.TestCase):
         InventoryManager.initialize(test_file)
 
         # Test getting a non-existent device
-        result, success = InventoryManager.get_device("non-existent-device")
+        result = InventoryManager.get_device("non-existent-device")
 
         # Assertions
-        self.assertFalse(success)
-        self.assertIsInstance(result, dict)
-        self.assertIn("error", result)
-        self.assertIn("non-existent-device", result["error"])
+        self.assertTrue(isinstance(result, DeviceErrorResult))
+        self.assertIsInstance(result, DeviceErrorResult)
+        self.assertIn("non-existent-device", result.msg)
 
     def test_list_devices_with_populated_inventory(self):
         """Test listing devices with a populated inventory."""
@@ -72,12 +76,12 @@ class TestInventoryManager(unittest.TestCase):
         result = InventoryManager.list_devices()
 
         # Assertions
-        self.assertIsInstance(result, dict)
-        self.assertIn("devices", result)
-        self.assertEqual(len(result["devices"]), 2)
+        self.assertIsInstance(result, DeviceListResult)
+        self.assertIsInstance(result.devices, list)
+        self.assertEqual(len(result.devices), 2)
 
         # Check specific devices in the list
-        devices = {d["name"]: d for d in result["devices"]}
+        devices = {d["name"]: d for d in result.devices}
         self.assertIn("test-device-1", devices)
         self.assertIn("test-device-2", devices)
 
@@ -99,9 +103,9 @@ class TestInventoryManager(unittest.TestCase):
         result = InventoryManager.list_devices()
 
         # Assertions
-        self.assertIsInstance(result, dict)
-        self.assertIn("devices", result)
-        self.assertEqual(len(result["devices"]), 0)
+        self.assertIsInstance(result, DeviceListResult)
+        self.assertIsInstance(result.devices, list)
+        self.assertEqual(len(result.devices), 0)
 
     def test_inventory_initialization_with_specific_file(self):
         """Test initializing inventory with a specific file path."""
@@ -116,8 +120,8 @@ class TestInventoryManager(unittest.TestCase):
         self.assertTrue(instance.is_initialized())
 
         # Check if we can get the first test device
-        device, success = InventoryManager.get_device("test-device-1")
-        self.assertTrue(success)
+        device = InventoryManager.get_device("test-device-1")
+        self.assertFalse(isinstance(device, DeviceErrorResult))
         self.assertEqual(device.ip_address, "10.0.0.1")
 
 
@@ -200,13 +204,13 @@ class TestAutoInitialization(unittest.TestCase):
         mock_initialize.side_effect = side_effect
 
         # Call get_device without initializing first
-        device, success = InventoryManager.get_device("test-device-1")
+        device = InventoryManager.get_device("test-device-1")
 
         # Verify that initialize was called
         mock_initialize.assert_called_once()
 
         # Should find the device
-        self.assertTrue(success)
+        self.assertFalse(isinstance(device, DeviceErrorResult))
         self.assertEqual(device.name, "test-device-1")
 
         # Verify initialization happened
@@ -240,8 +244,8 @@ class TestAutoInitialization(unittest.TestCase):
         mock_initialize.assert_called_once()
 
         # Should list our device
-        self.assertEqual(len(result["devices"]), 1)
-        self.assertEqual(result["devices"][0]["name"], "test-device-1")
+        self.assertEqual(len(result.devices), 1)
+        self.assertEqual(result.devices[0]["name"], "test-device-1")
 
         # Verify initialization happened
         instance = InventoryManager.get_instance()

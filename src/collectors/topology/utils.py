@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Dict, Any, List, Union
 import networkx as nx
-from src.schemas.models import Device
+from src.schemas.models import Device, DeviceErrorResult
 from src.schemas.responses import OperationStatus
 from src.inventory.manager import InventoryManager
 from src.processors.topology_processor import extract_interface_subnets
@@ -105,7 +105,8 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
 def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
 
     logger.debug("Getting device list from inventory")
-    device_objs = InventoryManager.list_devices()["devices"]
+    device_list_result = InventoryManager.list_devices()
+    device_objs = device_list_result.devices
     device_names = [d["name"] for d in device_objs]
     logger.debug("Found %d devices: %s", len(device_names), device_names)
 
@@ -191,15 +192,10 @@ def _get_interface(device: str) -> dict:
 def _get_device_or_error_dict(
     device_name: str,
 ) -> Union[Device, Dict[str, str]]:
-    device_obj_result, success = InventoryManager.get_device(device_name)
-    if success and isinstance(device_obj_result, Device):
+    device_obj_result = InventoryManager.get_device(device_name)
+    if not isinstance(device_obj_result, DeviceErrorResult):
         return device_obj_result
-    error_msg = (
-        device_obj_result["error"]
-        if isinstance(device_obj_result, dict) and "error" in device_obj_result
-        else "Device not found"
-    )
-    return {"error": error_msg, "device_name": device_name}
+    return {"error": device_obj_result.msg, "device_name": device_name}
 
 
 def _get_isis(device) -> dict:

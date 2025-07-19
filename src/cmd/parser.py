@@ -183,52 +183,10 @@ def cli(
 # Register command groups and commands
 def register_commands():
     """Register all commands with their respective groups"""
-    # Import commands
-    from src.cmd.commands import (
-        device_info,
-        device_profile,
-        device_list,
-        network_routing,
-        network_interface,
-        network_mpls,
-        network_vpn,
-        topology_adjacency,
-        topology_neighbors,
-        ops_logs,
-        ops_test_all,
-        manage_list_commands,
-        manage_log_level,
-    )
+    # Use the registration function from groups.py
+    from src.cmd.groups import register_commands as register_group_commands
 
-    # Get command groups
-    device_group = COMMAND_GROUPS["device"]
-    network_group = COMMAND_GROUPS["network"]
-    topology_group = COMMAND_GROUPS["topology"]
-    ops_group = COMMAND_GROUPS["ops"]
-    manage_group = COMMAND_GROUPS["manage"]
-
-    # Register device commands
-    device_group.add_command(device_info, name="info")
-    device_group.add_command(device_profile, name="profile")
-    device_group.add_command(device_list, name="list")
-
-    # Register network commands
-    network_group.add_command(network_routing, name="routing")
-    network_group.add_command(network_interface, name="interface")
-    network_group.add_command(network_mpls, name="mpls")
-    network_group.add_command(network_vpn, name="vpn")
-
-    # Register topology commands
-    topology_group.add_command(topology_adjacency, name="adjacency")
-    topology_group.add_command(topology_neighbors, name="neighbors")
-
-    # Register ops commands
-    ops_group.add_command(ops_logs, name="logs")
-    ops_group.add_command(ops_test_all, name="test-all")
-
-    # Register manage commands
-    manage_group.add_command(manage_list_commands, name="list-commands")
-    manage_group.add_command(manage_log_level, name="log-level")
+    register_group_commands()
 
 
 # Add command groups to main CLI with aliases
@@ -249,7 +207,6 @@ for group_name, group in COMMAND_GROUPS.items():
     if alias:
         cli.add_command(group, name=alias)
 
-# Register all commands
 register_commands()
 
 

@@ -1,44 +1,21 @@
 #!/usr/bin/env python3
 """Batch operations support for CLI commands with parallel execution"""
-import asyncio
 import time
-from typing import List, Dict, Any, Callable, Optional, Tuple
+from typing import List, Any, Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+
 import click
+from src.schemas.responses import (
+    NetworkOperationResult,
+    BatchOperationResult,
+    BatchOperationSummary,
+    OperationStatus,
+    ErrorResponse,
+)
 from src.logging.config import get_logger
 from src.inventory.manager import InventoryManager
 
 logger = get_logger(__name__)
-
-
-@dataclass
-class BatchResult:
-    """Result of a batch operation on a single device"""
-
-    device_name: str
-    success: bool
-    data: Any = None
-    error: Optional[str] = None
-    execution_time: float = 0.0
-
-
-@dataclass
-class BatchOperationSummary:
-    """Summary of a complete batch operation"""
-
-    total_devices: int
-    successful: int
-    failed: int
-    execution_time: float
-    results: List[BatchResult]
-
-    @property
-    def success_rate(self) -> float:
-        """Calculate success rate as a percentage"""
-        if self.total_devices == 0:
-            return 0.0
-        return (self.successful / self.total_devices) * 100
 
 
 class ProgressIndicator:
@@ -87,21 +64,23 @@ class BatchOperationExecutor:
     def execute_batch_operation(
         self,
         devices: List[str],
-        operation_func: Callable[[str], Any],
+        operation_func: Callable[[str], NetworkOperationResult],
+        operation_type: str,
         show_progress: bool = True,
         fail_fast: bool = False,
-    ) -> BatchOperationSummary:
+    ) -> BatchOperationResult:
         """
         Execute an operation on multiple devices in parallel
 
         Args:
             devices: List of device names
             operation_func: Function to execute on each device (takes device name as argument)
+            operation_type: Type of operation being performed (for metadata)
             show_progress: Whether to show progress indicator
             fail_fast: Whether to stop on first failure
 
         Returns:
-            BatchOperationSummary with results
+            BatchOperationResult with consistent NetworkOperationResult structure
         """
         start_time = time.time()
         results = []
@@ -126,21 +105,32 @@ class BatchOperationExecutor:
                         progress.update()
 
                         # Log individual results
-                        if result.success:
+                        if result.status == OperationStatus.SUCCESS:
+                            execution_time = result.metadata.get(
+                                "execution_time", 0.0
+                            )
                             logger.debug(
                                 "Successfully processed device %s in %.2fs",
                                 device,
-                                result.execution_time,
+                                execution_time,
                             )
                         else:
+                            error_msg = (
+                                result.error_response.message
+                                if result.error_response
+                                else "Unknown error"
+                            )
                             logger.warning(
                                 "Failed to process device %s: %s",
                                 device,
-                                result.error,
+                                error_msg,
                             )
 
                         # Fail fast if requested and we hit an error
-                        if fail_fast and not result.success:
+                        if (
+                            fail_fast
+                            and result.status != OperationStatus.SUCCESS
+                        ):
                             # Cancel remaining futures
                             for remaining_future in future_to_device:
                                 if not remaining_future.done():
@@ -153,13 +143,13 @@ class BatchOperationExecutor:
                             device,
                             e,
                         )
-                        results.append(
-                            BatchResult(
-                                device_name=device,
-                                success=False,
-                                error=f"Unexpected error: {str(e)}",
-                            )
+                        # Create a failed NetworkOperationResult for unexpected errors
+                        error_result = self._create_error_result(
+                            device,
+                            operation_type,
+                            f"Unexpected error: {str(e)}",
                         )
+                        results.append(error_result)
                         progress.update()
 
         finally:
@@ -167,7 +157,9 @@ class BatchOperationExecutor:
 
         # Calculate summary
         execution_time = time.time() - start_time
-        successful = sum(1 for r in results if r.success)
+        successful = sum(
+            1 for r in results if r.status == OperationStatus.SUCCESS
+        )
         failed = len(results) - successful
 
         summary = BatchOperationSummary(
@@ -175,7 +167,18 @@ class BatchOperationExecutor:
             successful=successful,
             failed=failed,
             execution_time=execution_time,
+            operation_type=operation_type,
+        )
+
+        # Create batch result
+        batch_result = BatchOperationResult(
             results=results,
+            summary=summary,
+            metadata={
+                "max_workers": self.max_workers,
+                "fail_fast": fail_fast,
+                "show_progress": show_progress,
+            },
         )
 
         # Log summary
@@ -187,34 +190,54 @@ class BatchOperationExecutor:
             execution_time,
         )
 
-        return summary
+        return batch_result
 
     def _execute_single_device(
-        self, device_name: str, operation_func: Callable[[str], Any]
-    ) -> BatchResult:
+        self,
+        device_name: str,
+        operation_func: Callable[[str], NetworkOperationResult],
+    ) -> NetworkOperationResult:
         """Execute operation on a single device"""
         start_time = time.time()
 
         try:
-            result_data = operation_func(device_name)
+            result = operation_func(device_name)
             execution_time = time.time() - start_time
 
-            return BatchResult(
-                device_name=device_name,
-                success=True,
-                data=result_data,
-                execution_time=execution_time,
-            )
+            # Add execution time to metadata if not already present
+            if "execution_time" not in result.metadata:
+                result.metadata["execution_time"] = execution_time
+
+            return result
         except Exception as e:
             execution_time = time.time() - start_time
             error_msg = str(e)
 
-            return BatchResult(
-                device_name=device_name,
-                success=False,
-                error=error_msg,
-                execution_time=execution_time,
+            # Create a failed NetworkOperationResult
+            return self._create_error_result(
+                device_name, "unknown", error_msg, execution_time
             )
+
+    def _create_error_result(
+        self,
+        device_name: str,
+        operation_type: str,
+        error_msg: str,
+        execution_time: float = 0.0,
+    ) -> NetworkOperationResult:
+        """Create a NetworkOperationResult for errors"""
+        return NetworkOperationResult(
+            device_name=device_name,
+            ip_address="unknown",  # We might not have this info in error cases
+            nos="unknown",
+            operation_type=operation_type,
+            status=OperationStatus.FAILED,
+            data={},
+            metadata={"execution_time": execution_time},
+            error_response=ErrorResponse(
+                type="execution_error", message=error_msg
+            ),
+        )
 
 
 class DeviceListParser:
@@ -254,7 +277,7 @@ class DeviceListParser:
             List of device names
         """
         try:
-            with open(file_path, "r") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 devices = []
                 for line in f:
                     line = line.strip()
@@ -289,18 +312,18 @@ class DeviceListParser:
 
 
 def create_batch_operation_wrapper(
-    operation_func: Callable[[Any], Any],
+    operation_func: Callable[[Any], NetworkOperationResult],
     extract_device_from_ctx: Callable[[Any], str] = lambda ctx: ctx.obj.device,
 ):
     """
     Create a wrapper for Click commands to support batch operations
 
     Args:
-        operation_func: The original operation function
+        operation_func: The original operation function that returns NetworkOperationResult
         extract_device_from_ctx: Function to extract device name from Click context
 
     Returns:
-        Wrapped function that supports batch operations
+        Wrapped function that supports batch operations and returns BatchOperationResult
     """
 
     def batch_wrapper(ctx, **kwargs):
@@ -332,8 +355,15 @@ def create_batch_operation_wrapper(
         max_workers = getattr(ctx.obj, "max_workers", 5)
         executor = BatchOperationExecutor(max_workers=max_workers)
 
+        # Extract operation type from the original function or command context
+        operation_type = getattr(ctx.command, "name", "unknown_operation")
+        if hasattr(ctx, "info_name"):
+            operation_type = ctx.info_name
+
         # Create operation function for batch execution
-        def single_device_operation(device_name: str):
+        def single_device_operation(
+            device_name: str,
+        ) -> NetworkOperationResult:
             # Create a new context with the specific device
             new_kwargs = kwargs.copy()
             new_kwargs.pop("devices", None)
@@ -346,66 +376,87 @@ def create_batch_operation_wrapper(
             ctx.obj.device = device_name
 
             try:
-                return operation_func(ctx, **new_kwargs)
+                result = operation_func(ctx, **new_kwargs)
+                # Ensure we have a proper NetworkOperationResult
+                if not isinstance(result, NetworkOperationResult):
+                    # If the operation returns something else, we need to wrap it
+                    # This is a fallback for operations that don't return NetworkOperationResult yet
+                    from src.inventory.manager import InventoryManager
+
+                    manager = InventoryManager.get_instance()
+                    device_info = manager.get_device(device_name)
+
+                    return NetworkOperationResult(
+                        device_name=device_name,
+                        ip_address=device_info.ip_address,
+                        nos=device_info.nos,
+                        operation_type=operation_type,
+                        status=OperationStatus.SUCCESS,
+                        data=(
+                            result
+                            if isinstance(result, dict)
+                            else {"raw_result": result}
+                        ),
+                        metadata={},
+                    )
+                return result
+            except Exception as e:
+                # Create error result for any exceptions
+                from src.inventory.manager import InventoryManager
+
+                manager = InventoryManager.get_instance()
+                device_info = manager.get_device(device_name)
+
+                return NetworkOperationResult(
+                    device_name=device_name,
+                    ip_address=device_info.ip_address,
+                    nos=device_info.nos,
+                    operation_type=operation_type,
+                    status=OperationStatus.FAILED,
+                    data={},
+                    metadata={},
+                    error_response=ErrorResponse(
+                        type="operation_error", message=str(e)
+                    ),
+                )
             finally:
                 # Restore original device
                 ctx.obj.device = original_device
 
         # Execute batch operation
         click.echo(f"Executing batch operation on {len(devices)} devices...")
-        summary = executor.execute_batch_operation(
+        batch_result = executor.execute_batch_operation(
             devices=devices,
             operation_func=single_device_operation,
+            operation_type=operation_type,
             show_progress=True,
+            fail_fast=getattr(ctx.obj, "fail_fast", False),
         )
 
         # Display results summary
         click.echo(f"\nBatch Operation Summary:")
-        click.echo(f"  Total devices: {summary.total_devices}")
-        click.echo(f"  Successful: {summary.successful}")
-        click.echo(f"  Failed: {summary.failed}")
-        click.echo(f"  Success rate: {summary.success_rate:.1f}%")
-        click.echo(f"  Total time: {summary.execution_time:.2f}s")
+        click.echo(f"  Total devices: {batch_result.summary.total_devices}")
+        click.echo(f"  Successful: {batch_result.summary.successful}")
+        click.echo(f"  Failed: {batch_result.summary.failed}")
+        click.echo(f"  Success rate: {batch_result.summary.success_rate:.1f}%")
+        click.echo(f"  Total time: {batch_result.summary.execution_time:.2f}s")
 
         # Show failed devices if any
-        failed_devices = [r for r in summary.results if not r.success]
-        if failed_devices:
+        failed_results = batch_result.failed_results
+        if failed_results:
             click.echo(f"\nFailed devices:")
-            for result in failed_devices:
-                click.echo(f"  {result.device_name}: {result.error}")
+            for result in failed_results:
+                error_msg = (
+                    result.error_response.message
+                    if result.error_response
+                    else "Unknown error"
+                )
+                click.echo(f"  {result.device_name}: {error_msg}")
 
-        return summary
+        return batch_result
 
     return batch_wrapper
 
 
 # Global batch executor instance
 batch_executor = BatchOperationExecutor()
-
-
-def add_batch_options(func):
-    """
-    Decorator to add batch operation options to Click commands
-
-    This decorator adds the following options:
-    - --devices: Comma-separated list of devices
-    - --device-file: Path to file containing device names
-    - --all-devices: Run on all devices in inventory
-    """
-    func = click.option(
-        "--all-devices",
-        is_flag=True,
-        help="Run command on all devices in inventory",
-    )(func)
-
-    func = click.option(
-        "--device-file",
-        type=click.Path(exists=True),
-        help="Path to file containing device names (one per line)",
-    )(func)
-
-    func = click.option(
-        "--devices", type=str, help="Comma-separated list of device names"
-    )(func)
-
-    return func

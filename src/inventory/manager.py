@@ -4,12 +4,12 @@ Inventory manager module.
 Manages device inventory with a singleton pattern.
 """
 
-import logging
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Union
+
+from src.logging.config import get_logger
+from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
 
 from .file_handler import get_inventory_path, load_inventory
-from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
-from src.logging.config import get_logger
 
 # Setup module logger
 logger = get_logger(__name__)
@@ -36,19 +36,19 @@ class InventoryManager:
         instance = cls.get_instance()
         if not instance.is_initialized() or cli_path is not None:
             inventory_path = get_inventory_path(cli_path)
-            logger.info("Initializing inventory from path: %s", inventory_path)
+            logger.debug(
+                "Initializing inventory from path: %s", inventory_path
+            )
             instance.set_devices(load_inventory(inventory_path))
             instance.set_initialized(True)
             device_count = len(instance.get_devices())
             logger.debug("Initialized inventory with %s devices", device_count)
-            if logger.isEnabledFor(logging.DEBUG):
+            if logger.isEnabledFor(10):
                 device_names = list(instance.get_devices().keys())
                 logger.debug("Loaded devices: %s", device_names)
 
     @classmethod
-    def get_device(
-        cls, device_name: str
-    ) -> Tuple[Union[Device, DeviceErrorResult], bool]:
+    def get_device(cls, device_name: str) -> Union[Device, DeviceErrorResult]:
         """
         Get device by name from the initialized inventory.
 
@@ -56,8 +56,7 @@ class InventoryManager:
             device_name: Name of the device to retrieve
 
         Returns:
-            Tuple containing either the Device object or an error dict,
-            along with a boolean indicating success
+            Either the Device object if found, or DeviceErrorResult if an error occurred
         """
         # logger.debug("Looking up device: %s", device_name)
         instance = cls.get_instance()
@@ -69,25 +68,19 @@ class InventoryManager:
         if not devices:
             error_msg = "No inventory file specified or the inventory is empty. Please provide a path via --inventory option or set the NETWORK_INVENTORY environment variable."
             logger.warning(error_msg)
-            return (
-                DeviceErrorResult(error=error_msg, device_info=None),
-                False,
-            )
+            return DeviceErrorResult(msg=error_msg, device_info=None)
 
         if device_name not in devices:
             logger.warning("Device '%s' not found in inventory", device_name)
-            return (
-                DeviceErrorResult(
-                    error=f"Device '{device_name}' not found in inventory",
-                    device_info=None,
-                ),
-                False,
+            return DeviceErrorResult(
+                msg=f"Device '{device_name}' not found in inventory",
+                device_info=None,
             )
 
         # logger.debug(
         #     f"Found device: {device_name}, IP: {devices[device_name].ip_address}"
         # )
-        return (devices[device_name], True)
+        return devices[device_name]
 
     @classmethod
     def list_devices(cls) -> DeviceListResult:

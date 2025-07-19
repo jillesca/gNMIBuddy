@@ -18,7 +18,7 @@ def device(ctx):
     Commands for managing and querying individual devices including
     system information, device profiles, and device listings.
 
-    Run 'gnmibuddy device COMMAND --help' for more information on a specific command.
+    Run 'uv run gnmibuddy.py device COMMAND --help' for more information on a specific command.
     """
     pass
 
@@ -87,7 +87,7 @@ def register_commands():
         topology_neighbors,
     )
     from src.cmd.commands.ops import ops_logs, ops_test_all
-    from src.cmd.commands.manage import manage_list_commands, manage_log_level
+    from src.cmd.commands.manage import manage_log_level
 
     # Register device commands
     device.add_command(device_info, "info")
@@ -109,7 +109,6 @@ def register_commands():
     ops.add_command(ops_test_all, "test-all")
 
     # Register manage commands
-    manage.add_command(manage_list_commands, "list-commands")
     manage.add_command(manage_log_level, "log-level")
 
 

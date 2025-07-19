@@ -30,7 +30,6 @@ commands/
 │   └── test_all.py       # `gnmibuddy ops test-all`
 └── manage/                # Management commands
     ├── __init__.py
-    ├── list_commands.py   # `gnmibuddy manage list-commands`
     └── log_level.py       # `gnmibuddy manage log-level`
 ```
 

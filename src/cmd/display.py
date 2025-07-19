@@ -112,10 +112,10 @@ class GroupedHelpFormatter:
             help_text.extend(self._get_usage_examples())
 
         help_text.append(
-            "Run 'gnmibuddy COMMAND --help' for more information on a specific command."
+            "Run 'uv run gnmibuddy.py COMMAND --help' for more information on a specific command."
         )
         help_text.append(
-            "Run 'gnmibuddy GROUP --help' to see commands in a specific group."
+            "Run 'uv run gnmibuddy.py GROUP --help' to see commands in a specific group."
         )
         help_text.append("")
 
@@ -323,7 +323,7 @@ def display_group_help(group_name: str, group_commands: List[str]) -> str:
 
     help_text.append("")
     help_text.append(
-        f"Run 'gnmibuddy {group_name} COMMAND --help' for more information on a specific command."
+        f"Run 'uv run gnmibuddy.py {group_name} COMMAND --help' for more information on a specific command."
     )
 
     return "\n".join(help_text)

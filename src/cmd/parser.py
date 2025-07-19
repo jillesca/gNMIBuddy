@@ -285,7 +285,7 @@ def run_cli_mode():
             except Exception:
                 # Fallback if we can't get help
                 click.echo(
-                    f"Run 'gnmibuddy {group_name + ' ' if group_name else ''}{command_name} --help' for usage information.",
+                    f"Run 'uv run gnmibuddy.py {group_name + ' ' if group_name else ''}{command_name} --help' for usage information.",
                     err=True,
                 )
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Enhanced error handling system for CLI with suggestions and context-aware messages"""
 import difflib
+import re
 from typing import List, Optional, Tuple
 import click
 from src.cmd.groups import COMMAND_GROUPS
@@ -149,7 +150,7 @@ class CLIErrorHandler:
             error_msg.extend(
                 [
                     "",
-                    f"Run 'gnmibuddy ... {command} --help' for usage information.",
+                    f"Run 'uv run gnmibuddy.py ... {command} --help' for usage information.",
                 ]
             )
 

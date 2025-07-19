@@ -56,17 +56,6 @@ def ops(ctx):
     pass
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
-@click.pass_context
-def manage(ctx):
-    """Management commands
-
-    Commands for managing the CLI tool itself including
-    configuration, logging levels, and command listings.
-    """
-    pass
-
-
 # Register commands with their groups
 def register_commands():
     """Register all commands with their respective groups"""
@@ -87,7 +76,6 @@ def register_commands():
         topology_neighbors,
     )
     from src.cmd.commands.ops import ops_logs, ops_test_all
-    from src.cmd.commands.manage import manage_log_level
 
     # Register device commands
     device.add_command(device_info, "info")
@@ -108,9 +96,6 @@ def register_commands():
     ops.add_command(ops_logs, "logs")
     ops.add_command(ops_test_all, "test-all")
 
-    # Register manage commands
-    manage.add_command(manage_log_level, "log-level")
-
 
 # Group registry for easy access
 COMMAND_GROUPS = {
@@ -118,5 +103,4 @@ COMMAND_GROUPS = {
     "network": network,
     "topology": topology,
     "ops": ops,
-    "manage": manage,
 }

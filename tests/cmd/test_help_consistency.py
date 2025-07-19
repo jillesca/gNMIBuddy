@@ -108,7 +108,6 @@ class TestHelpSystemConsistency:
                             "n": "network",
                             "t": "topology",
                             "o": "ops",
-                            "m": "manage",
                         }
                         alias_for_group = None
                         for alias, full_name in group_aliases.items():

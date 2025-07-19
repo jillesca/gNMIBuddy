@@ -72,15 +72,15 @@ class TestHostsInventory:
         assert len(result.devices) == 2
 
         # Check that test-device-1 and test-device-2 exist in the device list
-        device_names = [d["name"] for d in result.devices]
+        device_names = [d.name for d in result.devices]
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
         # Verify some specific device details
-        devices = {d["name"]: d for d in result.devices}
+        devices = {d.name: d for d in result.devices}
 
         # Check test-device-2
         test_device_2 = devices["test-device-2"]
-        assert test_device_2["ip_address"] == "10.0.0.2"
-        assert test_device_2["port"] == 57777
-        assert test_device_2["nos"] == "iosxr"
+        assert test_device_2.ip_address == "10.0.0.2"
+        assert test_device_2.port == 57777
+        assert test_device_2.nos == "iosxr"

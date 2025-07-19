@@ -20,7 +20,14 @@ def device_list(ctx, detail, output):
     logger.info("Listing all available devices")
 
     # Use the list_devices method instead of direct access to get_devices
-    device_list_result = InventoryManager.list_devices()
+    try:
+        device_list_result = InventoryManager.list_devices()
+    except FileNotFoundError as e:
+        # Handle inventory not found error gracefully
+        from src.cmd.commands.base import handle_inventory_error_in_command
+
+        handle_inventory_error_in_command(str(e))
+        raise click.Abort()
 
     if not device_list_result.devices:
         result = DeviceListCommandResult(

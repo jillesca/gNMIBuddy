@@ -47,24 +47,26 @@ class TestInventoryFileNotFound:
         )
 
     def test_load_inventory_nonexistent_cli_path(self):
-        """Test that load_inventory exits when a non-existent CLI path is provided."""
+        """Test that load_inventory raises FileNotFoundError when a non-existent CLI path is provided."""
         nonexistent_file = "nonexistent_inventory_file.json"
 
-        # Mock sys.exit to prevent actual exit during tests
-        with patch("sys.exit") as mock_exit:
+        # Verify that FileNotFoundError is raised
+        with pytest.raises(FileNotFoundError) as exc_info:
             load_inventory(nonexistent_file)
-            # Verify that sys.exit was called with exit code 1
-            mock_exit.assert_called_once_with(1)
+
+        # Verify error message contains expected content
+        assert "Error loading device inventory" in str(exc_info.value)
 
     def test_load_inventory_nonexistent_env_path(self):
-        """Test that load_inventory exits when a non-existent environment variable path is used."""
+        """Test that load_inventory raises FileNotFoundError when a non-existent environment variable path is used."""
         # Set a non-existent file path in the environment variable
         nonexistent_file = "nonexistent_env_inventory.json"
 
         with patch.dict(os.environ, {"NETWORK_INVENTORY": nonexistent_file}):
-            # Mock sys.exit to prevent actual exit during tests
-            with patch("sys.exit") as mock_exit:
+            # Verify that FileNotFoundError is raised
+            with pytest.raises(FileNotFoundError) as exc_info:
                 # Call without CLI path, so it falls back to env var
                 load_inventory()
-                # Verify that sys.exit was called with exit code 1
-                mock_exit.assert_called_once_with(1)
+
+            # Verify error message contains expected content
+            assert "Error loading device inventory" in str(exc_info.value)

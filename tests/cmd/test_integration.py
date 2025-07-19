@@ -206,7 +206,7 @@ class TestFullCLIIntegration:
         runner = CliRunner()
 
         # Test all main groups exist
-        groups = ["device", "network", "topology", "ops", "manage"]
+        groups = ["device", "network", "topology", "ops"]
         for group in groups:
             result = runner.invoke(cli, [group, "--help"])
             assert result.exit_code == 0
@@ -392,7 +392,6 @@ class TestShellCompletionIntegration:
             "network",
             "topology",
             "ops",
-            "manage",
             "info",
             "profile",
             "list",

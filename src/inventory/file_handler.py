@@ -144,7 +144,7 @@ def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
             inventory_file = get_inventory_path()
         except FileNotFoundError as e:
             logger.error("%s", e)
-            sys.exit(1)  # Exit with error code
+            raise
 
     try:
         device_inventory = parse_json_file(inventory_file)
@@ -162,7 +162,7 @@ def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
             f"Error loading device inventory from {inventory_file}: {e}"
         )
         logger.error(error_msg)
-        sys.exit(1)  # Exit with error code
+        raise FileNotFoundError(error_msg) from e
 
 
 def parse_json_file(json_file_path: str) -> DeviceInventory:

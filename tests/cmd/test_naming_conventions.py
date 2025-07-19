@@ -234,10 +234,6 @@ class TestCommandNamingConventions:
                 "preferred": ["logs", "test", "check"],
                 "avoid": ["log", "testing", "checking"],
             },
-            "manage": {
-                "preferred": ["list", "level", "config"],
-                "avoid": ["get", "set", "cfg"],
-            },
         }
 
         if group_name in terminology_patterns:
@@ -417,7 +413,6 @@ class TestConsistencyAcrossLayers:
                 "network",
                 "topology",
                 "ops",
-                "manage",
             ], f"Group '{group_name}' should follow expected naming categories"
 
     def test_help_text_terminology_consistency(self):

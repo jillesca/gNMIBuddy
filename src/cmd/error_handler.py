@@ -20,7 +20,6 @@ class CLIErrorHandler:
             "n",
             "t",
             "o",
-            "m",
         ]
         self.all_commands = self._get_all_commands()
         self.group_aliases = {
@@ -28,7 +27,6 @@ class CLIErrorHandler:
             "n": "network",
             "t": "topology",
             "o": "ops",
-            "m": "manage",
         }
 
     def _get_all_commands(self) -> List[str]:
@@ -71,7 +69,6 @@ class CLIErrorHandler:
                     "  network (n)   Network protocol commands",
                     "  topology (t)  Network topology commands",
                     "  ops (o)       Operational commands",
-                    "  manage (m)    Management commands",
                     "",
                     "Run 'gnmibuddy --help' to see all available commands.",
                 ]

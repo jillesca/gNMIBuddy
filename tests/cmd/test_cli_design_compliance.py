@@ -60,7 +60,7 @@ class TestCLIDesignCompliance:
 
     def test_all_commands_belong_to_appropriate_groups(self):
         """Test that all commands belong to appropriate groups"""
-        expected_groups = {"device", "network", "topology", "ops", "manage"}
+        expected_groups = {"device", "network", "topology", "ops"}
         all_commands = self.utils.get_all_command_info()
 
         for command_info in all_commands:
@@ -323,7 +323,7 @@ class TestFutureProofing:
 
         # The report should be comprehensive
         assert report["total_commands"] > 0, "Should detect existing commands"
-        assert len(report["groups"]) == 5, "Should detect all 5 groups"
+        assert len(report["groups"]) == 4, "Should detect all 4 groups"
 
         # Compliance metrics should be measurable
         summary = report["compliance_summary"]

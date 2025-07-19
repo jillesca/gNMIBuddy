@@ -81,15 +81,15 @@ class TestInventoryManager(unittest.TestCase):
         self.assertEqual(len(result.devices), 2)
 
         # Check specific devices in the list
-        devices = {d["name"]: d for d in result.devices}
+        devices = {d.name: d for d in result.devices}
         self.assertIn("test-device-1", devices)
         self.assertIn("test-device-2", devices)
 
         # Verify device properties
         device1 = devices["test-device-1"]
-        self.assertEqual(device1["ip_address"], "10.0.0.1")
-        self.assertEqual(device1["port"], 57777)
-        self.assertEqual(device1["nos"], "iosxr")
+        self.assertEqual(device1.ip_address, "10.0.0.1")
+        self.assertEqual(device1.port, 57777)
+        self.assertEqual(device1.nos, "iosxr")
 
     def test_list_devices_with_empty_inventory(self):
         """Test listing devices with an empty inventory."""
@@ -245,7 +245,7 @@ class TestAutoInitialization(unittest.TestCase):
 
         # Should list our device
         self.assertEqual(len(result.devices), 1)
-        self.assertEqual(result.devices[0]["name"], "test-device-1")
+        self.assertEqual(result.devices[0].name, "test-device-1")
 
         # Verify initialization happened
         instance = InventoryManager.get_instance()

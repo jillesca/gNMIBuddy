@@ -150,13 +150,12 @@ def check_banner_presence(help_text: str) -> bool:
 def command_test_data():
     """Provide test data for command validation"""
     return {
-        "expected_groups": ["device", "network", "topology", "ops", "manage"],
+        "expected_groups": ["device", "network", "topology", "ops"],
         "expected_aliases": {
             "d": "device",
             "n": "network",
             "t": "topology",
             "o": "ops",
-            "m": "manage",
         },
         "required_device_commands": ["info", "profile", "list"],
         "required_network_commands": ["routing", "interface", "mpls", "vpn"],

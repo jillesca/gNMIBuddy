@@ -81,18 +81,6 @@ class TestCLIHierarchicalStructure:
         for cmd in expected_commands:
             assert cmd in result.output
 
-    def test_manage_group_commands(self):
-        """Test manage group commands structure"""
-        # Test manage group exists
-        result = self.runner.invoke(cli, ["manage", "--help"])
-        assert result.exit_code == 0
-        assert "Management commands" in result.output
-
-        # Check expected commands in manage group
-        expected_commands = ["log-level", "list-commands"]
-        for cmd in expected_commands:
-            assert cmd in result.output
-
     def test_hierarchical_command_access(self):
         """Test that commands can be accessed hierarchically"""
         # Test device info command
@@ -110,36 +98,9 @@ class TestCLIHierarchicalStructure:
         assert result.exit_code == 0
         assert "Get topology neighbors" in result.output
 
-    # REMOVED: Backward compatibility test for old flat commands
-    # The CLI has been migrated to a grouped structure (device, network, topology, etc.)
-    # and no longer supports the old flat command structure like 'routing', 'interface', etc.
-    # This is expected behavior after the migration to Click.
-    #
-    # def test_backward_compatibility_commands(self):
-    #     """Test that old command structure is still supported"""
-    #     # Old commands that should still work for backward compatibility
-    #     old_commands = [
-    #         "routing",
-    #         "interface",
-    #         "mpls",
-    #         "vpn",
-    #         "system",
-    #         "device-profile",
-    #         "logging",
-    #         "list-devices",
-    #         "topology-adjacency",
-    #         "topology-neighbors",
-    #     ]
-    #
-    #     for cmd in old_commands:
-    #         result = self.runner.invoke(cli, [cmd, "--help"])
-    #         assert (
-    #             result.exit_code == 0
-    #         ), f"Backward compatibility failed for {cmd}"
-
     def test_command_groups_exist_in_registry(self):
         """Test that all groups exist in the command groups registry"""
-        expected_groups = {"device", "network", "topology", "ops", "manage"}
+        expected_groups = {"device", "network", "topology", "ops"}
         actual_groups = set(COMMAND_GROUPS.keys())
 
         assert (
@@ -215,7 +176,7 @@ class TestProgressiveHelp:
         assert result.exit_code == 0
 
         # Should show group commands
-        groups = ["device", "network", "topology", "ops", "manage"]
+        groups = ["device", "network", "topology", "ops"]
         for group in groups:
             assert group in result.output
 

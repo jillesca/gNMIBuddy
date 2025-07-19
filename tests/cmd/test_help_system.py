@@ -21,7 +21,7 @@ class TestHelpSystemStructure:
         assert hasattr(formatter, "group_descriptions")
 
         # Check that all expected groups are present
-        expected_groups = ["device", "network", "topology", "ops", "manage"]
+        expected_groups = ["device", "network", "topology", "ops"]
         for group in expected_groups:
             assert group in formatter.group_descriptions
 
@@ -40,7 +40,6 @@ class TestHelpSystemStructure:
         assert "Network Protocols:" in help_text
         assert "Network Topology:" in help_text
         assert "Operations:" in help_text
-        assert "Management:" in help_text
 
     def test_grouped_help_with_examples(self):
         """Test that examples are included when requested"""
@@ -65,7 +64,6 @@ class TestHelpSystemStructure:
         assert "(n)" in help_text  # network alias
         assert "(t)" in help_text  # topology alias
         assert "(o)" in help_text  # ops alias
-        assert "(m)" in help_text  # manage alias
 
 
 class TestMainHelpBehavior:
@@ -127,10 +125,6 @@ class TestCommandAliases:
 
         # Test ops alias
         result = runner.invoke(cli, ["o", "--help"])
-        assert result.exit_code == 0
-
-        # Test manage alias
-        result = runner.invoke(cli, ["m", "--help"])
         assert result.exit_code == 0
 
     def test_alias_equivalence(self):
@@ -306,7 +300,7 @@ class TestHelpSystemConsistency:
         handler = CLIErrorHandler()
 
         # Both should have the same aliases
-        for group in ["device", "network", "topology", "ops", "manage"]:
+        for group in ["device", "network", "topology", "ops"]:
             formatter_alias = formatter._get_group_alias(group)
             handler_reverse = handler.group_aliases.get(formatter_alias)
             if formatter_alias:  # If alias exists

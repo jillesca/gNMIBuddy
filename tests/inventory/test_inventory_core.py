@@ -118,7 +118,7 @@ class TestListDevices:
         assert len(result.devices) == 2
 
         # Check specific devices in the list
-        device_names = [d["name"] for d in result.devices]
+        device_names = [d.name for d in result.devices]
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
@@ -139,7 +139,7 @@ class TestListDevices:
         assert len(result.devices) == 2
 
         # Check that test devices are in the list
-        device_names = [d["name"] for d in result.devices]
+        device_names = [d.name for d in result.devices]
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
@@ -161,7 +161,7 @@ class TestListDevices:
         assert len(result.devices) == 2
 
         # Check that expected devices are in the list
-        device_names = [d["name"] for d in result.devices]
+        device_names = [d.name for d in result.devices]
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 

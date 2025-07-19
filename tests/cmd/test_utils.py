@@ -287,7 +287,6 @@ def get_expected_command_structure() -> Dict[str, List[str]]:
         "network": ["routing", "interface", "mpls", "vpn"],
         "topology": ["neighbors", "adjacency"],
         "ops": ["logs", "test-all"],
-        "manage": ["list-commands", "log-level"],
     }
 
 
@@ -298,5 +297,4 @@ def get_expected_aliases() -> Dict[str, str]:
         "n": "network",
         "t": "topology",
         "o": "ops",
-        "m": "manage",
     }

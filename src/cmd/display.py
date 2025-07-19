@@ -50,7 +50,6 @@ class GroupedHelpFormatter:
                 "Operations",
                 "Commands for operational tasks and testing",
             ),
-            "manage": ("Management", "Commands for CLI and system management"),
         }
 
     def format_grouped_help(self, show_examples: bool = False) -> str:

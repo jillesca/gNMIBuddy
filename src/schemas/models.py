@@ -7,14 +7,24 @@ inventory structures used throughout the application.
 """
 
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 
 
 @dataclass
 class DeviceListResult:
     """Result class for device list operations."""
 
-    devices: List[Dict[str, Any]]
+    devices: List["Device"]
+
+
+@dataclass
+class DeviceListCommandResult:
+    """Result class for device list command output."""
+
+    devices: Union[List["Device"], List[str]]
+    count: int
+    detail: bool
+    message: Optional[str] = None
 
 
 @dataclass

@@ -107,7 +107,7 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
     logger.debug("Getting device list from inventory")
     device_list_result = InventoryManager.list_devices()
     device_objs = device_list_result.devices
-    device_names = [d["name"] for d in device_objs]
+    device_names = [d.name for d in device_objs]
     logger.debug("Found %d devices: %s", len(device_names), device_names)
 
     logger.debug("Running interface commands on all devices")

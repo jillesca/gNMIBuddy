@@ -8,6 +8,7 @@ from src.inventory import initialize_inventory
 from src.utils.version_utils import load_gnmibuddy_version
 from src.cmd.cli_utils import display_program_banner, get_python_version
 import click
+from click.exceptions import Exit
 
 logger = get_logger(__name__)
 
@@ -228,18 +229,19 @@ def run_cli_mode():
 
     except click.Abort:
         return None, None
-    except click.exceptions.Exit as e:
-        # Click uses Exit exceptions for normal exits (like --help)
-        # Exit code 0 is success, anything else is an error
-        if e.exit_code == 0:
+
+    except click.ClickException as e:
+        # Handle Click exceptions including Exit and UsageError
+        if hasattr(e, "exit_code") and e.exit_code == 0:
             return None, None
-        else:
+        # Handle usage errors with enhanced error handling
+        if hasattr(e, "exit_code") and e.exit_code != 2:
+            # Only show generic message for non-usage errors
             click.echo(
                 f"Command failed with exit code: {e.exit_code}", err=True
             )
             return None, None
-    except click.exceptions.UsageError as e:
-        # Handle Click usage errors with enhanced error handling
+
         from src.cmd.error_handler import handle_click_exception
 
         # Extract command context information
@@ -290,10 +292,17 @@ def run_cli_mode():
         return None, None
     except SystemExit as e:
         if e.code != 0:
-            click.echo(
-                "Command line argument error. Use --help for usage information.",
-                err=True,
-            )
+            # For usage errors (exit code 2), try to show more helpful information
+            if e.code == 2:
+                click.echo("Error: Invalid option or argument.", err=True)
+                click.echo(
+                    "Use --help for detailed usage information.", err=True
+                )
+            else:
+                click.echo(
+                    "Command line argument error. Use --help for usage information.",
+                    err=True,
+                )
         return None, None
     except FileNotFoundError as e:
         # Handle inventory-related errors gracefully
@@ -304,6 +313,13 @@ def run_cli_mode():
             click.echo(f"File not found: {error_msg}", err=True)
         return None, None
     except Exception as e:
+        # Handle Click Exit exceptions first (like --help, --version)
+        if isinstance(e, Exit):
+            # Exit code 0 is normal (help, version), just return silently
+            if e.exit_code == 0:
+                return None, None
+            # Non-zero exit codes are handled by SystemExit handler above
+
         # Handle other exceptions but check for inventory-related issues first
         error_msg = str(e)
         if "inventory" in error_msg.lower() and (

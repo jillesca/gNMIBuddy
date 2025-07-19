@@ -3,8 +3,9 @@
 import click
 
 from src.logging.config import get_logger
-from src.cmd.cli_utils import output_result
+from src.cmd.formatters import format_output
 from src.inventory.manager import InventoryManager
+from src.schemas.models import DeviceListCommandResult
 from src.cmd.commands.base import add_output_option, add_detail_option
 
 
@@ -18,43 +19,35 @@ def device_list(ctx, detail, output):
     logger = get_logger(__name__)
     logger.info("Listing all available devices")
 
-    inventory = InventoryManager.get_instance()
-    devices = inventory.get_devices()
+    # Use the list_devices method instead of direct access to get_devices
+    device_list_result = InventoryManager.list_devices()
 
-    if not devices:
-        result = {
-            "devices": [],
-            "count": 0,
-            "message": "No devices found in inventory",
-        }
-        output_result(result, output)
+    if not device_list_result.devices:
+        result = DeviceListCommandResult(
+            devices=[],
+            count=0,
+            detail=detail,
+            message="No devices found in inventory",
+        )
+        formatted_output = format_output(result, output.lower())
+        click.echo(formatted_output)
         return result
 
     if detail:
-        # Create detailed device list
-        device_list = []
-        for device_name, device_info in devices.items():
-            device_data = {"name": device_name}
-            # Convert device object to dict-like display
-            if hasattr(device_info, "__dict__"):
-                device_data.update(device_info.__dict__)
-            else:
-                device_data["info"] = str(device_info)
-            device_list.append(device_data)
+        result = DeviceListCommandResult(
+            devices=device_list_result.devices,
+            count=len(device_list_result.devices),
+            detail=detail,
+        )
+        formatted_output = format_output(result, output.lower())
+        click.echo(formatted_output)
+        return result
 
-        result = {
-            "devices": device_list,
-            "count": len(device_list),
-            "detail": True,
-        }
-    else:
-        # Create simple device list
-        device_names = list(devices.keys())
-        result = {
-            "devices": device_names,
-            "count": len(device_names),
-            "detail": False,
-        }
-
-    output_result(result, output)
+    result = DeviceListCommandResult(
+        devices=[device.name for device in device_list_result.devices],
+        count=len(device_list_result.devices),
+        detail=detail,
+    )
+    formatted_output = format_output(result, output.lower())
+    click.echo(formatted_output)
     return result

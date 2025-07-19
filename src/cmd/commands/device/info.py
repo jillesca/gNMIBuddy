@@ -5,15 +5,14 @@ import click
 from src.cmd.commands.base import (
     execute_device_command,
     add_common_device_options,
+    add_detail_option,
 )
 from src.collectors.system import get_system_info
 
 
 @click.command()
 @add_common_device_options
-@click.option(
-    "--detail", is_flag=True, help="Show detailed system information"
-)
+@add_detail_option(help_text="Show detailed system information")
 @click.pass_context
 def device_info(
     ctx, device, detail, output, devices, device_file, all_devices

@@ -88,7 +88,7 @@ class InventoryManager:
         List all available devices in the inventory.
 
         Returns:
-            Dictionary with a "devices" key containing a list of device info
+            DeviceListResult containing a list of Device objects
         """
         # logger.debug("Listing all devices in inventory")
         instance = cls.get_instance()
@@ -101,7 +101,7 @@ class InventoryManager:
             logger.warning("No devices found in inventory")
             return DeviceListResult(devices=[])
 
-        device_list = [device.to_device_info() for device in devices.values()]
+        device_list = list(devices.values())
         # logger.info("Listed %s devices from inventory", len(device_list))
         return DeviceListResult(devices=device_list)
 

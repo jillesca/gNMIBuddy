@@ -3,7 +3,6 @@
 import click
 
 from src.inventory.manager import InventoryManager
-from src.cmd.cli_utils import output_result
 from src.cmd.commands.base import add_output_option, add_detail_option
 from src.schemas.models import DeviceErrorResult
 from src.logging.config import get_logger
@@ -32,5 +31,5 @@ def topology_neighbors(ctx, device, detail, output):
         "operation": "topology_neighbors",
         "status": "placeholder",
     }
-    output_result(result, output)
+
     return result

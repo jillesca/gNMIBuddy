@@ -2,8 +2,8 @@
 """Topology neighbors command implementation"""
 import click
 
-from src.inventory.manager import InventoryManager
 from src.cmd.commands.base import (
+    execute_device_command,
     add_common_device_options,
 )
 from src.cmd.schemas import Command, CommandGroup
@@ -12,7 +12,6 @@ from src.cmd.registries.command_registry import (
     register_command,
     register_error_provider,
 )
-from src.schemas.models import DeviceErrorResult
 from src.logging.config import get_logger
 from src.collectors.topology.neighbors import neighbors
 
@@ -30,7 +29,7 @@ def topology_neighbors_examples() -> ExampleSet:
         command=f"{CommandGroup.TOPOLOGY.group_name} {Command.TOPOLOGY_NEIGHBORS.command_name}",
         alias=f"t {Command.TOPOLOGY_NEIGHBORS.command_name}",
         device="R1",
-        detail_option=True,
+        detail_option=False,  # neighbors doesn't use detail flag
         batch_operations=True,
         output_formats=True,
         alias_examples=True,
@@ -57,28 +56,24 @@ def _get_command_help() -> str:
 
 @register_command(Command.TOPOLOGY_NEIGHBORS)
 @click.command(help=_get_command_help())
-@click.option("--device", required=True, help="Device name from inventory")
 @add_common_device_options
 @click.pass_context
-def topology_neighbors(ctx, device, output):
+def topology_neighbors(ctx, device, output, devices, device_file, all_devices):
     """Get topology neighbors information"""
-    logger.info("Getting topology neighbors for device: %s", device)
 
-    # Get device object from inventory
-    device_obj = InventoryManager.get_device(device)
-    if isinstance(device_obj, DeviceErrorResult):
-        click.echo(f"Error: {device_obj.msg}", err=True)
-        raise click.Abort()
+    def operation_func(device_obj, **kwargs):
+        return neighbors(device_obj)
 
-    # Call the topology neighbors collector function
-    result = neighbors(device_obj)
-
-    # Format and return the result
-    from src.cmd.formatters import format_output
-
-    formatted_output = format_output(result, output.lower())
-    click.echo(formatted_output)
-    return result
+    return execute_device_command(
+        ctx=ctx,
+        device=device,
+        devices=devices,
+        device_file=device_file,
+        all_devices=all_devices,
+        output=output,
+        operation_func=operation_func,
+        operation_name="topology neighbors",
+    )
 
 
 if __name__ == "__main__":

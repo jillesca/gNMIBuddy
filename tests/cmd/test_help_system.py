@@ -202,13 +202,12 @@ class TestErrorHandling:
         assert handler.group_aliases["n"] == "network"
 
     def test_unknown_command_suggestions(self):
-        """Test suggestions for unknown commands"""
+        """Test error messages for unknown commands"""
         handler = CLIErrorHandler()
 
-        # Test suggestion for similar group name
-        error_msg = handler.handle_unknown_command("devic", "root")
-        assert "Did you mean one of these groups?" in error_msg
-        assert "device" in error_msg
+        # Test error message for similar group name
+        error_msg = handler.handle_unknown_command("devic")
+        assert "Error: Unknown command 'devic'" in error_msg
 
     def test_missing_device_option_help(self):
         """Test help for missing --device option"""
@@ -222,12 +221,11 @@ class TestErrorHandling:
         assert "Examples:" in error_msg
 
     def test_unknown_command_in_group_context(self):
-        """Test unknown command suggestions in group context"""
+        """Test unknown command error messages in group context"""
         handler = CLIErrorHandler()
 
-        error_msg = handler.handle_unknown_command("rout", "network")
-        assert "Did you mean one of these commands in 'network'?" in error_msg
-        assert "routing" in error_msg
+        error_msg = handler.handle_unknown_command("rout")
+        assert "Error: Unknown command 'rout'" in error_msg
 
     def test_fuzzy_matching_quality(self):
         """Test the quality of fuzzy string matching"""

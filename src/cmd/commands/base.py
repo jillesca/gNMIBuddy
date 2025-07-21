@@ -176,11 +176,9 @@ def execute_device_command(
 
     # Single device operation
     if not device:
-        click.echo(
-            "Error: --device is required for single device operations",
-            err=True,
-        )
-        raise click.Abort()
+        # Show help instead of error when no device is specified
+        click.echo(ctx.get_help())
+        ctx.exit()
 
     logger.info("Getting %s for device: %s", operation_name, device)
     return _execute_single_operation(device, operation_func, output, **kwargs)
@@ -328,6 +326,15 @@ def add_detail_option(help_text="Show detailed information"):
     return decorator
 
 
+def validate_device_option(ctx, param, value):
+    """Validate device option and handle special cases like --help being passed as device name"""
+    if value == "--help" or value == "-h":
+        # User typed something like "--device --help", show help instead
+        click.echo(ctx.get_help())
+        ctx.exit()
+    return value
+
+
 def add_device_selection_options(func):
     """Decorator to add device selection options to commands"""
     func = click.option(
@@ -343,7 +350,11 @@ def add_device_selection_options(func):
     func = click.option(
         "--devices", type=str, help="Comma-separated list of device names"
     )(func)
-    func = click.option("--device", help="Device name from inventory")(func)
+    func = click.option(
+        "--device",
+        help="Device name from inventory",
+        callback=validate_device_option,
+    )(func)
     return func
 
 

@@ -57,11 +57,17 @@ def _get_command_help() -> str:
 
 @register_command(Command.TOPOLOGY_ADJACENCY)
 @click.command(help=_get_command_help())
-@click.option("--device", required=True, help="Device name from inventory")
+@click.option("--device", help="Device name from inventory")
 @add_output_option
 @click.pass_context
 def topology_adjacency(ctx, device, output):
     """Get IP adjacency topology information"""
+
+    # Check if device is provided, show help if not
+    if not device:
+        click.echo(ctx.get_help())
+        ctx.exit()
+
     logger.info("Getting topology adjacency for device: %s", device)
 
     # Get device object from inventory

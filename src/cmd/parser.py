@@ -238,6 +238,9 @@ def run_cli_mode():
                 click.echo(fallback_message, err=True)
 
         return None, None
+    except click.Abort:
+        # click.Abort() is used intentionally for user-facing errors, don't treat as unexpected
+        return None, None
     except SystemExit as e:
         if e.code != 0:
             # For usage errors (exit code 2), try to show more helpful information
@@ -255,8 +258,47 @@ def run_cli_mode():
             click.echo(f"File not found: {error_msg}", err=True)
         return None, None
     except Exception as e:
-        logger.error("Unexpected error in CLI: %s", e)
-        click.echo(f"Unexpected error: {e}", err=True)
+        # Provide more helpful error messages based on the exception type
+        error_msg = str(e)
+
+        # Handle common error patterns with user-friendly messages
+        if "device" in error_msg.lower() and "not found" in error_msg.lower():
+            logger.error("Device not found error: %s", e)
+            click.echo(f"❌ Device Error: {error_msg}", err=True)
+            click.echo(
+                "\n💡 To see available devices, run: uv run gnmibuddy.py device list",
+                err=True,
+            )
+        elif "inventory" in error_msg.lower():
+            logger.error("Inventory error: %s", e)
+            handle_inventory_error(error_msg)
+        elif (
+            "connection" in error_msg.lower() or "timeout" in error_msg.lower()
+        ):
+            logger.error("Connection error: %s", e)
+            click.echo(f"❌ Connection Error: {error_msg}", err=True)
+            click.echo(
+                "\n💡 Check device connectivity and gNMI configuration",
+                err=True,
+            )
+        elif (
+            "permission" in error_msg.lower()
+            or "unauthorized" in error_msg.lower()
+        ):
+            logger.error("Permission error: %s", e)
+            click.echo(f"❌ Permission Error: {error_msg}", err=True)
+            click.echo(
+                "\n💡 Check device credentials and user permissions", err=True
+            )
+        else:
+            # For truly unexpected errors, still log but provide better user message
+            logger.error("Unexpected error in CLI: %s", e, exc_info=True)
+            click.echo(f"❌ An unexpected error occurred.", err=True)
+            click.echo(f"Details: {error_msg}", err=True)
+            click.echo(
+                "\n💡 For help, run: uv run gnmibuddy.py --help", err=True
+            )
+            click.echo("💡 Or check the logs for more details", err=True)
         return None, None
 
 

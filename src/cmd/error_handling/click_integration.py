@@ -62,7 +62,7 @@ def handle_click_exception(
             parts = error_msg.split("'")
             if len(parts) >= 2:
                 unknown_command = parts[1]
-                _handle_unknown_command_error(unknown_command, group_name)
+                _handle_unknown_command_error(unknown_command)
             else:
                 click.echo(f"Error: {error_msg}", err=True)
         elif error_msg.strip() == "":
@@ -89,7 +89,7 @@ def _handle_unexpected_argument_error(
     click.echo(error_message, err=True)
 
 
-def _handle_unknown_command_error(error_msg: str, group_name: str) -> None:
+def _handle_unknown_command_error(error_msg: str) -> None:
     """Handle unknown command errors with suggestions"""
     error_handler = CLIErrorHandler()
 
@@ -103,16 +103,7 @@ def _handle_unknown_command_error(error_msg: str, group_name: str) -> None:
     else:
         unknown_command = error_msg
 
-    if group_name:
-        # Unknown command in a specific group
-        context = group_name
-    else:
-        # Unknown command at root level
-        context = "root"
-
-    error_message = error_handler.handle_unknown_command(
-        command=unknown_command, context=context
-    )
+    error_message = error_handler.handle_unknown_command(unknown_command)
 
     click.echo(error_message, err=True)
 

@@ -191,8 +191,7 @@ class CLITestUtils:
         error_output = result.output or ""
 
         analysis = {
-            "has_suggestion": "did you mean" in error_output.lower()
-            or "similar" in error_output.lower(),
+            "has_clear_error": "error:" in error_output.lower(),
             "has_help_reference": "--help" in error_output
             or "help" in error_output.lower(),
             "is_user_friendly": not (

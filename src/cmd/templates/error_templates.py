@@ -94,28 +94,7 @@ Unexpected argument: '{unexpected_arg}'
     GENERIC_UNEXPECTED_ARGUMENT_FIX_TEMPLATE = """  The command '{command}' doesn't accept positional arguments.
   Try using an option like --device {arg}"""
 
-    UNKNOWN_COMMAND_ROOT_TEMPLATE = """Error: Unknown command '{command}'
-
-Did you mean one of these groups?
-{suggestions}
-
-Available command groups:
-  device (d)    Device management commands
-  network (n)   Network protocol commands
-  topology (t)  Network topology commands
-  ops (o)       Operational commands
-
-Run 'uv run gnmibuddy --help' to see all available commands."""
-
-    UNKNOWN_COMMAND_GROUP_TEMPLATE = """Error: Unknown command '{command}'
-
-Did you mean one of these commands in '{context}'?
-{suggestions}
-
-Available commands in '{context}':
-{group_commands}
-
-Run 'uv run gnmibuddy {context} --help' to see available commands in this group."""
+    UNKNOWN_COMMAND_TEMPLATE = """Error: Unknown command '{command}'"""
 
     MISSING_DEVICE_OPTION_TEMPLATE = """Error: Missing required option '{option}' for command '{command}'
 
@@ -136,16 +115,10 @@ Run 'uv run gnmibuddy.py ... {command} --help' for usage information."""
 
     INVALID_CHOICE_TEMPLATE = """Error: Invalid value '{value}' for option '{option}'
 
-Did you mean one of these?
-{suggestions}
-
 Valid choices for {option}:
   {choices}"""
 
     DEVICE_NOT_FOUND_TEMPLATE = """Error: Device '{device}' not found in inventory
-
-Did you mean one of these devices?
-{suggestions}
 
 Available devices:
 {available_devices}"""
@@ -229,13 +202,11 @@ The command '{command_name}' doesn't accept arguments.
         cls, data: InvalidChoiceData, suggestions: Optional[List[str]] = None
     ) -> str:
         """Format invalid choice error"""
-        suggestions_text = "\n".join(f"  {s}" for s in (suggestions or [])[:3])
         choices_text = ", ".join(data.choices)
 
         return cls.INVALID_CHOICE_TEMPLATE.format(
             value=data.value,
             option=data.option,
-            suggestions=suggestions_text,
             choices=choices_text,
         )
 
@@ -247,9 +218,6 @@ The command '{command_name}' doesn't accept arguments.
                 device=data.device
             )
 
-        suggestions_text = "\n".join(
-            f"  {s}" for s in (data.suggestions or [])[:3]
-        )
         available_devices_text = "\n".join(
             f"  {d}" for d in data.available_devices[:10]
         )
@@ -261,32 +229,11 @@ The command '{command_name}' doesn't accept arguments.
 
         return cls.DEVICE_NOT_FOUND_TEMPLATE.format(
             device=data.device,
-            suggestions=suggestions_text,
             available_devices=available_devices_text,
         )
 
     @classmethod
-    def format_unknown_command_error(
-        cls,
-        command: str,
-        context: str = "root",
-        suggestions: Optional[List[str]] = None,
-        group_commands: Optional[List[str]] = None,
-    ) -> str:
+    def format_unknown_command_error(cls, command: str) -> str:
         """Format unknown command error"""
-        suggestions_text = "\n".join(f"  {s}" for s in (suggestions or [])[:3])
 
-        if context == "root":
-            return cls.UNKNOWN_COMMAND_ROOT_TEMPLATE.format(
-                command=command, suggestions=suggestions_text
-            )
-        else:
-            group_commands_text = "\n".join(
-                f"  {cmd}" for cmd in sorted(group_commands or [])
-            )
-            return cls.UNKNOWN_COMMAND_GROUP_TEMPLATE.format(
-                command=command,
-                context=context,
-                suggestions=suggestions_text,
-                group_commands=group_commands_text,
-            )
+        return cls.UNKNOWN_COMMAND_TEMPLATE.format(command=command)

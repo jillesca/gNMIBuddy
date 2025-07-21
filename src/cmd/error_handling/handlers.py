@@ -17,39 +17,17 @@ class CLIErrorHandler:
     def __init__(self):
         self.command_registry = command_registry
 
-    def handle_unknown_command(
-        self, command: str, context: str = "root"
-    ) -> str:
+    def handle_unknown_command(self, command: str) -> str:
         """Handle unknown command errors with context-aware suggestions
 
         Args:
             command: The unknown command that was entered
-            context: The context where the error occurred ("root" or group name)
 
         Returns:
             Formatted error message with suggestions
         """
-        if context == "root":
-            # Unknown group at root level
-            all_groups = CommandGroup.get_all_names_and_aliases()
-            suggestions = self._find_similar_items(command, all_groups)
 
-            return ErrorTemplates.format_unknown_command_error(
-                command=command,
-                context="root",
-                suggestions=suggestions,
-            )
-        else:
-            # Unknown command within a group
-            group_commands = self._get_group_commands(context)
-            suggestions = self._find_similar_items(command, group_commands)
-
-            return ErrorTemplates.format_unknown_command_error(
-                command=command,
-                context=context,
-                suggestions=suggestions,
-                group_commands=group_commands,
-            )
+        return ErrorTemplates.format_unknown_command_error(command=command)
 
     def handle_unexpected_argument(
         self,

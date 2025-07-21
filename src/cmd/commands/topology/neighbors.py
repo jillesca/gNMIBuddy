@@ -8,7 +8,12 @@ from src.cmd.commands.base import (
     add_common_device_options,
     add_output_option,
     add_detail_option,
-    CommandErrorProvider,
+)
+from src.cmd.schemas import Command, CommandGroup
+from src.cmd.error_providers import CommandErrorProvider
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
 )
 from src.schemas.models import DeviceErrorResult
 from src.logging.config import get_logger
@@ -24,8 +29,8 @@ logger = get_logger(__name__)
 def topology_neighbors_examples() -> ExampleSet:
     """Build topology neighbors command examples with common patterns."""
     return ExampleBuilder.standard_command_examples(
-        command="topology neighbors",
-        alias="t neighbors",
+        command=f"{CommandGroup.TOPOLOGY.group_name} {Command.TOPOLOGY_NEIGHBORS.command_name}",
+        alias=f"t {Command.TOPOLOGY_NEIGHBORS.command_name}",
         device="R1",
         detail_option=True,
         batch_operations=True,
@@ -44,16 +49,15 @@ def detailed_examples() -> str:
     return topology_neighbors_examples().for_help()
 
 
-# Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(
-    command_name="neighbors", group_name="topology"
-)
+error_provider = CommandErrorProvider(Command.TOPOLOGY_NEIGHBORS)
+register_error_provider(Command.TOPOLOGY_NEIGHBORS, error_provider)
 
 
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+@register_command(Command.TOPOLOGY_NEIGHBORS)
 @click.command(help=_get_command_help())
 @click.option("--device", required=True, help="Device name from inventory")
 @add_detail_option("Show detailed neighbor information")

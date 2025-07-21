@@ -1,45 +1,18 @@
 #!/usr/bin/env python3
 """Main CLI parser and entry point with Click framework"""
-import click
 import os
 import sys
-from src.logging.config import get_logger, LoggingConfig
+import click
+from src.logging.config import get_logger
 from src.cmd.cli_utils import display_program_banner
 from src.cmd.context import CLIContext
 from src.cmd.display import display_all_commands
 from src.cmd.error_handler import handle_click_exception
 from src.utils.version_utils import load_gnmibuddy_version, get_python_version
-from click.testing import CliRunner
+from src.cmd.templates.usage_templates import UsageTemplates
+from src.cmd.registries.coordinator import coordinator
 
 logger = get_logger(__name__)
-
-
-# Help and error message templates - separated from logic for better readability
-INVENTORY_ERROR_TEMPLATE = """❌ Inventory Error
-═══════════════════════════════════════════════════════════
-
-The inventory file is required but not found.
-
-💡 How to fix this:
-  1. Use --inventory option:
-     {inventory_example}
-
-  2. Or set environment variable:
-     export NETWORK_INVENTORY=path/to/your/devices.json
-     {env_example}
-
-📁 Example inventory files:
-  • xrd_sandbox.json (in project root)
-  • Any JSON file with device definitions"""
-
-COMMAND_HELP_FALLBACK_TEMPLATE = """Run 'uv run gnmibuddy.py {group_command} --help' for usage information."""
-
-USAGE_ERROR_TEMPLATE = """Error: Invalid option or argument.
-Use --help for detailed usage information."""
-
-CLI_ARGUMENT_ERROR_TEMPLATE = (
-    """Command line argument error. Use --help for usage information."""
-)
 
 
 def show_help_with_banner(ctx, param, value):
@@ -190,35 +163,21 @@ def cli(
 
 
 def register_commands():
-    """Register all command groups and commands"""
+    """Register all command groups and commands using the new registry system"""
     try:
-        # Import all command groups
-        from src.cmd.groups import (
-            device,
-            network,
-            topology,
-            ops,
-        )
 
-        # Add command groups to main CLI
-        cli.add_command(device, "device")
-        cli.add_command(device, "d")  # Alias
+        # Import all command modules to trigger auto-registration
+        coordinator.import_all_command_modules()
 
-        cli.add_command(network, "network")
-        cli.add_command(network, "n")  # Alias
+        # Register all commands with their groups
+        coordinator.register_all_commands_with_groups()
 
-        cli.add_command(topology, "topology")
-        cli.add_command(topology, "t")  # Alias
+        # Register all groups with the main CLI
+        coordinator.register_groups_with_cli(cli)
 
-        cli.add_command(ops, "ops")
-        cli.add_command(ops, "o")  # Alias
-
-        # Import and call the actual register_commands function from groups
-        from src.cmd.groups import register_commands as register_group_commands
-
-        register_group_commands()
-
-        logger.debug("Successfully registered all commands and groups")
+        # Log registration stats
+        stats = coordinator.get_registration_stats()
+        logger.info("Registration complete: %s", stats)
 
     except Exception as e:
         logger.error("Failed to register commands: %s", e)
@@ -240,20 +199,12 @@ def run_cli_mode():
     group_name = ""
 
     try:
-        # Parse arguments to extract command context
+        # Parse arguments to extract command context using registry
         if len(sys.argv) > 1:
-            # Check if first argument is a group
+
+            # Check if first argument is a group using the registry
             potential_group = sys.argv[1]
-            if potential_group in [
-                "device",
-                "d",
-                "network",
-                "n",
-                "topology",
-                "t",
-                "ops",
-                "o",
-            ]:
+            if coordinator.is_valid_group_name_or_alias(potential_group):
                 group_name = potential_group
                 if len(sys.argv) > 2:
                     command_name = sys.argv[2]
@@ -281,8 +232,8 @@ def run_cli_mode():
                 group_command = (
                     f"{group_name + ' ' if group_name else ''}{command_name}"
                 )
-                fallback_message = COMMAND_HELP_FALLBACK_TEMPLATE.format(
-                    group_command=group_command
+                fallback_message = UsageTemplates.format_command_help_fallback(
+                    group_command
                 )
                 click.echo(fallback_message, err=True)
 
@@ -291,9 +242,9 @@ def run_cli_mode():
         if e.code != 0:
             # For usage errors (exit code 2), try to show more helpful information
             if e.code == 2:
-                click.echo(USAGE_ERROR_TEMPLATE, err=True)
+                click.echo(UsageTemplates.get_usage_error(), err=True)
             else:
-                click.echo(CLI_ARGUMENT_ERROR_TEMPLATE, err=True)
+                click.echo(UsageTemplates.get_cli_argument_error(), err=True)
         return None, None
     except FileNotFoundError as e:
         # Handle inventory-related errors gracefully
@@ -317,22 +268,12 @@ def handle_inventory_error(error_msg: str, show_help: bool = False):
         error_msg: The original error message
         show_help: Whether to show help after the error message
     """
-    # Build example commands
-    inventory_example = "uv run gnmibuddy.py --inventory path/to/your/devices.json device info --device R1"
-    env_example = "uv run gnmibuddy.py device info --device R1"
-
-    formatted_message = INVENTORY_ERROR_TEMPLATE.format(
-        inventory_example=inventory_example, env_example=env_example
+    # Use the centralized error handling
+    from src.cmd.error_handling.click_integration import (
+        handle_inventory_error as centralized_handler,
     )
 
-    click.echo(formatted_message, err=True)
-
-    if show_help:
-        click.echo("\n" + "═" * 50, err=True)
-        click.echo("Command Help:", err=True)
-        runner = CliRunner()
-        result = runner.invoke(cli, ["--help"])
-        click.echo(result.output, err=True)
+    centralized_handler(error_msg, show_help)
 
 
 if __name__ == "__main__":

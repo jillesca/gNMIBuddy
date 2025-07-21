@@ -6,7 +6,12 @@ from src.cmd.commands.base import (
     execute_device_command,
     add_common_device_options,
     add_detail_option,
-    CommandErrorProvider,
+)
+from src.cmd.schemas.commands import Command, CommandGroup
+from src.cmd.error_providers import CommandErrorProvider
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
 )
 
 from src.cmd.examples.example_builder import (
@@ -18,8 +23,8 @@ from src.cmd.examples.example_builder import (
 def device_profile_examples() -> ExampleSet:
     """Build device profile command examples with common patterns."""
     return ExampleBuilder.standard_command_examples(
-        command="device profile",
-        alias="d profile",
+        command=f"{CommandGroup.DEVICE.group_name} {Command.DEVICE_PROFILE.command_name}",
+        alias=f"d {Command.DEVICE_PROFILE.command_name}",
         device="R1",
         detail_option=True,
         batch_operations=True,
@@ -38,16 +43,15 @@ def detailed_examples() -> str:
     return device_profile_examples().for_help()
 
 
-# Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(
-    command_name="profile", group_name="device"
-)
+error_provider = CommandErrorProvider(Command.DEVICE_PROFILE)
+register_error_provider(Command.DEVICE_PROFILE, error_provider)
 
 
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+@register_command(Command.DEVICE_PROFILE)
 @click.command(help=_get_command_help())
 @add_common_device_options
 @add_detail_option(help_text="Show detailed profile analysis")

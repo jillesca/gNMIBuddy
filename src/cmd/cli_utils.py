@@ -5,10 +5,10 @@ from src.utils.version_utils import load_gnmibuddy_version, get_python_version
 
 # ASCII art and banner templates - separated from logic for better readability
 ASCII_TITLE = r"""
- ▗▄▄▖▗▖  ▗▖▗▖  ▗▖▗▄▄▄▖▗▄▄▖ ▗▖ ▗▖▗▄▄▄ ▗▄▄▄▗▖  ▗▖
-▐▌   ▐▛▚▖▐▌▐▛▚▞▜▌  █  ▐▌ ▐▌▐▌ ▐▌▐▌  █▐▌  █▝▚▞▘ 
-▐▌▝▜▌▐▌ ▝▜▌▐▌  ▐▌  █  ▐▛▀▚▖▐▌ ▐▌▐▌  █▐▌  █ ▐▌  
-▝▚▄▞▘▐▌  ▐▌▐▌  ▐▌▗▄█▄▖▐▙▄▞▘▝▚▄▞▘▐▙▄▄▀▐▙▄▄▀ ▐▌  
+  ▗▄▄▖▗▖  ▗▖▗▖  ▗▖▗▄▄▄▖▗▄▄▖ ▗▖ ▗▖▗▄▄▄ ▗▄▄▄▗▖  ▗▖
+ ▐▌   ▐▛▚▖▐▌▐▛▚▞▜▌  █  ▐▌ ▐▌▐▌ ▐▌▐▌  █▐▌  █▝▚▞▘ 
+ ▐▌▝▜▌▐▌ ▝▜▌▐▌  ▐▌  █  ▐▛▀▚▖▐▌ ▐▌▐▌  █▐▌  █ ▐▌  
+ ▝▚▄▞▘▐▌  ▐▌▐▌  ▐▌▗▄█▄▖▐▙▄▞▘▝▚▄▞▘▐▙▄▄▀▐▙▄▄▀ ▐▌  
 """
 
 DESCRIPTION = (
@@ -38,10 +38,12 @@ def display_program_banner():
     Returns:
         str: Banner string
     """
-    return PROGRAM_BANNER_TEMPLATE.format(
+    banner = PROGRAM_BANNER_TEMPLATE.format(
         ascii_title=ASCII_TITLE,
         description=DESCRIPTION,
         help_url=HELP_URL,
         python_version=python_version,
         gnmibuddy_version=gnmibuddy_version,
-    ).strip()
+    )
+    # Strip only trailing whitespace to preserve ASCII art leading spaces
+    return banner.rstrip()

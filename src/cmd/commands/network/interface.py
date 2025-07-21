@@ -6,7 +6,12 @@ from src.cmd.commands.base import (
     execute_device_command,
     add_common_device_options,
     add_detail_option,
-    CommandErrorProvider,
+)
+from src.cmd.schemas.commands import Command, CommandGroup
+from src.cmd.error_providers import CommandErrorProvider
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
 )
 
 from src.cmd.examples.example_builder import (
@@ -19,7 +24,7 @@ def network_interface_examples() -> ExampleSet:
     """Build network interface command examples with common patterns."""
     # Start with standard network command examples
     examples = ExampleBuilder.network_command_examples(
-        command="interface",
+        command=Command.NETWORK_INTERFACE.command_name,
         device="R1",
         detail_option=True,
         batch_operations=True,
@@ -28,10 +33,10 @@ def network_interface_examples() -> ExampleSet:
 
     # Add interface-specific examples
     examples.add_advanced(
-        command="uv run gnmibuddy.py network interface --device R1 --name GigabitEthernet0/0/0/1",
+        command=f"uv run gnmibuddy.py {CommandGroup.NETWORK.group_name} {Command.NETWORK_INTERFACE.command_name} --device R1 --name GigabitEthernet0/0/0/1",
         description="Filter by specific interface",
     ).add_advanced(
-        command="uv run gnmibuddy.py n interface --device R1 --name Gi0/0/0/1",
+        command=f"uv run gnmibuddy.py n {Command.NETWORK_INTERFACE.command_name} --device R1 --name Gi0/0/0/1",
         description="Using alias with interface filter",
     )
 
@@ -48,45 +53,15 @@ def detailed_examples() -> str:
     return network_interface_examples().for_help()
 
 
-# Custom error provider for interface-specific scenarios
-class InterfaceErrorProvider(CommandErrorProvider):
-    """Custom error provider for network interface command with interface-specific errors."""
-
-    def __init__(self):
-        super().__init__(command_name="interface", group_name="network")
-
-    def get_missing_interface_name_examples(self) -> ExampleSet:
-        """Get examples for missing --name option errors (interface-specific)."""
-        examples = ExampleSet("interface_missing_name_errors")
-
-        examples.add_error_missing_device(
-            command="uv run gnmibuddy.py network interface --device R1 --name GigabitEthernet0/0/0/1",
-            description="Specify interface name",
-        )
-
-        return examples
-
-    def get_examples_for_error_type(
-        self, error_type: str, **kwargs
-    ) -> ExampleSet:
-        """
-        Override to handle interface-specific error types.
-        """
-        if error_type == "missing_interface_name":
-            return self.get_missing_interface_name_examples()
-
-        # Fall back to parent class for common error types
-        return super().get_examples_for_error_type(error_type, **kwargs)
-
-
-# Error provider instance for duck typing pattern - using custom provider
-error_provider = InterfaceErrorProvider()
+error_provider = CommandErrorProvider(Command.NETWORK_INTERFACE)
+register_error_provider(Command.NETWORK_INTERFACE, error_provider)
 
 
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+@register_command(Command.NETWORK_INTERFACE)
 @click.command(help=_get_command_help())
 @add_common_device_options
 @click.option(

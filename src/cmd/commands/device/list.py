@@ -9,7 +9,12 @@ from src.schemas.models import DeviceListCommandResult
 from src.cmd.commands.base import (
     add_detail_option,
     add_output_option,
-    CommandErrorProvider,
+)
+from src.cmd.schemas import Command, CommandGroup
+from src.cmd.error_providers import CommandErrorProvider
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
 )
 
 from src.cmd.examples.example_builder import (
@@ -21,16 +26,16 @@ from src.cmd.examples.example_builder import (
 def device_list_examples() -> ExampleSet:
     """Build device list command examples with common patterns."""
     examples = ExampleBuilder.simple_command_examples(
-        command="device list",
+        command=f"{CommandGroup.DEVICE.group_name} {Command.DEVICE_LIST.command_name}",
         description="List all devices in inventory",
     )
 
     # Add device list specific examples
     examples.add_advanced(
-        command="uv run gnmibuddy.py device list --detail",
+        command=f"uv run gnmibuddy.py {CommandGroup.DEVICE.group_name} {Command.DEVICE_LIST.command_name} --detail",
         description="Show detailed device information",
     ).add_advanced(
-        command="uv run gnmibuddy.py d list --output json",
+        command=f"uv run gnmibuddy.py d {Command.DEVICE_LIST.command_name} --output json",
         description="Output as JSON with alias",
     )
 
@@ -47,14 +52,15 @@ def detailed_examples() -> str:
     return device_list_examples().for_help()
 
 
-# Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(command_name="list", group_name="device")
-
-
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+error_provider = CommandErrorProvider(Command.DEVICE_LIST)
+register_error_provider(Command.DEVICE_LIST, error_provider)
+
+
+@register_command(Command.DEVICE_LIST)
 @click.command(help=_get_command_help())
 @add_detail_option(help_text="Show detailed device information")
 @add_output_option

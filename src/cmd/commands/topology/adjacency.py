@@ -7,7 +7,12 @@ from src.cmd.commands.base import (
     execute_device_command,
     add_output_option,
     add_detail_option,
-    CommandErrorProvider,
+)
+from src.cmd.schemas.commands import Command, CommandGroup
+from src.cmd.error_providers import CommandErrorProvider
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
 )
 from src.schemas.models import DeviceErrorResult
 from src.logging.config import get_logger
@@ -23,8 +28,8 @@ logger = get_logger(__name__)
 def topology_adjacency_examples() -> ExampleSet:
     """Build topology adjacency command examples with common patterns."""
     return ExampleBuilder.standard_command_examples(
-        command="topology adjacency",
-        alias="t adjacency",
+        command=f"{CommandGroup.TOPOLOGY.group_name} {Command.TOPOLOGY_ADJACENCY.command_name}",
+        alias=f"t {Command.TOPOLOGY_ADJACENCY.command_name}",
         device="R1",
         detail_option=True,
         batch_operations=False,  # Currently doesn't support batch operations
@@ -43,16 +48,15 @@ def detailed_examples() -> str:
     return topology_adjacency_examples().for_help()
 
 
-# Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(
-    command_name="adjacency", group_name="topology"
-)
+error_provider = CommandErrorProvider(Command.TOPOLOGY_ADJACENCY)
+register_error_provider(Command.TOPOLOGY_ADJACENCY, error_provider)
 
 
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+@register_command(Command.TOPOLOGY_ADJACENCY)
 @click.command(help=_get_command_help())
 @click.option("--device", required=True, help="Device name from inventory")
 @add_detail_option("Show detailed topology information")

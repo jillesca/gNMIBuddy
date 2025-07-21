@@ -5,7 +5,12 @@ from src.cmd.commands.base import (
     execute_device_command,
     add_common_device_options,
     add_detail_option,
-    CommandErrorProvider,
+)
+from src.cmd.schemas.commands import Command, CommandGroup
+from src.cmd.error_providers import CommandErrorProvider
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
 )
 from src.logging.config import get_logger
 
@@ -20,8 +25,8 @@ logger = get_logger(__name__)
 def ops_test_all_examples() -> ExampleSet:
     """Build ops test-all command examples with common patterns."""
     return ExampleBuilder.standard_command_examples(
-        command="ops test-all",
-        alias="o test-all",
+        command=f"{CommandGroup.OPS.group_name} {Command.OPS_TEST_ALL.command_name}",
+        alias=f"o {Command.OPS_TEST_ALL.command_name}",
         device="R1",
         detail_option=True,
         batch_operations=True,
@@ -40,16 +45,15 @@ def detailed_examples() -> str:
     return ops_test_all_examples().for_help()
 
 
-# Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(
-    command_name="test-all", group_name="ops"
-)
+error_provider = CommandErrorProvider(Command.OPS_TEST_ALL)
+register_error_provider(Command.OPS_TEST_ALL, error_provider)
 
 
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+@register_command(Command.OPS_TEST_ALL)
 @click.command(help=_get_command_help())
 @add_common_device_options
 @click.option(

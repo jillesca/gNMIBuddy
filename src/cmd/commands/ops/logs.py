@@ -5,7 +5,12 @@ from src.collectors.logs import get_logs
 from src.cmd.commands.base import (
     execute_device_command,
     add_common_device_options,
-    CommandErrorProvider,
+)
+from src.cmd.schemas.commands import Command, CommandGroup
+from src.cmd.error_providers import CommandErrorProvider
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
 )
 
 from src.cmd.examples.example_builder import (
@@ -17,8 +22,8 @@ from src.cmd.examples.example_builder import (
 def ops_logs_examples() -> ExampleSet:
     """Build ops logs command examples with common patterns."""
     examples = ExampleBuilder.standard_command_examples(
-        command="ops logs",
-        alias="o logs",
+        command=f"{CommandGroup.OPS.group_name} {Command.OPS_LOGS.command_name}",
+        alias=f"o {Command.OPS_LOGS.command_name}",
         device="R1",
         detail_option=False,  # logs doesn't use detail flag
         batch_operations=True,
@@ -28,13 +33,13 @@ def ops_logs_examples() -> ExampleSet:
 
     # Add log-specific examples
     examples.add_advanced(
-        command="uv run gnmibuddy.py ops logs --device R1 --minutes 20",
+        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_LOGS.command_name} --device R1 --minutes 20",
         description="Specify time range",
     ).add_advanced(
-        command="uv run gnmibuddy.py ops logs --device R1 --show-all-logs",
+        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_LOGS.command_name} --device R1 --show-all-logs",
         description="Show all available logs",
     ).add_advanced(
-        command="uv run gnmibuddy.py o logs --device R1 --minutes 5",
+        command=f"uv run gnmibuddy.py o {Command.OPS_LOGS.command_name} --device R1 --minutes 5",
         description="Using alias with time filter",
     )
 
@@ -51,14 +56,15 @@ def detailed_examples() -> str:
     return ops_logs_examples().for_help()
 
 
-# Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(command_name="logs", group_name="ops")
+error_provider = CommandErrorProvider(Command.OPS_LOGS)
+register_error_provider(Command.OPS_LOGS, error_provider)
 
 
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+@register_command(Command.OPS_LOGS)
 @click.command(help=_get_command_help())
 @add_common_device_options
 @click.option(

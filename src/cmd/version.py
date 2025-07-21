@@ -109,7 +109,7 @@ class VersionInfo:
             except ImportError:
                 pass
         except Exception as e:
-            logger.debug(f"Error getting version for {package_name}: {e}")
+            logger.debug("Error getting version for %s: %s", package_name, e)
         return None
 
     def get_build_info(self) -> Dict[str, Any]:
@@ -169,7 +169,7 @@ class VersionInfo:
             return build_info
 
         except Exception as e:
-            logger.debug(f"Error getting build info: {e}")
+            logger.debug("Error getting build info: %s", e)
             return {}
 
     def get_comprehensive_version_info(self) -> Dict[str, Any]:

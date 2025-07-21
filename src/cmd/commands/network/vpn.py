@@ -8,6 +8,7 @@ from src.cmd.commands.base import (
     add_detail_option,
     CommandErrorProvider,
 )
+from src.cmd.schemas import Command, CommandGroup
 
 from src.cmd.examples.example_builder import (
     ExampleBuilder,
@@ -19,7 +20,7 @@ def network_vpn_examples() -> ExampleSet:
     """Build network VPN command examples with common patterns."""
     # Start with standard network command examples
     examples = ExampleBuilder.network_command_examples(
-        command="vpn",
+        command=Command.NETWORK_VPN.command_name,
         device="R1",
         detail_option=True,
         batch_operations=True,
@@ -28,10 +29,10 @@ def network_vpn_examples() -> ExampleSet:
 
     # Add VRF-specific examples
     examples.add_advanced(
-        command="uv run gnmibuddy.py network vpn --device R1 --vrf-name CUSTOMER_A",
+        command=f"uv run gnmibuddy.py {CommandGroup.NETWORK.group_name} {Command.NETWORK_VPN.command_name} --device R1 --vrf-name CUSTOMER_A",
         description="Filter by specific VRF",
     ).add_advanced(
-        command="uv run gnmibuddy.py n vpn --device R1 --vrf-name MGMT",
+        command=f"uv run gnmibuddy.py n {Command.NETWORK_VPN.command_name} --device R1 --vrf-name MGMT",
         description="Using alias with VRF filter",
     )
 
@@ -49,7 +50,10 @@ def detailed_examples() -> str:
 
 
 # Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(command_name="vpn", group_name="network")
+error_provider = CommandErrorProvider(
+    command_name=Command.NETWORK_VPN.command_name,
+    group_name=CommandGroup.NETWORK.group_name,
+)
 
 
 def _get_command_help() -> str:

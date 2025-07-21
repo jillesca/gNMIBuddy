@@ -6,8 +6,14 @@ from src.cmd.commands.base import (
     execute_device_command,
     add_common_device_options,
     add_detail_option,
-    CommandErrorProvider,
 )
+from src.cmd.registries.command_registry import (
+    register_command,
+    register_error_provider,
+)
+
+from src.cmd.schemas.commands import Command
+from src.cmd.error_providers import CommandErrorProvider
 
 from src.cmd.examples.example_builder import (
     ExampleBuilder,
@@ -18,7 +24,7 @@ from src.cmd.examples.example_builder import (
 def network_mpls_examples() -> ExampleSet:
     """Build network MPLS command examples with common patterns."""
     return ExampleBuilder.network_command_examples(
-        command="mpls",
+        command=Command.NETWORK_MPLS.command_name,
         device="R1",
         detail_option=True,
         batch_operations=True,
@@ -36,16 +42,15 @@ def detailed_examples() -> str:
     return network_mpls_examples().for_help()
 
 
-# Error provider instance for duck typing pattern
-error_provider = CommandErrorProvider(
-    command_name="mpls", group_name="network"
-)
+error_provider = CommandErrorProvider(Command.NETWORK_MPLS)
+register_error_provider(Command.NETWORK_MPLS, error_provider)
 
 
 def _get_command_help() -> str:
     return detailed_examples()
 
 
+@register_command(Command.NETWORK_MPLS)
 @click.command(help=_get_command_help())
 @add_common_device_options
 @add_detail_option("Show detailed MPLS information")

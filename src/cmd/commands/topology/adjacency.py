@@ -4,9 +4,7 @@ import click
 
 from src.inventory.manager import InventoryManager
 from src.cmd.commands.base import (
-    execute_device_command,
     add_output_option,
-    add_detail_option,
 )
 from src.cmd.schemas.commands import Command, CommandGroup
 from src.cmd.error_providers import CommandErrorProvider
@@ -16,6 +14,7 @@ from src.cmd.registries.command_registry import (
 )
 from src.schemas.models import DeviceErrorResult
 from src.logging.config import get_logger
+from src.collectors.topology.ip_adjacency_dump import ip_adjacency_dump
 
 from src.cmd.examples.example_builder import (
     ExampleBuilder,
@@ -59,10 +58,9 @@ def _get_command_help() -> str:
 @register_command(Command.TOPOLOGY_ADJACENCY)
 @click.command(help=_get_command_help())
 @click.option("--device", required=True, help="Device name from inventory")
-@add_detail_option("Show detailed topology information")
 @add_output_option
 @click.pass_context
-def topology_adjacency(ctx, device, detail, output):
+def topology_adjacency(ctx, device, output):
     """Get IP adjacency topology information"""
     logger.info("Getting topology adjacency for device: %s", device)
 
@@ -72,13 +70,14 @@ def topology_adjacency(ctx, device, detail, output):
         click.echo(f"Error: {device_obj.msg}", err=True)
         raise click.Abort()
 
-    # TODO: Implement actual topology adjacency collection
-    result = {
-        "device": device,
-        "operation": "topology_adjacency",
-        "status": "placeholder",
-    }
+    # Call the topology adjacency collector function
+    result = ip_adjacency_dump(device_obj)
 
+    # Format and return the result
+    from src.cmd.formatters import format_output
+
+    formatted_output = format_output(result, output.lower())
+    click.echo(formatted_output)
     return result
 
 

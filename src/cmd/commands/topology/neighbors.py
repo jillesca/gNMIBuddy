@@ -4,10 +4,7 @@ import click
 
 from src.inventory.manager import InventoryManager
 from src.cmd.commands.base import (
-    execute_device_command,
     add_common_device_options,
-    add_output_option,
-    add_detail_option,
 )
 from src.cmd.schemas import Command, CommandGroup
 from src.cmd.error_providers import CommandErrorProvider
@@ -17,6 +14,7 @@ from src.cmd.registries.command_registry import (
 )
 from src.schemas.models import DeviceErrorResult
 from src.logging.config import get_logger
+from src.collectors.topology.neighbors import neighbors
 
 from src.cmd.examples.example_builder import (
     ExampleBuilder,
@@ -60,10 +58,9 @@ def _get_command_help() -> str:
 @register_command(Command.TOPOLOGY_NEIGHBORS)
 @click.command(help=_get_command_help())
 @click.option("--device", required=True, help="Device name from inventory")
-@add_detail_option("Show detailed neighbor information")
-@add_output_option
+@add_common_device_options
 @click.pass_context
-def topology_neighbors(ctx, device, detail, output):
+def topology_neighbors(ctx, device, output):
     """Get topology neighbors information"""
     logger.info("Getting topology neighbors for device: %s", device)
 
@@ -73,13 +70,14 @@ def topology_neighbors(ctx, device, detail, output):
         click.echo(f"Error: {device_obj.msg}", err=True)
         raise click.Abort()
 
-    # TODO: Implement actual topology neighbors collection
-    result = {
-        "device": device,
-        "operation": "topology_neighbors",
-        "status": "placeholder",
-    }
+    # Call the topology neighbors collector function
+    result = neighbors(device_obj)
 
+    # Format and return the result
+    from src.cmd.formatters import format_output
+
+    formatted_output = format_output(result, output.lower())
+    click.echo(formatted_output)
     return result
 
 

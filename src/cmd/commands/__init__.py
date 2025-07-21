@@ -8,6 +8,7 @@ from .base import (
     add_detail_option,
     add_device_selection_options,
     handle_inventory_error_in_command,
+    CommandErrorProvider,
 )
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "add_detail_option",
     "add_device_selection_options",
     "handle_inventory_error_in_command",
+    "CommandErrorProvider",
 ]

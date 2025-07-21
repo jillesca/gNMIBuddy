@@ -1,18 +1,205 @@
 #!/usr/bin/env python3
 """Enhanced display functions for CLI output and help system"""
-from typing import Dict, List, Any, Optional
+from typing import List, Optional
 import click
 from src.cmd.groups import COMMAND_GROUPS
 from src.logging.config import get_logger
+from src.cmd.examples.example_builder import ExampleBuilder
 
 logger = get_logger(__name__)
 
 
+# Help text templates - separated from logic for better readability
+MAIN_HELP_TEMPLATE = """Usage: gnmibuddy [OPTIONS] COMMAND [ARGS]...
+
+📋 INVENTORY REQUIREMENT:
+  You must provide device inventory via either:
+  • --inventory PATH_TO_FILE.json
+  • Set NETWORK_INVENTORY environment variable
+
+Options:
+  -h, --help               Show this message and exit
+  --log-level [debug|info|warning|error]
+                           Set the global logging level
+  --all-devices            Run command on all devices concurrently
+  --inventory TEXT         Path to inventory JSON file (REQUIRED)
+
+Commands:
+
+{commands_section}
+
+{examples_section}
+
+Run 'uv run gnmibuddy.py COMMAND --help' for more information on a specific command.
+Run 'uv run gnmibuddy.py GROUP --help' to see commands in a specific group.
+"""
+
+GROUP_HELP_TEMPLATE = """Usage: gnmibuddy {group_name} [OPTIONS] COMMAND [ARGS]...{alias_usage}
+
+{group_description}
+
+Commands:
+{commands_list}
+
+Run 'uv run gnmibuddy.py {group_name} COMMAND --help' for more information on a specific command."""
+
+EXAMPLES_SECTION_TEMPLATE = """Examples:
+{example_lines}"""
+
+
+class HelpExampleProvider:
+    """
+    Duck typing system for getting help examples from command modules.
+
+    Similar to the error provider system, this discovers help examples
+    from command modules using duck typing pattern.
+    """
+
+    @staticmethod
+    def get_examples_from_command_module(
+        command_name: str, group_name: str, example_type: str = "detailed"
+    ) -> Optional[str]:
+        """
+        Get examples from command module using duck typing.
+
+        Args:
+            command_name: Name of the command (e.g., "info")
+            group_name: Group name (e.g., "device")
+            example_type: Type of examples ("basic" or "detailed")
+
+        Returns:
+            Formatted example string or None if not found
+        """
+        try:
+            module_path = f"src.cmd.commands.{group_name}.{command_name}"
+            module = __import__(module_path, fromlist=[command_name])
+
+            if example_type == "basic" and hasattr(module, "basic_usage"):
+                basic_usage_func = getattr(module, "basic_usage")
+                return basic_usage_func()
+            elif example_type == "detailed" and hasattr(
+                module, "detailed_examples"
+            ):
+                detailed_examples_func = getattr(module, "detailed_examples")
+                return detailed_examples_func()
+
+        except (ImportError, AttributeError) as e:
+            logger.debug(
+                "Could not get examples from %s.%s: %s",
+                group_name,
+                command_name,
+                e,
+            )
+
+        return None
+
+    @staticmethod
+    def get_command_description_from_module(
+        command_name: str, group_name: str
+    ) -> Optional[str]:
+        """
+        Get command description from module using duck typing.
+
+        Looks for a COMMAND_DESCRIPTION constant or get_description() function in the module.
+        """
+        try:
+            module_path = f"src.cmd.commands.{group_name}.{command_name}"
+            module = __import__(module_path, fromlist=[command_name])
+
+            # Try to get description from module
+            if hasattr(module, "COMMAND_DESCRIPTION"):
+                return getattr(module, "COMMAND_DESCRIPTION")
+            elif hasattr(module, "get_description"):
+                desc_func = getattr(module, "get_description")
+                return desc_func()
+
+        except (ImportError, AttributeError) as e:
+            logger.debug(
+                "Could not get description from %s.%s: %s",
+                group_name,
+                command_name,
+                e,
+            )
+
+        return None
+
+    @staticmethod
+    def get_fallback_examples(command_name: str, group_name: str) -> str:
+        """
+        Generate fallback examples using ExampleBuilder when no module examples exist.
+        """
+        try:
+            if group_name == "device":
+                if command_name == "list":
+                    examples = ExampleBuilder.simple_command_examples(
+                        f"{group_name} {command_name}"
+                    )
+                else:
+                    examples = ExampleBuilder.standard_command_examples(
+                        command=f"{group_name} {command_name}",
+                        alias=f"d {command_name}",
+                        detail_option=True,
+                        batch_operations=True,
+                    )
+            elif group_name == "network":
+                examples = ExampleBuilder.network_command_examples(
+                    command=command_name,
+                    detail_option=True,
+                    batch_operations=True,
+                )
+            else:
+                # Generic fallback
+                examples = ExampleBuilder.standard_command_examples(
+                    command=f"{group_name} {command_name}",
+                    detail_option=True,
+                    batch_operations=True,
+                )
+
+            return examples.for_help(max_examples=3)
+
+        except Exception as e:
+            logger.debug(
+                "Error generating fallback examples for %s.%s: %s",
+                group_name,
+                command_name,
+                e,
+            )
+            return f"\nExamples:\n  uv run gnmibuddy.py {group_name} {command_name} --device R1"
+
+    @staticmethod
+    def get_command_examples(command_name: str, group_name: str) -> str:
+        """
+        Get command examples using duck typing with fallbacks.
+
+        1. Try to get from command module (duck typing)
+        2. Fall back to ExampleBuilder
+        3. Final fallback to basic example
+        """
+        # Try duck typing first
+        examples = HelpExampleProvider.get_examples_from_command_module(
+            command_name, group_name, "detailed"
+        )
+
+        if examples:
+            return examples
+
+        # Fall back to ExampleBuilder
+        return HelpExampleProvider.get_fallback_examples(
+            command_name, group_name
+        )
+
+
 class GroupedHelpFormatter:
-    """Custom help formatter that groups commands by category"""
+    """
+    Custom help formatter that groups commands by category using duck typing.
+
+    Uses duck typing to get command descriptions and examples from command modules,
+    falling back to hardcoded defaults when modules don't provide them.
+    """
 
     def __init__(self):
-        self.command_descriptions = {
+        # Fallback command descriptions - can be overridden by modules using duck typing
+        self.fallback_command_descriptions = {
             # Device group
             "info": "Get system information from a network device",
             "profile": "Get device profile and role information",
@@ -52,120 +239,138 @@ class GroupedHelpFormatter:
             ),
         }
 
-    def format_grouped_help(self, show_examples: bool = False) -> str:
-        """Format help output with commands grouped by category"""
-        help_text = []
-
-        # Add usage section
-        help_text.append("Usage: gnmibuddy [OPTIONS] COMMAND [ARGS]...")
-        help_text.append("")
-
-        # Add inventory requirement information prominently
-        help_text.append("📋 INVENTORY REQUIREMENT:")
-        help_text.append("  You must provide device inventory via either:")
-        help_text.append("  • --inventory PATH_TO_FILE.json")
-        help_text.append("  • Set NETWORK_INVENTORY environment variable")
-        help_text.append("")
-
-        help_text.append("Options:")
-        help_text.append(
-            "  -h, --help               Show this message and exit"
-        )
-        help_text.append("  --log-level [debug|info|warning|error]")
-        help_text.append(
-            "                           Set the global logging level"
-        )
-        help_text.append(
-            "  --all-devices            Run command on all devices concurrently"
-        )
-        help_text.append(
-            "  --inventory TEXT         Path to inventory JSON file (REQUIRED)"
-        )
-        help_text.append("")
-
-        # Add grouped commands
-        help_text.append("Commands:")
-        help_text.append("")
-
-        for group_name, group in COMMAND_GROUPS.items():
-            group_title, group_desc = self.group_descriptions.get(
-                group_name, (group_name.title(), "")
-            )
-            alias = self._get_group_alias(group_name)
-
-            help_text.append(f"  {group_title}:")
-            if alias:
-                help_text.append(f"    {group_name} ({alias})    {group_desc}")
-            else:
-                help_text.append(f"    {group_name}      {group_desc}")
-
-            # Add commands in this group
-            commands = self._get_commands_in_group(group)
-            for cmd_name in sorted(commands):
-                cmd_desc = self.command_descriptions.get(cmd_name, "")
-                help_text.append(f"      {cmd_name:<12} {cmd_desc}")
-
-            help_text.append("")
-
-        if show_examples:
-            help_text.extend(self._get_usage_examples())
-
-        help_text.append(
-            "Run 'uv run gnmibuddy.py COMMAND --help' for more information on a specific command."
-        )
-        help_text.append(
-            "Run 'uv run gnmibuddy.py GROUP --help' to see commands in a specific group."
-        )
-        help_text.append("")
-
-        return "\n".join(help_text)
-
-    def _get_group_alias(self, group_name: str) -> str:
-        """Get the alias for a command group"""
-        aliases = {
+        self.group_aliases = {
             "device": "d",
             "network": "n",
             "topology": "t",
             "ops": "o",
             "manage": "m",
         }
-        return aliases.get(group_name, "")
+
+    def get_command_description(
+        self, command_name: str, group_name: str
+    ) -> str:
+        """
+        Get command description using duck typing with fallback.
+
+        1. Try to get from command module (duck typing)
+        2. Fall back to hardcoded description
+        """
+        # Try duck typing first
+        description = HelpExampleProvider.get_command_description_from_module(
+            command_name, group_name
+        )
+
+        if description:
+            return description
+
+        # Fall back to hardcoded descriptions
+        return self.fallback_command_descriptions.get(command_name, "")
+
+    def _build_commands_section(self) -> str:
+        """Build the commands section with grouped commands."""
+        commands_lines = []
+
+        for group_name, group in COMMAND_GROUPS.items():
+            group_title, group_desc = self.group_descriptions.get(
+                group_name, (group_name.title(), "")
+            )
+            alias = self.group_aliases.get(group_name, "")
+
+            # Format group header
+            if alias:
+                group_header = f"  {group_title}:\n    {group_name} ({alias})    {group_desc}"
+            else:
+                group_header = (
+                    f"  {group_title}:\n    {group_name}      {group_desc}"
+                )
+
+            commands_lines.append(group_header)
+
+            # Add commands in this group
+            commands = self._get_commands_in_group(group)
+            for cmd_name in sorted(commands):
+                cmd_desc = self.get_command_description(cmd_name, group_name)
+                commands_lines.append(f"      {cmd_name:<12} {cmd_desc}")
+
+            commands_lines.append("")  # Empty line between groups
+
+        return "\n".join(commands_lines)
+
+    def _build_examples_section(self) -> str:
+        """Build the examples section using duck typing from command modules."""
+        sample_commands = [
+            ("device", "info"),
+            ("network", "routing"),
+            ("topology", "neighbors"),
+            ("ops", "logs"),
+        ]
+
+        example_lines = []
+
+        for group_name, command_name in sample_commands:
+            try:
+                # Try to get basic examples from command module
+                basic_examples = (
+                    HelpExampleProvider.get_examples_from_command_module(
+                        command_name, group_name, "basic"
+                    )
+                )
+
+                if basic_examples:
+                    # Extract first example line
+                    first_line = basic_examples.split("\n")[0].strip()
+                    if first_line and not first_line.startswith("#"):
+                        example_lines.append(f"  {first_line}")
+                else:
+                    # Fallback to basic example
+                    example_lines.append(
+                        f"  uv run gnmibuddy.py {group_name} {command_name} --device R1"
+                    )
+
+            except Exception as e:
+                logger.debug(
+                    "Error getting examples for %s.%s: %s",
+                    group_name,
+                    command_name,
+                    e,
+                )
+                example_lines.append(
+                    f"  uv run gnmibuddy.py {group_name} {command_name} --device R1"
+                )
+
+        # Add some group alias examples
+        example_lines.extend(
+            [
+                "  uv run gnmibuddy.py d info --device R1  # Using alias",
+                "  uv run gnmibuddy.py n routing --device R1  # Using alias",
+            ]
+        )
+
+        return "\n".join(example_lines)
+
+    def format_grouped_help(self, show_examples: bool = False) -> str:
+        """Format help output with commands grouped by category."""
+        commands_section = self._build_commands_section()
+
+        if show_examples:
+            examples_content = self._build_examples_section()
+            examples_section = EXAMPLES_SECTION_TEMPLATE.format(
+                example_lines=examples_content
+            )
+        else:
+            examples_section = ""
+
+        return MAIN_HELP_TEMPLATE.format(
+            commands_section=commands_section,
+            examples_section=examples_section,
+        ).strip()
 
     def _get_commands_in_group(self, group) -> List[str]:
-        """Get list of command names in a Click group"""
+        """Get list of command names in a Click group."""
         if hasattr(group, "commands"):
             return list(group.commands.keys())
         return []
-
-    def _get_usage_examples(self) -> List[str]:
-        """Get usage examples for the help system"""
-        examples = [
-            "",
-            "Examples:",
-            "  # Get system information from a device",
-            "  uv run gnmibuddy.py device info --device R1",
-            "",
-            "  # Get routing information with protocol filter",
-            "  uv run gnmibuddy.py network routing --device R1 --protocol bgp",
-            "",
-            "  # List all devices in inventory",
-            "  uv run gnmibuddy.py device list",
-            "",
-            "  # Get interface information for specific interface",
-            "  uv run gnmibuddy.py network interface --device R1 --name GigabitEthernet0/0/0/1",
-            "",
-            "  # Get topology neighbors",
-            "  uv run gnmibuddy.py topology neighbors --device R1",
-            "",
-            "  # Run on all devices concurrently",
-            "  uv run gnmibuddy.py --all-devices device info",
-            "",
-            "  # Use command aliases for shorter commands",
-            "  uv run gnmibuddy.py d info --device R1    # Same as 'device info'",
-            "  uv run gnmibuddy.py n routing --device R1 # Same as 'network routing'",
-            "",
-        ]
-        return examples
 
 
 def display_all_commands(detailed=False):
@@ -178,112 +383,6 @@ def display_all_commands(detailed=False):
     formatter = GroupedHelpFormatter()
     help_output = formatter.format_grouped_help(show_examples=detailed)
     click.echo(help_output)
-
-
-def format_command_help_with_examples(
-    command_name: str, group_name: str, base_help: str
-) -> str:
-    """
-    Format command help with usage examples
-
-    Args:
-        command_name: Name of the command
-        group_name: Group the command belongs to
-        base_help: Base help text from Click
-
-    Returns:
-        Enhanced help text with examples
-    """
-    examples_map = {
-        # Device commands
-        "info": [
-            "Examples:",
-            "  uv run gnmibuddy.py device info --device R1",
-            "  uv run gnmibuddy.py device info --device PE1 --detail",
-            "  uv run gnmibuddy.py d info --device R1  # Using alias",
-        ],
-        "profile": [
-            "Examples:",
-            "  uv run gnmibuddy.py device profile --device R1",
-            "  uv run gnmibuddy.py device profile --device PE1 --detail",
-            "  uv run gnmibuddy.py d profile --device R1  # Using alias",
-        ],
-        "list": [
-            "Examples:",
-            "  uv run gnmibuddy.py device list",
-            "  uv run gnmibuddy.py device list --detail",
-            "  uv run gnmibuddy.py d list  # Using alias",
-        ],
-        # Network commands
-        "routing": [
-            "Examples:",
-            "  uv run gnmibuddy.py network routing --device R1",
-            "  uv run gnmibuddy.py network routing --device R1 --protocol bgp",
-            "  uv run gnmibuddy.py network routing --device R1 --detail",
-            "  uv run gnmibuddy.py n routing --device R1  # Using alias",
-        ],
-        "interface": [
-            "Examples:",
-            "  uv run gnmibuddy.py network interface --device R1",
-            "  uv run gnmibuddy.py network interface --device R1 --name GigabitEthernet0/0/0/1",
-            "  uv run gnmibuddy.py network interface --device R1 --detail",
-            "  uv run gnmibuddy.py n interface --device R1  # Using alias",
-        ],
-        "mpls": [
-            "Examples:",
-            "  uv run gnmibuddy.py network mpls --device R1",
-            "  uv run gnmibuddy.py network mpls --device R1 --detail",
-            "  uv run gnmibuddy.py n mpls --device R1  # Using alias",
-        ],
-        "vpn": [
-            "Examples:",
-            "  uv run gnmibuddy.py network vpn --device R1",
-            "  uv run gnmibuddy.py network vpn --device R1 --detail",
-            "  uv run gnmibuddy.py n vpn --device R1  # Using alias",
-        ],
-        # Topology commands
-        "neighbors": [
-            "Examples:",
-            "  uv run gnmibuddy.py topology neighbors --device R1",
-            "  uv run gnmibuddy.py topology neighbors --device R1 --detail",
-            "  uv run gnmibuddy.py t neighbors --device R1  # Using alias",
-        ],
-        "adjacency": [
-            "Examples:",
-            "  uv run gnmibuddy.py topology adjacency --device R1",
-            "  uv run gnmibuddy.py topology adjacency --device R1 --detail",
-            "  uv run gnmibuddy.py t adjacency --device R1  # Using alias",
-        ],
-        # Operations commands
-        "logs": [
-            "Examples:",
-            "  uv run gnmibuddy.py ops logs --device R1",
-            "  uv run gnmibuddy.py ops logs --device R1 --detail",
-            "  uv run gnmibuddy.py o logs --device R1  # Using alias",
-        ],
-        "test-all": [
-            "Examples:",
-            "  uv run gnmibuddy.py ops test-all --device R1",
-            "  uv run gnmibuddy.py o test-all --device R1  # Using alias",
-        ],
-        # Management commands
-        "list-commands": [
-            "Examples:",
-            "  uv run gnmibuddy.py manage list-commands",
-            "  uv run gnmibuddy.py manage list-commands --detail",
-            "  uv run gnmibuddy.py m list-commands  # Using alias",
-        ],
-        "log-level": [
-            "Examples:",
-            "  uv run gnmibuddy.py manage log-level",
-            "  uv run gnmibuddy.py m log-level  # Using alias",
-        ],
-    }
-
-    examples = examples_map.get(command_name, [])
-    if examples:
-        return f"{base_help}\n\n" + "\n".join(examples) + "\n"
-    return base_help
 
 
 def display_group_help(group_name: str, group_commands: List[str]) -> str:
@@ -301,28 +400,24 @@ def display_group_help(group_name: str, group_commands: List[str]) -> str:
     group_title, group_desc = formatter.group_descriptions.get(
         group_name, (group_name.title(), "")
     )
-    alias = formatter._get_group_alias(group_name)
+    alias = formatter.group_aliases.get(group_name, "")
 
-    help_text = []
-    help_text.append(
-        f"Usage: gnmibuddy {group_name} [OPTIONS] COMMAND [ARGS]..."
-    )
+    # Build alias usage line
+    alias_usage = ""
     if alias:
-        help_text.append(
-            f"       uv run gnmibuddy.py {alias} [OPTIONS] COMMAND [ARGS]...  # Short alias"
-        )
-    help_text.append("")
-    help_text.append(f"{group_desc}")
-    help_text.append("")
-    help_text.append("Commands:")
+        alias_usage = f"\n       uv run gnmibuddy.py {alias} [OPTIONS] COMMAND [ARGS]...  # Short alias"
 
+    # Build commands list
+    commands_list_lines = []
     for cmd_name in sorted(group_commands):
-        cmd_desc = formatter.command_descriptions.get(cmd_name, "")
-        help_text.append(f"  {cmd_name:<12} {cmd_desc}")
+        cmd_desc = formatter.get_command_description(cmd_name, group_name)
+        commands_list_lines.append(f"  {cmd_name:<12} {cmd_desc}")
 
-    help_text.append("")
-    help_text.append(
-        f"Run 'uv run gnmibuddy.py {group_name} COMMAND --help' for more information on a specific command."
-    )
+    commands_list = "\n".join(commands_list_lines)
 
-    return "\n".join(help_text)
+    return GROUP_HELP_TEMPLATE.format(
+        group_name=group_name,
+        alias_usage=alias_usage,
+        group_description=group_desc,
+        commands_list=commands_list,
+    ).strip()

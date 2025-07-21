@@ -13,8 +13,92 @@ from src.schemas.responses import (
     OperationStatus,
     ErrorResponse,
 )
+from src.cmd.examples.example_builder import ExampleBuilder, ExampleSet
 
 logger = get_logger(__name__)
+
+
+class CommandErrorProvider:
+    """
+    Base class for providing command-specific error examples.
+
+    This implements the duck typing pattern where each command module can
+    create an instance of this class (or similar) to provide error examples.
+    The error handler can then use getattr() to check for specific error methods.
+    """
+
+    def __init__(self, command_name: str, group_name: str = ""):
+        self.command_name = command_name
+        self.group_name = group_name
+        self.examples = ExampleSet(f"{command_name}_error_examples")
+
+    def get_missing_device_examples(self) -> ExampleSet:
+        """Get examples for missing --device option errors."""
+        return ExampleBuilder.missing_device_error_examples(
+            command=self.command_name, group=self.group_name
+        )
+
+    def get_unexpected_argument_examples(self) -> ExampleSet:
+        """Get examples for unexpected argument errors."""
+        return ExampleBuilder.unexpected_argument_error_examples(
+            command=self.command_name, group=self.group_name
+        )
+
+    def get_device_not_found_examples(self) -> ExampleSet:
+        """Get examples for device not found errors."""
+        return ExampleBuilder.device_not_found_error_examples()
+
+    def get_inventory_missing_examples(self) -> ExampleSet:
+        """Get examples for inventory missing errors."""
+        return ExampleBuilder.inventory_missing_error_examples()
+
+    def get_invalid_choice_examples(
+        self, option: str, valid_choices: List[str]
+    ) -> ExampleSet:
+        """Get examples for invalid choice errors."""
+        full_command = (
+            f"{self.group_name} {self.command_name}"
+            if self.group_name
+            else self.command_name
+        )
+        return ExampleBuilder.invalid_choice_error_examples(
+            option=option, valid_choices=valid_choices, command=full_command
+        )
+
+    def get_examples_for_error_type(
+        self, error_type: str, **kwargs
+    ) -> ExampleSet:
+        """
+        Generic method to get examples for any error type.
+
+        This enables the duck typing pattern - the error handler can call this
+        method and the command provider can return appropriate examples.
+
+        Args:
+            error_type: Type of error (e.g., "missing_device", "unexpected_arg")
+            **kwargs: Additional context for the error
+
+        Returns:
+            ExampleSet with relevant examples, or empty set if not supported
+        """
+        method_map = {
+            "missing_device": self.get_missing_device_examples,
+            "unexpected_argument": self.get_unexpected_argument_examples,
+            "device_not_found": self.get_device_not_found_examples,
+            "inventory_missing": self.get_inventory_missing_examples,
+        }
+
+        if error_type == "invalid_choice":
+            option = kwargs.get("option", "--option")
+            valid_choices = kwargs.get("valid_choices", [])
+            return self.get_invalid_choice_examples(option, valid_choices)
+
+        method = method_map.get(error_type)
+        if method:
+            return method()
+
+        # Return empty set if error type not supported
+        return ExampleSet(f"unsupported_{error_type}_examples")
 
 
 def handle_inventory_error_in_command(error_msg: str):

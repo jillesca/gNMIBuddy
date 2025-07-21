@@ -6,10 +6,56 @@ from src.logging.config import get_logger
 from src.cmd.formatters import format_output
 from src.inventory.manager import InventoryManager
 from src.schemas.models import DeviceListCommandResult
-from src.cmd.commands.base import add_output_option, add_detail_option
+from src.cmd.commands.base import (
+    add_detail_option,
+    add_output_option,
+    CommandErrorProvider,
+)
+
+from src.cmd.examples.example_builder import (
+    ExampleBuilder,
+    ExampleSet,
+)
 
 
-@click.command()
+def device_list_examples() -> ExampleSet:
+    """Build device list command examples with common patterns."""
+    examples = ExampleBuilder.simple_command_examples(
+        command="device list",
+        description="List all devices in inventory",
+    )
+
+    # Add device list specific examples
+    examples.add_advanced(
+        command="uv run gnmibuddy.py device list --detail",
+        description="Show detailed device information",
+    ).add_advanced(
+        command="uv run gnmibuddy.py d list --output json",
+        description="Output as JSON with alias",
+    )
+
+    return examples
+
+
+def basic_usage() -> str:
+    """Basic usage examples"""
+    return device_list_examples().basic_only().to_string()
+
+
+def detailed_examples() -> str:
+    """Detailed examples"""
+    return device_list_examples().for_help()
+
+
+# Error provider instance for duck typing pattern
+error_provider = CommandErrorProvider(command_name="list", group_name="device")
+
+
+def _get_command_help() -> str:
+    return detailed_examples()
+
+
+@click.command(help=_get_command_help())
 @add_detail_option(help_text="Show detailed device information")
 @add_output_option
 @click.pass_context
@@ -58,3 +104,7 @@ def device_list(ctx, detail, output):
     formatted_output = format_output(result, output.lower())
     click.echo(formatted_output)
     return result
+
+
+if __name__ == "__main__":
+    print(_get_command_help())

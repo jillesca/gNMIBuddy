@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Output formatting system for CLI with support for multiple formats"""
+"""Output formatting system for CLI with support for multiple formats (JSON, YAML) while handling dataclasses, enums, and nested structures."""
 from enum import Enum
 from io import StringIO
 from typing import Any, List
@@ -21,6 +21,12 @@ def make_serializable(obj: Any) -> Any:
 
     This is a pure function that recursively converts dataclasses, enums,
     and nested structures to basic Python types.
+
+    Args:
+        obj: Object to convert to serializable format
+
+    Returns:
+        Serializable representation of the object
     """
     if is_dataclass(obj):
         # Convert dataclass to dict, then recursively process the result
@@ -176,3 +182,18 @@ def print_formatted_output(data: Any, output_format: str = "json", **kwargs):
 def get_available_output_formats() -> List[str]:
     """Get list of available output formats"""
     return formatter_manager.get_available_formats()
+
+
+# Export the main functions for external use
+__all__ = [
+    # Core formatting functions
+    "format_output",
+    "print_formatted_output",
+    "get_available_output_formats",
+    "make_serializable",
+    # Classes for advanced usage
+    "FormatterManager",
+    "JSONFormatter",
+    "YAMLFormatter",
+    "OutputFormatter",
+]

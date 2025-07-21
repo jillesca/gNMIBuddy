@@ -15,17 +15,76 @@ from src.cmd.registries.coordinator import coordinator
 logger = get_logger(__name__)
 
 
+def build_complete_help_output(ctx):
+    """Build the complete unified help output combining all components"""
+    from src.cmd.display import GroupedHelpFormatter
+
+    # 1. Get the banner
+    banner = display_program_banner()
+
+    # 2. Build usage and inventory section
+    usage_section = """Usage: gnmibuddy.py [OPTIONS] COMMAND [ARGS]...
+
+📋 INVENTORY REQUIREMENT:
+  You must provide device inventory via either:
+  • --inventory PATH_TO_FILE.json
+  • Set NETWORK_INVENTORY environment variable"""
+
+    # 3. Build examples section
+    examples_section = """  Examples:
+    uv run gnmibuddy.py device info --device R1
+    uv run gnmibuddy.py network routing --device R1
+    uv run gnmibuddy.py --all-devices ops logs"""
+
+    # 4. Extract options from Click context
+    options_section = """Options:
+  -h, --help                      Show this message and exit.
+  -V, --version                   Show version information and exit.
+  --version-detailed              Show detailed version information and exit.
+  --log-level [debug|info|warning|error]
+                                  Set the global logging level
+  --module-log-levels TEXT        Set specific log levels for modules (format:
+                                  module1=debug,module2=warning)
+  --structured-logging            Enable structured JSON logging
+  --quiet-external                Reduce noise from external libraries
+  --all-devices                   Run command on all devices in inventory
+                                  concurrently
+  --max-workers INTEGER           Maximum number of concurrent workers when
+                                  using --all-devices
+  --inventory TEXT                Path to inventory JSON file"""
+
+    # 5. Get commands section from existing formatter
+    formatter = GroupedHelpFormatter()
+    commands_section_content = formatter._build_commands_section()
+    commands_section = f"Commands:\n{commands_section_content}"
+
+    # 6. Help instructions
+    help_instructions = """Run 'uv run gnmibuddy.py COMMAND --help' for more information on a specific command.
+Run 'uv run gnmibuddy.py GROUP --help' to see commands in a specific group."""
+
+    # Combine all sections
+    complete_output = f"""{banner}
+{usage_section}
+
+{examples_section}
+
+{options_section}
+
+{commands_section}
+
+{help_instructions}"""
+
+    return complete_output
+
+
 def show_help_with_banner(ctx, param, value):
-    """Show help with program banner"""
+    """Show help with program banner and complete unified output"""
     if not value or ctx.resilient_parsing:
         return
 
-    # Display banner first
-    banner = display_program_banner()
-    click.echo(banner)
-
-    # Then display all commands grouped
-    display_all_commands(detailed=False)
+    # Build the complete unified help output
+    help_output = build_complete_help_output(ctx)
+    click.echo(help_output)
 
     ctx.exit()
 
@@ -126,18 +185,7 @@ def cli(
     max_workers,
     inventory,
 ):
-    """gNMIBuddy - Essential network information using gNMI/OpenConfig
-
-    \b
-    A tool for retrieving essential network information from devices using gNMI and OpenConfig models.
-    Designed primarily for LLMs with Model Context Protocol (MCP) integration, it also provides a full CLI.
-
-    \b
-    Examples:
-      gnmibuddy device info --device R1
-      gnmibuddy network routing --device R1
-      gnmibuddy --all-devices ops logs
-    """
+    """placeholder"""
     # Create and configure context
     ctx.ensure_object(CLIContext)
     ctx.obj = CLIContext(
@@ -156,10 +204,9 @@ def cli(
 
     # If no command provided, show help
     if ctx.invoked_subcommand is None:
-        # Display banner and commands
-        banner = display_program_banner()
-        click.echo(banner)
-        display_all_commands(detailed=False)
+        # Display complete unified help output
+        help_output = build_complete_help_output(ctx)
+        click.echo(help_output)
 
 
 def register_commands():

@@ -298,6 +298,9 @@ class DeviceListParser:
 
         Returns:
             List of all device names in inventory
+
+        Raises:
+            FileNotFoundError: If inventory file is not found or other inventory-related errors
         """
         try:
             # Get the InventoryManager instance and retrieve all device names
@@ -306,7 +309,15 @@ class DeviceListParser:
                 InventoryManager.initialize()
             devices = manager.get_devices()
             return list(devices.keys())
+        except FileNotFoundError:
+            # Re-raise FileNotFoundError for proper inventory error handling
+            raise
         except Exception as e:
+            # Check if this is an inventory-related error
+            error_msg = str(e).lower()
+            if "inventory" in error_msg or "no inventory file" in error_msg:
+                # Convert to FileNotFoundError for consistent handling
+                raise FileNotFoundError(str(e)) from e
             logger.error("Error getting devices from inventory: %s", e)
             return []
 
@@ -335,9 +346,29 @@ def create_batch_operation_wrapper(
         # Determine device list
         devices = []
         if all_devices:
-            devices = DeviceListParser.get_all_inventory_devices()
-            if not devices:
-                click.echo("No devices found in inventory", err=True)
+            try:
+                devices = DeviceListParser.get_all_inventory_devices()
+                if not devices:
+                    click.echo("No devices found in inventory", err=True)
+                    raise click.Abort()
+            except FileNotFoundError as e:
+                # Handle inventory not found error gracefully using the template
+                from src.cmd.templates.usage_templates import (
+                    UsageTemplates,
+                    InventoryUsageData,
+                )
+
+                # Build example commands
+                inventory_example = "uv run gnmibuddy.py --inventory path/to/your/devices.json --all-devices command"
+                env_example = "uv run gnmibuddy.py --all-devices command"
+
+                data = InventoryUsageData(
+                    inventory_example=inventory_example,
+                    env_example=env_example,
+                )
+
+                formatted_message = UsageTemplates.format_inventory_error(data)
+                click.echo(formatted_message, err=True)
                 raise click.Abort()
         elif devices_list:
             devices = DeviceListParser.parse_device_list(devices_list)

@@ -56,7 +56,11 @@ class VersionInfo:
     def get_python_version(self) -> Dict[str, str]:
         """Get Python version information"""
         if self._python_info is None:
-            self._python_info = get_python_version()
+            self._python_info = {
+                "version": platform.python_version(),
+                "implementation": platform.python_implementation(),
+                "compiler": platform.python_compiler(),
+            }
         return self._python_info
 
     def get_platform_info(self) -> Dict[str, str]:

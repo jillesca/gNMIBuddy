@@ -160,9 +160,28 @@ def execute_device_command(
     )
 
     if effective_all_devices:
-        batch_devices = DeviceListParser.get_all_inventory_devices()
-        if not batch_devices:
-            click.echo("No devices found in inventory", err=True)
+        try:
+            batch_devices = DeviceListParser.get_all_inventory_devices()
+            if not batch_devices:
+                click.echo("No devices found in inventory", err=True)
+                raise click.Abort()
+        except FileNotFoundError as e:
+            # Handle inventory not found error gracefully using the template
+            from src.cmd.templates.usage_templates import (
+                UsageTemplates,
+                InventoryUsageData,
+            )
+
+            # Build example commands
+            inventory_example = "uv run gnmibuddy.py --inventory path/to/your/devices.json --all-devices ops logs"
+            env_example = "uv run gnmibuddy.py --all-devices ops logs"
+
+            data = InventoryUsageData(
+                inventory_example=inventory_example, env_example=env_example
+            )
+
+            formatted_message = UsageTemplates.format_inventory_error(data)
+            click.echo(formatted_message, err=True)
             raise click.Abort()
     elif devices:
         batch_devices = DeviceListParser.parse_device_list(devices)

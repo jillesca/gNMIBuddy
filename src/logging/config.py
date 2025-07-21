@@ -89,6 +89,7 @@ class LoggingConfig:
 
     _configured = False
     _module_levels: Dict[str, int] = {}
+    _last_config: Dict[str, Any] = {}
 
     @classmethod
     def configure(
@@ -109,8 +110,20 @@ class LoggingConfig:
             enable_file_output: Whether to log to file
             log_file: Custom log file path
         """
-        if cls._configured:
+        # Check if configuration has changed
+        current_config = {
+            "global_level": global_level,
+            "module_levels": module_levels,
+            "enable_structured": enable_structured,
+            "enable_file_output": enable_file_output,
+            "log_file": log_file,
+        }
+
+        if cls._configured and cls._last_config == current_config:
             return logging.getLogger(LoggerNames.APP_ROOT)
+
+        # Store the new configuration
+        cls._last_config = current_config.copy()
 
         level_map = {
             "debug": logging.DEBUG,

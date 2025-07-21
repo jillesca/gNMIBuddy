@@ -97,6 +97,7 @@ def _extract_gnmi_data(
         logger.debug("No updates found in gNMI notification")
         return None
 
+    logger.debug("Updates found in gNMI notification: %s", updates)
     result = {}
     result["data"] = updates
 

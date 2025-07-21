@@ -2,8 +2,9 @@
 """Main CLI parser and entry point with Click framework"""
 import os
 import sys
+from typing import Optional
 import click
-from src.logging.config import get_logger
+from src.logging.config import get_logger, LoggingConfig
 from src.cmd.cli_utils import display_program_banner
 from src.cmd.context import CLIContext
 from src.cmd.display import display_all_commands
@@ -198,6 +199,14 @@ def cli(
         inventory=inventory,
     )
 
+    # Configure logging system using CLI options
+    configure_logging_from_cli_options(
+        log_level=log_level,
+        module_log_levels=module_log_levels,
+        structured_logging=structured_logging,
+        quiet_external=quiet_external,
+    )
+
     # Set environment variable for inventory if provided
     if inventory:
         os.environ["NETWORK_INVENTORY"] = inventory
@@ -207,6 +216,73 @@ def cli(
         # Display complete unified help output
         help_output = build_complete_help_output(ctx)
         click.echo(help_output)
+
+
+def configure_logging_from_cli_options(
+    log_level: str,
+    module_log_levels: Optional[str] = None,
+    structured_logging: bool = False,
+    quiet_external: bool = True,
+):
+    """
+    Configure the logging system using CLI options.
+
+    Args:
+        log_level: Global logging level from CLI
+        module_log_levels: Module-specific levels string (format: module1=level1,module2=level2)
+        structured_logging: Whether to enable structured JSON logging
+        quiet_external: Whether to reduce external library noise
+    """
+    # Parse module-specific log levels from string format
+    parsed_module_levels = {}
+    if module_log_levels:
+        try:
+            pairs = module_log_levels.split(",")
+            for pair in pairs:
+                if "=" in pair:
+                    module, level = pair.strip().split("=", 1)
+                    parsed_module_levels[module.strip()] = level.strip()
+        except Exception as e:
+            # Log parsing error but continue with defaults
+            print(
+                f"Warning: Failed to parse module log levels '{module_log_levels}': {e}",
+                file=sys.stderr,
+            )
+
+    # Add external library settings if quiet_external is enabled
+    if quiet_external:
+        parsed_module_levels.setdefault("pygnmi", "warning")
+        parsed_module_levels.setdefault("grpc", "error")
+        parsed_module_levels.setdefault("urllib3", "warning")
+        parsed_module_levels.setdefault("asyncio", "warning")
+
+    # Configure the logging system
+    try:
+        LoggingConfig.configure(
+            global_level=log_level,
+            module_levels=parsed_module_levels,
+            enable_structured=structured_logging,
+            enable_file_output=True,  # Always enable file output
+        )
+
+        # Log the successful configuration
+        app_logger = get_logger(__name__)
+        app_logger.debug(
+            "Logging configured from CLI options",
+            extra={
+                "global_level": log_level,
+                "module_levels": parsed_module_levels,
+                "structured": structured_logging,
+                "quiet_external": quiet_external,
+            },
+        )
+
+    except Exception as e:
+        # If logging configuration fails, show error and continue
+        print(f"Warning: Failed to configure logging: {e}", file=sys.stderr)
+        print(
+            "Continuing with default logging configuration.", file=sys.stderr
+        )
 
 
 def register_commands():

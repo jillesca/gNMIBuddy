@@ -5,16 +5,17 @@ Uses a decorator factory to register API functions without duplicating signature
 """
 import os
 import sys
-import logging
 from functools import wraps
 
-import api
 from mcp.server.fastmcp import FastMCP
+
+import api
 from src.utils.version_utils import load_gnmibuddy_version
+from src.cmd.formatters import make_serializable
+from src.logging.config import get_logger
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("mcp")
+logger = get_logger(__name__)
 
 
 mcp = FastMCP("gNMIBuddy")
@@ -32,6 +33,7 @@ def register_as_mcp_tool(func):
     """
     Decorator factory that creates an MCP tool wrapper for an API function.
     This preserves the original function's name, signature, docstring, and type hints.
+    The wrapper automatically serializes the response to ensure MCP compatibility.
 
     Args:
         func: The API function to register as an MCP tool
@@ -39,7 +41,7 @@ def register_as_mcp_tool(func):
     Returns:
         A decorated function that will be registered as an MCP tool
     """
-    logger.debug("Calling MCP tool: %s", func.__name__)
+    logger.debug("Registering MCP tool: %s", func.__name__)
 
     # Define a dynamic wrapper that preserves the original function's signature
     @mcp.tool()
@@ -48,7 +50,13 @@ def register_as_mcp_tool(func):
     )  # This preserves docstring, name, and other function attributes
     def wrapper(*args, **kwargs):
         # Call the original function from the api module
-        return func(*args, **kwargs)
+        result = func(*args, **kwargs)
+
+        serialized_result = make_serializable(result)
+
+        logger.debug("MCP tool '%s' executed successfully", func.__name__)
+
+        return serialized_result
 
     # Return the decorated function
     return wrapper

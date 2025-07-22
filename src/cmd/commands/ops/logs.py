@@ -34,6 +34,9 @@ def ops_logs_examples() -> ExampleSet:
         command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_LOGS.command_name} --device R1 --minutes 20",
         description="Specify time range",
     ).add_advanced(
+        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_LOGS.command_name} --device R1 --keywords 'error|warning'",
+        description="Filter logs by keywords",
+    ).add_advanced(
         command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_LOGS.command_name} --device R1 --show-all-logs",
         description="Show all available logs",
     ).add_advanced(
@@ -66,6 +69,11 @@ def _get_command_help() -> str:
 @click.command(help=_get_command_help())
 @add_common_device_options
 @click.option(
+    "--keywords",
+    type=str,
+    help="Filter logs by keywords",
+)
+@click.option(
     "--minutes",
     type=int,
     default=10,
@@ -78,6 +86,7 @@ def _get_command_help() -> str:
 def ops_logs(
     ctx,
     device,
+    keywords,
     minutes,
     show_all_logs,
     output,
@@ -89,10 +98,12 @@ def ops_logs(
 
     def operation_func(device_obj, **kwargs):
         return get_logs(
-            device_obj, minutes=minutes, show_all_logs=show_all_logs
+            device_obj,
+            keywords=keywords,
+            minutes=minutes,
+            show_all_logs=show_all_logs,
         )
 
-    # TODO: Chech if show_all_logs exists in the device
     return execute_device_command(
         ctx=ctx,
         device=device,
@@ -102,6 +113,7 @@ def ops_logs(
         output=output,
         operation_func=operation_func,
         operation_name="logs",
+        keywords=keywords,
         minutes=minutes,
         show_all_logs=show_all_logs,
     )

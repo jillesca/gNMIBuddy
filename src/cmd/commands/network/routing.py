@@ -65,7 +65,9 @@ def network_routing(
     """Get routing information from a network device"""
 
     def operation_func(device_obj, **kwargs):
-        return get_routing_info(device_obj)
+        return get_routing_info(
+            device_obj, protocol=protocol, include_details=detail
+        )
 
     return execute_device_command(
         ctx=ctx,

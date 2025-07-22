@@ -12,70 +12,83 @@ from src.cmd.error_handler import handle_click_exception
 from src.utils.version_utils import load_gnmibuddy_version, get_python_version
 from src.cmd.templates.usage_templates import UsageTemplates
 from src.cmd.registries.coordinator import coordinator
+from src.cmd.module_log_help import (
+    show_module_log_help_callback,
+    validate_module_log_levels,
+)
 
 logger = get_logger(__name__)
 
 
 def build_complete_help_output(ctx):
-    """Build the complete unified help output combining all components"""
+    """Build the complete unified help output with enhanced formatting"""
     from src.cmd.display import GroupedHelpFormatter
 
-    # 1. Get the banner
+    # Get the banner
     banner = display_program_banner()
 
-    # 2. Build usage and inventory section
-    usage_section = """Usage: gnmibuddy.py [OPTIONS] COMMAND [ARGS]...
+    # Clean, concise help template following Docker/kubectl style
+    ENHANCED_HELP_TEMPLATE = """
+Usage: 
+  gnmibuddy.py [OPTIONS] COMMAND [ARGS]...
 
-📋 INVENTORY REQUIREMENT:
-  You must provide device inventory via either:
-  • --inventory PATH_TO_FILE.json
-  • Set NETWORK_INVENTORY environment variable"""
+📋 Inventory Requirement:
+  Provide device inventory via --inventory PATH or set NETWORK_INVENTORY env var
 
-    # 3. Build examples section
-    examples_section = """  Examples:
-    uv run gnmibuddy.py device info --device R1
-    uv run gnmibuddy.py network routing --device R1
-    uv run gnmibuddy.py --all-devices ops logs"""
-
-    # 4. Extract options from Click context
-    options_section = """Options:
-  -h, --help                      Show this message and exit.
-  -V, --version                   Show version information and exit.
-  --version-detailed              Show detailed version information and exit.
-  --log-level [debug|info|warning|error]
-                                  Set the global logging level
-  --module-log-levels TEXT        Set specific log levels for modules (format:
-                                  module1=debug,module2=warning)
-  --structured-logging            Enable structured JSON logging
-  --quiet-external                Reduce noise from external libraries
-  --all-devices                   Run command on all devices in inventory
-                                  concurrently
-  --max-workers INTEGER           Maximum number of concurrent workers when
-                                  using --all-devices
-  --inventory TEXT                Path to inventory JSON file"""
-
-    # 5. Get commands section from existing formatter
-    formatter = GroupedHelpFormatter()
-    commands_section_content = formatter._build_commands_section()
-    commands_section = f"Commands:\n{commands_section_content}"
-
-    # 6. Help instructions
-    help_instructions = """Run 'uv run gnmibuddy.py COMMAND --help' for more information on a specific command.
-Run 'uv run gnmibuddy.py GROUP --help' to see commands in a specific group."""
-
-    # Combine all sections
-    complete_output = f"""{banner}
-{usage_section}
-
-{examples_section}
-
+Options:
 {options_section}
 
+Commands:
 {commands_section}
 
-{help_instructions}"""
+Examples:
+{examples_section}
 
-    return complete_output
+Run 'gnmibuddy.py COMMAND --help' for more information on a command.
+"""
+
+    # Simplified options section
+    options_lines = []
+    options_lines.append(
+        "  -h, --help                      Show this message and exit"
+    )
+    options_lines.append(
+        "  -V, --version                   Show version information"
+    )
+    options_lines.append(
+        "  --log-level LEVEL               Set logging level (debug, info, warning, error)"
+    )
+    options_lines.append(
+        "  --module-log-help               Show detailed module logging help"
+    )
+    options_lines.append(
+        "  --all-devices                   Run on all devices concurrently"
+    )
+    options_lines.append(
+        "  --inventory PATH                Path to inventory JSON file"
+    )
+    options_section = "\n".join(options_lines)
+
+    # Get simplified commands section from formatter
+    formatter = GroupedHelpFormatter()
+    commands_section_content = formatter._build_simple_commands_section()
+    commands_section = commands_section_content
+
+    # Minimal essential examples
+    examples_lines = []
+    examples_lines.append("  gnmibuddy.py device info --device R1")
+    examples_lines.append("  gnmibuddy.py network routing --device R1")
+    examples_lines.append("  gnmibuddy.py --all-devices device list")
+    examples_section = "\n".join(examples_lines)
+
+    # Apply to template
+    complete_output = ENHANCED_HELP_TEMPLATE.format(
+        options_section=options_section,
+        commands_section=commands_section,
+        examples_section=examples_section,
+    ).strip()
+
+    return f"{banner}\n{complete_output}"
 
 
 def show_help_with_banner(ctx, param, value):
@@ -153,6 +166,16 @@ def show_detailed_version_callback(ctx, param, value):
     "--module-log-levels",
     type=str,
     help="Set specific log levels for modules (format: module1=debug,module2=warning)",
+)
+@click.option(
+    "--module-log-help",
+    is_flag=True,
+    expose_value=False,
+    is_eager=True,
+    callback=lambda ctx, param, value: show_module_log_help_callback(
+        ctx, param, value
+    ),
+    help="Show detailed help for module-specific logging options and exit.",
 )
 @click.option(
     "--structured-logging", is_flag=True, help="Enable structured JSON logging"
@@ -236,6 +259,18 @@ def configure_logging_from_cli_options(
     # Parse module-specific log levels from string format
     parsed_module_levels = {}
     if module_log_levels:
+        # Validate format first
+        is_valid, error_msg = validate_module_log_levels(module_log_levels)
+        if not is_valid:
+            print(
+                f"❌ Invalid module log levels: {error_msg}", file=sys.stderr
+            )
+            print(
+                "💡 Use --module-log-help to see available modules and examples",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
         try:
             pairs = module_log_levels.split(",")
             for pair in pairs:

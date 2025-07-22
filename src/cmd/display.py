@@ -261,6 +261,78 @@ class GroupedHelpFormatter:
 
         return "\n".join(lines)
 
+    def _build_enhanced_commands_section(self) -> str:
+        """Build an enhanced commands section with emojis and better visual formatting"""
+        lines = []
+        groups = list(CommandGroup)
+
+        # Emoji mapping for different command groups
+        group_emojis = {
+            "device": "🔧",
+            "network": "🌐",
+            "topology": "🗺️",
+            "ops": "⚙️",
+            "manage": "📋",
+        }
+
+        for i, group_enum in enumerate(groups):
+            # Get emoji for group
+            emoji = group_emojis.get(group_enum.group_name, "📁")
+
+            # Enhanced group header with emoji and alias
+            group_line = (
+                f"  {emoji} {group_enum.group_name} ({group_enum.alias})"
+            )
+            lines.append(f"{group_line:<35} {group_enum.title}")
+
+            # Get commands for this group
+            commands = self.command_registry.get_commands_for_group(
+                group_enum.group_name
+            )
+
+            # Sort commands for consistent display
+            commands.sort(key=lambda cmd: cmd.name)
+
+            # Add each command with better indentation and formatting
+            for cmd_info in commands:
+                cmd_line = f"    {cmd_info.name}"
+                lines.append(f"{cmd_line:<33} {cmd_info.description}")
+
+            # Only add empty line between groups, not after the last one
+            if i < len(groups) - 1:
+                lines.append("")
+
+        return "\n".join(lines)
+
+    def _build_simple_commands_section(self) -> str:
+        """Build a simple, clean commands section following Docker/kubectl style"""
+        lines = []
+        groups = list(CommandGroup)
+
+        for i, group_enum in enumerate(groups):
+            # Simple group header with alias - Docker style
+            group_line = f"  {group_enum.group_name} ({group_enum.alias})"
+            lines.append(f"{group_line:<20} {group_enum.title}")
+
+            # Get commands for this group
+            commands = self.command_registry.get_commands_for_group(
+                group_enum.group_name
+            )
+
+            # Sort commands for consistent display
+            commands.sort(key=lambda cmd: cmd.name)
+
+            # Add each command with simple indentation
+            for cmd_info in commands:
+                cmd_line = f"    {cmd_info.name}"
+                lines.append(f"{cmd_line:<16} {cmd_info.description}")
+
+            # Only add empty line between groups, not after the last one
+            if i < len(groups) - 1:
+                lines.append("")
+
+        return "\n".join(lines)
+
     def _build_examples_section(self) -> str:
         """Build the examples section content for template"""
         example_lines = [

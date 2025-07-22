@@ -67,6 +67,9 @@ Run 'gnmibuddy.py COMMAND --help' for more information on a command.
     options_lines.append(
         "  --inventory PATH                Path to inventory JSON file"
     )
+    options_lines.append(
+        "  --max-workers NUMBER            Maximum number of concurrent workers for batch operations (--all-devices, --devices, --device-file)"
+    )
     options_section = "\n".join(options_lines)
 
     # Get simplified commands section from formatter
@@ -195,7 +198,7 @@ def show_detailed_version_callback(ctx, param, value):
     "--max-workers",
     type=int,
     default=5,
-    help="Maximum number of concurrent workers when using --all-devices",
+    help="Maximum number of concurrent workers for batch operations (--all-devices, --devices, --device-file)",
 )
 @click.option("--inventory", type=str, help="Path to inventory JSON file")
 @click.pass_context

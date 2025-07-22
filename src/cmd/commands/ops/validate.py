@@ -82,7 +82,10 @@ def _get_command_help() -> str:
 
 
 def _run_collector_tests(
-    device_obj, test_query: str = "basic", include_data: bool = True
+    device_obj,
+    test_query: str = "basic",
+    include_data: bool = True,
+    max_workers: int = 5,
 ) -> Dict[str, Any]:
     """
     Run all collector function tests in parallel on a single device.
@@ -139,8 +142,10 @@ def _run_collector_tests(
         "device_name": device_obj.name,
     }
 
+    # Use the smaller of max_workers or number of test functions to avoid unnecessary threads
+    effective_max_workers = min(max_workers, len(test_functions))
     with concurrent.futures.ThreadPoolExecutor(
-        max_workers=len(test_functions)
+        max_workers=effective_max_workers
     ) as executor:
         # Submit all tests
         future_to_test = {
@@ -339,7 +344,11 @@ def ops_validate(
             test_query,
             device_obj.name,
         )
-        return _run_collector_tests(device_obj, test_query, include_data)
+        # Get max_workers from context, default to 5 if not available
+        ctx_max_workers = getattr(ctx.obj, "max_workers", 5)
+        return _run_collector_tests(
+            device_obj, test_query, include_data, ctx_max_workers
+        )
 
     return execute_device_command(
         ctx=ctx,

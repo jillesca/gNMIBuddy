@@ -487,7 +487,3 @@ def create_batch_operation_wrapper(
         return batch_result
 
     return batch_wrapper
-
-
-# Global batch executor instance
-batch_executor = BatchOperationExecutor()

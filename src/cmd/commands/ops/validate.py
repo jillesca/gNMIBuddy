@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ops test_all command implementation"""
+"""Ops validate command implementation"""
 import time
 import concurrent.futures
 from typing import Dict, Any
@@ -38,11 +38,11 @@ from src.cmd.examples.example_builder import (
 logger = get_logger(__name__)
 
 
-def ops_test_all_examples() -> ExampleSet:
-    """Build ops test-all command examples with common patterns."""
-    return ExampleBuilder.standard_command_examples(
-        command=f"{CommandGroup.OPS.group_name} {Command.OPS_TEST_ALL.command_name}",
-        alias=f"o {Command.OPS_TEST_ALL.command_name}",
+def ops_validate_examples() -> ExampleSet:
+    """Build ops validate command examples with development focus."""
+    examples = ExampleBuilder.standard_command_examples(
+        command=f"{CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name}",
+        alias=f"o {Command.OPS_VALIDATE.command_name}",
         device="R1",
         detail_option=True,
         batch_operations=True,
@@ -50,19 +50,33 @@ def ops_test_all_examples() -> ExampleSet:
         alias_examples=True,
     )
 
+    # Add development-specific examples
+    examples.add_advanced(
+        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1 --test-query full",
+        description="Run comprehensive validation with all tests",
+    ).add_advanced(
+        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --all-devices --summary-only",
+        description="Quick validation check across all devices",
+    ).add_advanced(
+        command=f"uv run gnmibuddy.py o {Command.OPS_VALIDATE.command_name} --device R1 --output yaml",
+        description="Development validation with YAML output for easier reading",
+    )
+
+    return examples
+
 
 def basic_usage() -> str:
     """Basic usage examples"""
-    return ops_test_all_examples().basic_only().to_string()
+    return ops_validate_examples().basic_only().to_string()
 
 
 def detailed_examples() -> str:
     """Detailed examples"""
-    return ops_test_all_examples().for_help()
+    return ops_validate_examples().for_help()
 
 
-error_provider = CommandErrorProvider(Command.OPS_TEST_ALL)
-register_error_provider(Command.OPS_TEST_ALL, error_provider)
+error_provider = CommandErrorProvider(Command.OPS_VALIDATE)
+register_error_provider(Command.OPS_VALIDATE, error_provider)
 
 
 def _get_command_help() -> str:
@@ -283,22 +297,22 @@ def _run_collector_tests(
     }
 
 
-@register_command(Command.OPS_TEST_ALL)
+@register_command(Command.OPS_VALIDATE)
 @click.command(help=_get_command_help())
 @add_common_device_options
 @click.option(
     "--test-query",
     type=click.Choice(["basic", "full"]),
     default="basic",
-    help="Type of test to run",
+    help="Type of validation to run",
 )
 @click.option(
     "--summary-only",
     is_flag=True,
-    help="Show only test summary without full data",
+    help="Show only validation summary without full data",
 )
 @click.pass_context
-def ops_test_all(
+def ops_validate(
     ctx,
     device,
     test_query,
@@ -308,14 +322,24 @@ def ops_test_all(
     device_file,
     all_devices,
 ):
-    """Test all APIs on a network device"""
+    """Validate all collector functions on network devices
+
+    This is a development tool that tests all available collector functions
+    to verify they work correctly after code changes. It runs comprehensive
+    tests on system info, interfaces, routing, MPLS, VPN, topology, and more.
+
+    Use this command to quickly validate that all functionality still works
+    after making changes to the codebase.
+    """
 
     # Include data by default, unless summary-only is requested
     include_data = not summary_only
 
     def operation_func(device_obj, **kwargs):
         logger.info(
-            "Running %s test suite on device: %s", test_query, device_obj.name
+            "Running %s validation suite on device: %s",
+            test_query,
+            device_obj.name,
         )
         return _run_collector_tests(device_obj, test_query, include_data)
 
@@ -327,7 +351,7 @@ def ops_test_all(
         all_devices=all_devices,
         output=output,
         operation_func=operation_func,
-        operation_name="test-all",
+        operation_name="validate",
         test_query=test_query,
     )
 

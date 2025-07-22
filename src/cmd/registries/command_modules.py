@@ -55,7 +55,7 @@ COMMAND_MODULES: List[str] = [
     "src.cmd.commands.topology.network",
     # Operations commands - Commands for operational tasks and testing
     "src.cmd.commands.ops.logs",
-    "src.cmd.commands.ops.test_all",
+    "src.cmd.commands.ops.validate",
 ]
 
 

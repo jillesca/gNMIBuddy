@@ -27,7 +27,7 @@ commands/
 ├── ops/                   # Operational commands
 │   ├── __init__.py
 │   ├── logs.py           # `gnmibuddy ops logs`
-│   └── test_all.py       # `gnmibuddy ops test-all`
+│   └── validate.py       # `gnmibuddy ops validate`
 └── manage/                # Management commands
     ├── __init__.py
     └── log_level.py       # `gnmibuddy manage log-level`

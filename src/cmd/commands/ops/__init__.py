@@ -2,9 +2,9 @@
 """Operations command implementations"""
 
 from .logs import ops_logs
-from .test_all import ops_test_all
+from .validate import ops_validate
 
 __all__ = [
     "ops_logs",
-    "ops_test_all",
+    "ops_validate",
 ]

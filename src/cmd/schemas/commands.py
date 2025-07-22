@@ -91,7 +91,7 @@ class CommandRegistry:
                 group=CommandGroup.OPS,
             ),
             CommandInfo(
-                command=Command.OPS_TEST_ALL,
+                command=Command.OPS_VALIDATE,
                 group=CommandGroup.OPS,
             ),
         ]

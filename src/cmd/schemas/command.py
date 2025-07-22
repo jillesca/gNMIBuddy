@@ -34,7 +34,10 @@ class Command(Enum):
 
     # Operations commands
     OPS_LOGS = ("logs", "Retrieve and filter device logs")
-    OPS_TEST_ALL = ("test-all", "Test all gNMI operations on a device")
+    OPS_VALIDATE = (
+        "validate",
+        "Validate all collector functions (development tool)",
+    )
 
     def __init__(self, command_name: str, description: str):
         self.command_name = command_name

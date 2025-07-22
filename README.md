@@ -212,6 +212,40 @@ uv run gnmibuddy.py ops logs --device xrd-2 --keywords "bgp|error"
 uv run gnmibuddy.py --all-devices network interface
 ```
 
+## ⚙️ Batch Operations & Concurrency
+
+gNMIBuddy supports running commands across multiple devices simultaneously with configurable concurrency controls to optimize performance while avoiding rate limiting.
+
+### Batch Operation Options
+
+**Device Selection:**
+
+- `--device DEVICE`: Single device operation
+- `--devices device1,device2,device3`: Comma-separated device list
+- `--device-file path/to/devices.txt`: Device list from file (one per line)
+- `--all-devices`: Run on all devices in inventory
+
+**Concurrency Controls:**
+
+- `--max-workers N`: Maximum concurrent devices to process (default: 5)
+- `--per-device-workers N`: Maximum concurrent operations per device (default: varies by command)
+
+### Understanding Concurrency Levels
+
+gNMIBuddy operates with **two levels of concurrency**:
+
+1. **Device-level concurrency** (`--max-workers`): How many devices to process simultaneously
+2. **Per-device concurrency** (command-specific): How many operations to run simultaneously on each device
+
+**Total concurrent requests = max_workers × per_device_operations**
+
+### Examples
+
+```bash
+# Process 3 devices, 2 operations per device = 6 total requests
+uv run gnmibuddy.py --max-workers 3 ops validate --devices xrd-1,xrd-2,xrd-3 --per-device-workers 2
+```
+
 ## 📋 Response Format
 
 Replies from `gNMIBuddy` adhere to the `NetworkOperationResult` schema, ensuring consistent and structured responses for all network operations. This schema provides detailed information about the operation, including status, data, metadata, and error handling.

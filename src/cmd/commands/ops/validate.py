@@ -314,12 +314,19 @@ def _run_collector_tests(
     is_flag=True,
     help="Show only validation summary without full data",
 )
+@click.option(
+    "--per-device-workers",
+    type=int,
+    default=2,
+    help="Maximum number of concurrent tests per device (default: 2, reduces rate limiting)",
+)
 @click.pass_context
 def ops_validate(
     ctx,
     device,
     test_query,
     summary_only,
+    per_device_workers,
     output,
     devices,
     device_file,
@@ -333,21 +340,39 @@ def ops_validate(
 
     Use this command to quickly validate that all functionality still works
     after making changes to the codebase.
+
+    CONCURRENCY BEHAVIOR:
+    - --max-workers: Controls how many devices to process simultaneously (default: 5)
+    - --per-device-workers: Controls how many tests to run per device simultaneously (default: 2)
+    - Total concurrent requests = max_workers × per_device_workers
+
+    To avoid rate limiting:
+    - Use --per-device-workers 1 for strict sequential testing per device
+    - Use --max-workers 1 --per-device-workers 2 for moderate concurrency
     """
 
     # Include data by default, unless summary-only is requested
     include_data = not summary_only
 
+    # Validate per_device_workers range
+    if per_device_workers < 1:
+        click.echo("Error: --per-device-workers must be at least 1", err=True)
+        ctx.exit(1)
+    elif per_device_workers > 10:
+        click.echo(
+            "Warning: --per-device-workers > 10 may cause rate limiting issues",
+            err=True,
+        )
+
     def operation_func(device_obj, **kwargs):
         logger.info(
-            "Running %s validation suite on device: %s",
+            "Running %s validation suite on device: %s (concurrency: %d)",
             test_query,
             device_obj.name,
+            per_device_workers,
         )
-        # Get max_workers from context, default to 5 if not available
-        ctx_max_workers = getattr(ctx.obj, "max_workers", 5)
         return _run_collector_tests(
-            device_obj, test_query, include_data, ctx_max_workers
+            device_obj, test_query, include_data, per_device_workers
         )
 
     return execute_device_command(

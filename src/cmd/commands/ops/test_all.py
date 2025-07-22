@@ -28,7 +28,7 @@ from src.collectors.mpls import get_mpls_info
 from src.collectors.routing import get_routing_info
 from src.collectors.vpn import get_vpn_info
 from src.collectors.topology.neighbors import neighbors
-from src.collectors.topology.ip_adjacency_dump import ip_adjacency_dump
+from src.collectors.topology.network_topology import get_network_topology
 
 from src.cmd.examples.example_builder import (
     ExampleBuilder,
@@ -109,7 +109,7 @@ def _run_collector_tests(
                 "logs": lambda: get_logs(
                     device_obj, minutes=5, show_all_logs=False
                 ),
-                "ip_adjacency_dump": lambda: ip_adjacency_dump(device_obj),
+                "network_topology": lambda: get_network_topology(),
                 "interfaces_detailed": lambda: get_interfaces(
                     device_obj, interface="GigabitEthernet0/0/0/1"
                 ),

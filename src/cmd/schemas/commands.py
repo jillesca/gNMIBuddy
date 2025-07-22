@@ -81,8 +81,9 @@ class CommandRegistry:
                 group=CommandGroup.TOPOLOGY,
             ),
             CommandInfo(
-                command=Command.TOPOLOGY_ADJACENCY,
+                command=Command.TOPOLOGY_NETWORK,
                 group=CommandGroup.TOPOLOGY,
+                requires_device=False,
             ),
             # Operations commands
             CommandInfo(

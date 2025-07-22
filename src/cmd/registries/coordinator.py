@@ -6,6 +6,7 @@ from typing import Dict, List
 import click
 from src.cmd.schemas import Command, CommandGroup
 from src.cmd.registries.group_registry import group_registry
+from src.cmd.registries.command_modules import get_command_modules
 from src.logging.config import get_logger
 
 logger = get_logger(__name__)
@@ -121,23 +122,7 @@ class RegistrationCoordinator:
 
     def import_all_command_modules(self) -> None:
         """Import all command modules to ensure they are registered"""
-        command_modules = [
-            # Device commands
-            "src.cmd.commands.device.info",
-            "src.cmd.commands.device.profile",
-            "src.cmd.commands.device.list",
-            # Network commands
-            "src.cmd.commands.network.routing",
-            "src.cmd.commands.network.interface",
-            "src.cmd.commands.network.mpls",
-            "src.cmd.commands.network.vpn",
-            # Topology commands
-            "src.cmd.commands.topology.neighbors",
-            "src.cmd.commands.topology.adjacency",
-            # Operations commands
-            "src.cmd.commands.ops.logs",
-            "src.cmd.commands.ops.test_all",
-        ]
+        command_modules = get_command_modules()
 
         for module_path in command_modules:
             try:

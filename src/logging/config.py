@@ -341,7 +341,7 @@ def log_operation(operation_name: str, device_name: Optional[str] = None):
             if actual_device_name:
                 extra["device_name"] = actual_device_name
 
-            logger.info("Starting %s", operation_name, extra=extra)
+            logger.debug("Starting %s", operation_name, extra=extra)
 
             try:
                 result = func(*args, **kwargs)
@@ -349,7 +349,7 @@ def log_operation(operation_name: str, device_name: Optional[str] = None):
                 duration = (datetime.now() - start_time).total_seconds() * 1000
                 extra["duration_ms"] = round(duration, 2)
 
-                logger.info("Completed %s", operation_name, extra=extra)
+                logger.debug("Completed %s", operation_name, extra=extra)
                 return result
 
             except Exception as e:

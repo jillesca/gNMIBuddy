@@ -14,7 +14,7 @@ from src.schemas.responses import (
 from src.collectors.topology.path import path
 from src.collectors.topology.segment import segment
 from src.collectors.topology.neighbors import neighbors
-from src.collectors.topology.ip_adjacency_dump import ip_adjacency_dump
+from src.collectors.topology.network_topology import get_network_topology
 
 
 # Note: adjacency_dump_cmd is commented out due to missing adjacency_dump module
@@ -144,4 +144,4 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
     Returns:
         NetworkOperationResult: Response object containing all IP adjacencies in the network
     """
-    return ip_adjacency_dump(device)
+    return get_network_topology()

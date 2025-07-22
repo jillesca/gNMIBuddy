@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Topology command implementations"""
 
-from .adjacency import topology_adjacency
+from .network import topology_network
 from .neighbors import topology_neighbors
 
 __all__ = [
-    "topology_adjacency",
+    "topology_network",
     "topology_neighbors",
 ]

@@ -27,9 +27,9 @@ class Command(Enum):
         "neighbors",
         "Get direct neighbor information via LLDP/CDP",
     )
-    TOPOLOGY_ADJACENCY = (
-        "adjacency",
-        "Get complete topology adjacency information",
+    TOPOLOGY_NETWORK = (
+        "network",
+        "Get complete network topology information. Queries all devices in inventory.",
     )
 
     # Operations commands

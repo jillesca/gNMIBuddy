@@ -62,7 +62,7 @@ register_as_mcp_tool(api.get_vpn_info)
 register_as_mcp_tool(api.get_devices)
 register_as_mcp_tool(api.get_device_profile_api)
 register_as_mcp_tool(api.get_system_info)
-register_as_mcp_tool(api.get_topology_ip_adjacency_dump)
+register_as_mcp_tool(api.get_network_topology_api)
 register_as_mcp_tool(api.get_topology_neighbors)
 
 

@@ -7,23 +7,34 @@ inventory structures used throughout the application.
 """
 
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any, TypedDict
+from typing import Optional, List, Dict, Any, Union
 
 
-class DeviceListResult(TypedDict):
-    """Type definition for the device list result."""
+@dataclass
+class DeviceListResult:
+    """Result class for device list operations."""
 
-    devices: List[Dict[str, Any]]
+    devices: List["Device"]
 
 
-class DeviceErrorResult(TypedDict):
-    """Type definition for device error result.
+@dataclass
+class DeviceListCommandResult:
+    """Result class for device list command output."""
 
-    Enhanced to include device context when available.
-    """
+    devices: Union[List["Device"], List[str]]
+    count: int
+    detail: bool
+    message: Optional[str] = None
 
-    error: str
-    device_info: Optional[Dict[str, Any]]
+
+@dataclass
+class DeviceErrorResult:
+    """Result class for device error conditions."""
+
+    msg: str
+    nos: str = "unknown"
+    ip_address: str = "unknown"
+    device_info: Optional[Dict[str, Any]] = None
 
 
 @dataclass

@@ -3,7 +3,7 @@
 API module for gNMIBuddy - Contains the core network tool functions
 that can be used by both MCP and CLI interfaces.
 """
-from typing import Dict, Any, Optional
+from typing import Optional
 
 from src.services.commands import run
 from src.inventory import list_available_devices
@@ -14,13 +14,13 @@ from src.collectors.interfaces import get_interfaces as collect_interfaces
 from src.collectors.logs import get_logs as collect_logs
 from src.collectors.system import get_system_info as collect_system_info
 from src.collectors.profile import get_device_profile as collect_device_profile
-
-# from src.collectors.topology.segment import segment
 from src.collectors.topology.neighbors import neighbors
-from src.collectors.topology.ip_adjacency_dump import ip_adjacency_dump
+from src.collectors.topology.network_topology import get_network_topology
+from src.schemas.responses import NetworkOperationResult
+from src.schemas.models import DeviceListResult
 
 
-def get_device_profile_api(device_name: str) -> Dict[str, Any]:
+def get_device_profile_api(device_name: str) -> NetworkOperationResult:
     """
     Retrieve a comprehensive device profile summarizing the core service provider role and key protocol features for a network device.
 
@@ -56,7 +56,7 @@ def get_device_profile_api(device_name: str) -> Dict[str, Any]:
 
 def get_system_info(
     device_name: str,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Retrieve structured system-level information from a network device via gNMI.
 
@@ -75,7 +75,7 @@ def get_routing_info(
     device_name: str,
     protocol: Optional[str] = None,
     include_details: bool = False,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get routing information from a network device.
 
@@ -96,7 +96,7 @@ def get_logs(
     keywords: Optional[str] = None,
     minutes: Optional[int] = 5,
     show_all_logs: bool = False,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get logs from a network device.
 
@@ -121,7 +121,7 @@ def get_logs(
 def get_interface_info(
     device_name: str,
     interface: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get interface information from a network device.
 
@@ -140,7 +140,7 @@ def get_interface_info(
 def get_mpls_info(
     device_name: str,
     include_details: bool = False,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get MPLS information from a network device.
 
@@ -156,24 +156,24 @@ def get_mpls_info(
 
 def get_vpn_info(
     device_name: str,
-    vrf: Optional[str] = None,
+    vrf_name: Optional[str] = None,
     include_details: bool = False,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get VPN/VRF information from a network device.
 
     Args:
         device_name: Name of the device in the inventory
-        vrf: Optional specific VRF name
+        vrf_name: Optional specific VRF name
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
         Structured VPN information
     """
-    return run(device_name, collect_vpn_info, vrf, include_details)
+    return run(device_name, collect_vpn_info, vrf_name, include_details)
 
 
-def get_devices() -> Dict[str, Any]:
+def get_devices() -> DeviceListResult:
     """
     Get information about all available devices in the inventory.
 
@@ -185,7 +185,7 @@ def get_devices() -> Dict[str, Any]:
 
 def get_topology_neighbors(
     device_name: str,
-) -> Dict[str, Any]:
+) -> NetworkOperationResult:
     """
     Get direct neighbors of a specified device.
 
@@ -233,7 +233,7 @@ def get_topology_neighbors(
 #     return run(device_name, segment, network)
 
 
-def get_topology_ip_adjacency_dump(device_name: str) -> Dict[str, Any]:
+def get_network_topology_api() -> NetworkOperationResult:
     """
     Retrieve the full L3 IP-only direct connection list for all devices in the network (excluding management interfaces).
 
@@ -269,4 +269,4 @@ def get_topology_ip_adjacency_dump(device_name: str) -> Dict[str, Any]:
         Dictionary with the device name and a list of all IP direct connections in the topology graph.
     """
 
-    return run(device_name, ip_adjacency_dump)
+    return run(None, get_network_topology)

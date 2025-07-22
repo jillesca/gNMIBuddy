@@ -9,7 +9,7 @@ import pytest
 from pathlib import Path
 
 from src.inventory.manager import InventoryManager
-from src.schemas.models import Device
+from src.schemas.models import Device, DeviceErrorResult, DeviceListResult
 
 
 @pytest.fixture
@@ -40,23 +40,20 @@ class TestGetDevice:
         InventoryManager.initialize(inventory_paths["test_devices"])
 
         # Get a device that should exist
-        device, success = InventoryManager.get_device("test-device-1")
+        device = InventoryManager.get_device("test-device-1")
 
         # Assertions for successful retrieval
-        assert success
+        assert not isinstance(device, DeviceErrorResult)
         assert isinstance(device, Device)
         assert device.name == "test-device-1"
         assert device.ip_address == "10.0.0.1"
 
         # Test getting a non-existent device
-        error_result, error_success = InventoryManager.get_device(
-            "non-existent"
-        )
+        error_result = InventoryManager.get_device("non-existent")
 
         # Assertions for error case
-        assert not error_success
-        assert isinstance(error_result, dict)
-        assert "error" in error_result
+        assert isinstance(error_result, DeviceErrorResult)
+        assert "non-existent" in error_result.msg
 
     def test_get_device_from_sandbox(self, inventory_paths):
         """Test retrieving a device from the test_devices.json file."""
@@ -69,10 +66,10 @@ class TestGetDevice:
         InventoryManager.initialize(inventory_paths["sandbox"])
 
         # Get the test device
-        device, success = InventoryManager.get_device("test-device-1")
+        device = InventoryManager.get_device("test-device-1")
 
         # Assertions
-        assert success
+        assert not isinstance(device, DeviceErrorResult)
         assert isinstance(device, Device)
         assert device.name == "test-device-1"
         assert device.ip_address == "10.0.0.1"
@@ -89,10 +86,10 @@ class TestGetDevice:
         InventoryManager.initialize(inventory_paths["hosts"])
 
         # Get one of the devices from test_devices.json
-        device, success = InventoryManager.get_device("test-device-2")
+        device = InventoryManager.get_device("test-device-2")
 
         # Assertions
-        assert success
+        assert not isinstance(device, DeviceErrorResult)
         assert isinstance(device, Device)
         assert device.name == "test-device-2"
         assert device.ip_address == "10.0.0.2"
@@ -117,12 +114,11 @@ class TestListDevices:
         result = InventoryManager.list_devices()
 
         # Assertions
-        assert isinstance(result, dict)
-        assert "devices" in result
-        assert len(result["devices"]) == 2
+        assert isinstance(result, DeviceListResult)
+        assert len(result.devices) == 2
 
         # Check specific devices in the list
-        device_names = [d["name"] for d in result["devices"]]
+        device_names = [d.name for d in result.devices]
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
@@ -139,12 +135,11 @@ class TestListDevices:
         result = InventoryManager.list_devices()
 
         # Assertions
-        assert isinstance(result, dict)
-        assert "devices" in result
-        assert len(result["devices"]) == 2
+        assert isinstance(result, DeviceListResult)
+        assert len(result.devices) == 2
 
         # Check that test devices are in the list
-        device_names = [d["name"] for d in result["devices"]]
+        device_names = [d.name for d in result.devices]
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
@@ -162,12 +157,11 @@ class TestListDevices:
         result = InventoryManager.list_devices()
 
         # Assertions
-        assert isinstance(result, dict)
-        assert "devices" in result
-        assert len(result["devices"]) == 2
+        assert isinstance(result, DeviceListResult)
+        assert len(result.devices) == 2
 
         # Check that expected devices are in the list
-        device_names = [d["name"] for d in result["devices"]]
+        device_names = [d.name for d in result.devices]
         assert "test-device-1" in device_names
         assert "test-device-2" in device_names
 
@@ -185,6 +179,5 @@ class TestListDevices:
         result = InventoryManager.list_devices()
 
         # Assertions
-        assert isinstance(result, dict)
-        assert "devices" in result
-        assert len(result["devices"]) == 0
+        assert isinstance(result, DeviceListResult)
+        assert len(result.devices) == 0

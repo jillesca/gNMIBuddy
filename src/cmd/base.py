@@ -1,44 +1,57 @@
 #!/usr/bin/env python3
-"""Base classes and utilities for CLI command handling"""
-from abc import ABC, abstractmethod
-from src.logging.config import get_logger
+"""Base classes and utilities for Click-based CLI command handling"""
+from typing import Any, Dict, Optional
 
+from src.cmd.context import CLIContext
+from src.logging.config import get_logger
 
 logger = get_logger(__name__)
 
 
-class BaseCommand(ABC):
-    """Base class for all CLI commands"""
+class ClickCommand:
+    """Base class for Click-based CLI commands (if needed for future extensibility)"""
 
-    name = None
-    help = None
-    description = None
+    name: str = ""
+    help: str = ""
+    description: str = ""
 
     def __init__(self):
-        self.parser = None
+        """Initialize the command"""
+        self.click_command = None
 
-    @abstractmethod
-    def configure_parser(self, parser):
-        """Configure the argument parser for this command"""
-        pass
+    def execute(self, ctx: CLIContext, **kwargs):
+        """Execute the command with the given context and parameters"""
+        raise NotImplementedError("Subclasses must implement execute method")
 
-    @abstractmethod
-    def execute(self, args):
-        """Execute the command with the given arguments"""
-        pass
+    def get_click_options(self) -> list:
+        """Return list of Click options for this command"""
+        return []
 
-    def register(self, subparsers):
-        """Register this command with the given subparsers"""
-        if not self.name or not self.help:
-            raise ValueError(
-                f"Command {self.__class__.__name__} must define name and help attributes"
-            )
 
-        self.parser = subparsers.add_parser(
-            self.name,
-            help=self.help,
-            description=self.description or self.help,
-        )
+# Minimal registry for any future command management needs
+class CommandRegistry:
+    """Registry for managing Click commands (minimal implementation)"""
 
-        self.configure_parser(self.parser)
-        return self.parser
+    def __init__(self):
+        self._commands: Dict[str, Any] = {}
+
+    def register(self, name: str, command: Any):
+        """Register a command"""
+        self._commands[name] = command
+        logger.debug("Registered command: %s", name)
+
+    def get(self, name: str) -> Optional[Any]:
+        """Get a registered command"""
+        return self._commands.get(name)
+
+    def get_all(self) -> Dict[str, Any]:
+        """Get all registered commands"""
+        return self._commands.copy()
+
+    def get_names(self) -> list:
+        """Get all command names"""
+        return list(self._commands.keys())
+
+
+# Global command registry (for any future use)
+command_registry = CommandRegistry()

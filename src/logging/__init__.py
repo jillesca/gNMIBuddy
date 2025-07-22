@@ -9,6 +9,7 @@ Key Components:
 - LoggingConfig: Centralized logging configuration
 - OTelFormatter: OpenTelemetry-compatible structured logging
 - LoggerNames: Standardized logger naming hierarchy
+- ExternalLibrarySuppressor: External library noise suppression
 - Operation tracking with decorators
 - Dynamic log level management
 
@@ -29,6 +30,14 @@ from src.logging.config import (
     log_operation,
 )
 
+# Re-export external suppression utilities
+from src.logging.external_suppression import (
+    ExternalLibrarySuppressor,
+    setup_mcp_suppression,
+    setup_cli_suppression,
+    setup_development_suppression,
+)
+
 __all__ = [
     "LoggingConfig",
     "LoggerNames",
@@ -36,4 +45,8 @@ __all__ = [
     "configure_logging",
     "get_logger",
     "log_operation",
+    "ExternalLibrarySuppressor",
+    "setup_mcp_suppression",
+    "setup_cli_suppression",
+    "setup_development_suppression",
 ]

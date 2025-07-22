@@ -1,8 +1,8 @@
 # 🧪 gNMIBuddy
 
-An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) integration, it also provides a full CLI for direct use.
+An _over-engineered_ and _opinionated_ tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) integration, it also provides a full CLI for direct use.
 
-> **Opinionated by design:** gNMI and YANG expose overwhelming amounts of data with countless parameters. This tool provides what I consider the most relevant information for LLMs.
+> **Opinionated by design, over-engineered by passion.** gNMI and YANG expose overwhelming amounts of data with countless parameters. This tool provides what I consider the most relevant information for LLMs. And who doesn't enjoy building complicated solutions.
 
 ## 🎯 What It Does
 
@@ -48,24 +48,63 @@ Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):
 brew install uv
 ```
 
-Run the application:
+## CLI Reference
 
 ```bash
-# Creates virtual environment, installs dependencies, and shows help
-uv run gnmibuddy.py --help
-```
+❯ uv run gnmibuddy.py --help
 
-### Basic Usage
+  ▗▄▄▖▗▖  ▗▖▗▖  ▗▖▗▄▄▄▖▗▄▄▖ ▗▖ ▗▖▗▄▄▄ ▗▄▄▄▗▖  ▗▖
+ ▐▌   ▐▛▚▖▐▌▐▛▚▞▜▌  █  ▐▌ ▐▌▐▌ ▐▌▐▌  █▐▌  █▝▚▞▘
+ ▐▌▝▜▌▐▌ ▝▜▌▐▌  ▐▌  █  ▐▛▀▚▖▐▌ ▐▌▐▌  █▐▌  █ ▐▌
+ ▝▚▄▞▘▐▌  ▐▌▐▌  ▐▌▗▄█▄▖▐▙▄▞▘▝▚▄▞▘▐▙▄▄▀▐▙▄▄▀ ▐▌
 
-```bash
-# List available devices
-uv run gnmibuddy.py list-devices
+An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models.
+Designed primarily for LLMs with Model Context Protocol (MCP) integration, it also provides a full CLI.
+Help: https://github.com/jillesca/gNMIBuddy
 
-# Get routing info from a device
-uv run gnmibuddy.py --device xrd-1 routing --protocol bgp
+Python Version: 3.13.4
+gNMIBuddy Version: 0.1.0
+Usage:
+  gnmibuddy.py [OPTIONS] COMMAND [ARGS]...
 
-# Check all interfaces across all devices
-uv run gnmibuddy.py --all-devices interface
+📋 Inventory Requirement:
+  Provide device inventory via --inventory PATH or set NETWORK_INVENTORY env var
+
+Options:
+  -h, --help            Show this message and exit
+  -V, --version         Show version information
+  --log-level LEVEL     Set logging level (debug, info, warning, error)
+  --module-log-help     Show detailed module logging help
+  --all-devices         Run on all devices concurrently
+  --inventory PATH      Path to inventory JSON file
+  --max-workers NUMBER  Maximum number of concurrent workers for batch operations (--all-devices, --devices, --device-file)
+
+Commands:
+  device (d)    Device Information
+    info         Get system information from a network device
+    list         List all available devices in the inventory
+    profile      Get device profile and role information
+
+  network (n)   Network Protocols
+    interface    Get interface status and configuration
+    mpls         Get MPLS forwarding and label information
+    routing      Get routing protocol information (BGP, ISIS, OSPF)
+    vpn          Get VPN/VRF configuration and status
+
+  topology (t)  Network Topology
+    neighbors    Get direct neighbor information via LLDP/CDP
+    network      Get complete network topology information. Queries all devices in inventory.
+
+  ops (o)       Operations
+    logs         Retrieve and filter device logs
+    validate     Validate all collector functions (development tool)
+
+Examples:
+  gnmibuddy.py device info --device R1
+  gnmibuddy.py network routing --device R1
+  gnmibuddy.py --all-devices device list
+
+Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 ```
 
 ## 🤖 LLM Integration (MCP)
@@ -151,42 +190,13 @@ Then test with the provided `xrd_sandbox.json` inventory file.
 
 Want to see how this MCP tool integrates with actual AI agents? Check out [sp_oncall](https://github.com/jillesca/sp_oncall) - a graph of agents that use gNMIBuddy to demonstrate real-world network operations scenarios.
 
-## 💻 CLI Reference
-
-### Global Options
-
-- `--inventory PATH`: Custom inventory file (or set `NETWORK_INVENTORY` env var)
-- `--device DEVICE_NAME`: Single device from inventory
-
-And pick a command. Use the `--help` flag for detailed command options.
-
-### Examples
-
-```bash
-# Routing with BGP details
-uv run gnmibuddy.py --device xrd-1 routing --protocol bgp --detail
-
-# Specific interface
-uv run gnmibuddy.py --device xrd-2 interface --name GigabitEthernet0/0/0/0
-
-# MPLS details
-uv run gnmibuddy.py --device xrd-1 mpls --detail
-
-# VRF information
-uv run gnmibuddy.py --device xrd-3 vpn --vrf customer-a
-
-# Filtered logs
-uv run gnmibuddy.py --device xrd-2 logging --keywords "bgp|error"
-
-# Run on all devices
-uv run gnmibuddy.py --all-devices interface
-```
-
 ## 📋 Response Format
 
-Replies from `gNMIBuddy` adhere to the `NetworkOperationResult` schema, ensuring consistent and structured responses for all network operations. This schema provides detailed information about the operation, including status, data, metadata, and error handling.
+gNMIBuddy provides structured, consistent responses for all network operations. The response format depends on whether you're targeting a single device or multiple devices.
 
-### `NetworkOperationResult` Schema
+### Single Device Operations
+
+Single device operations return a `NetworkOperationResult` object with detailed information about the operation, including status, data, metadata, and error handling.
 
 ```python
 @dataclass
@@ -200,6 +210,22 @@ class NetworkOperationResult:
     metadata: Dict[str, Any] = field(default_factory=dict)
     error_response: Optional[ErrorResponse] = None
     feature_not_found_response: Optional[FeatureNotFoundResponse] = None
+```
+
+### Batch Operations
+
+Batch operations (using `--all-devices`, `--devices`, or `--device-file`) return a `BatchOperationResult` object containing:
+
+- **`results`**: A list of `NetworkOperationResult` objects, one for each device
+- **`summary`**: Aggregate statistics about the batch operation
+- **`metadata`**: Additional batch operation metadata
+
+```python
+@dataclass
+class BatchOperationResult:
+    results: List[NetworkOperationResult]  # One result per device
+    summary: BatchOperationSummary
+    metadata: Dict[str, Any] = field(default_factory=dict)
 ```
 
 For more details, see the [response schema definition](src/schemas/responses.py).
@@ -233,6 +259,40 @@ Raw gNMI Data → Collector → Processor → Schema → Response
 2. **Processors** transform raw data into structured, LLM-friendly formats.
 3. **Schemas** ensure consistent data contracts across the system.
 4. **Responses** provide standardized output for CLI, API, and MCP interfaces.
+
+## ⚙️ Batch Operations & Concurrency
+
+gNMIBuddy supports running commands across multiple devices simultaneously with configurable concurrency controls to optimize performance while avoiding rate limiting.
+
+### Batch Operation Options
+
+**Device Selection:**
+
+- `--device DEVICE`: Single device operation
+- `--devices device1,device2,device3`: Comma-separated device list
+- `--device-file path/to/devices.txt`: Device list from file (one per line)
+- `--all-devices`: Run on all devices in inventory
+
+**Concurrency Controls:**
+
+- `--max-workers N`: Maximum concurrent devices to process (default: 5)
+- `--per-device-workers N`: Maximum concurrent operations per device (default: varies by command)
+
+### Understanding Concurrency Levels
+
+gNMIBuddy operates with **two levels of concurrency**:
+
+1. **Device-level concurrency** (`--max-workers`): How many devices to process simultaneously
+2. **Per-device concurrency** (command-specific): How many operations to run simultaneously on each device
+
+**Total concurrent requests = max_workers × per_device_operations**
+
+### Examples
+
+```bash
+# Process 3 devices, 2 operations per device = 6 total requests
+uv run gnmibuddy.py --max-workers 3 ops validate --devices xrd-1,xrd-2,xrd-3 --per-device-workers 2
+```
 
 ## 🚧 Development Notes
 

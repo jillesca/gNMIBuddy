@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-"""gNMI client module for interacting with network devices via gNMI"""
+"""
+gNMI client module for interacting with network devices via gNMI.
+
+This module provides the main interface for gNMI operations with automatic
+retry handling, proper error management, and structured response parsing.
+"""
 import os
 import sys
-import logging
-from typing import Dict, Any, Union
 import grpc
 from pygnmi.client import gNMIclient
-
-# Configure pygnmi logger to only show ERROR level messages
-logging.getLogger("pygnmi.client").setLevel(logging.ERROR)
 
 # Add parent directory to path when running as standalone for development
 if __name__ == "__main__":
     sys.path.append(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     )
-
 
 from src.schemas.models import Device
 from src.inventory.file_handler import parse_json_file
@@ -31,120 +30,274 @@ from src.gnmi.error_handlers import (
     handle_connection_refused,
     handle_generic_error,
 )
+from src.gnmi.retry_handler import with_retry
+from src.gnmi.response_parser import parse_gnmi_response, ParsedGnmiResponse
 from src.logging.config import get_logger
-
 
 logger = get_logger(__name__)
 
 
-def get_gnmi_data(device: Device, request: GnmiRequest) -> NetworkResponse:
+class GnmiConnectionManager:
+    """Manages gNMI connection parameters and client creation."""
+
+    @staticmethod
+    def create_connection_params(device: Device) -> dict:
+        """
+        Create gNMI connection parameters from device configuration.
+
+        Args:
+            device: Device object containing connection information
+
+        Returns:
+            Dictionary of gNMI connection parameters
+        """
+        return {
+            "target": (device.ip_address, device.port),
+            "username": device.username,
+            "password": device.password,
+            "insecure": device.insecure,
+            "path_cert": device.path_cert,
+            "path_key": device.path_key,
+            "path_root": device.path_root,
+            "override": device.override,
+            "skip_verify": device.skip_verify,
+            "gnmi_timeout": device.gnmi_timeout,
+            "grpc_options": device.grpc_options,
+            "show_diff": device.show_diff,
+        }
+
+
+class GnmiRequestExecutor:
+    """Executes gNMI requests without retry logic."""
+
+    def __init__(self):
+        self.connection_manager = GnmiConnectionManager()
+
+    def execute_request(
+        self, device: Device, request: GnmiRequest
+    ) -> NetworkResponse:
+        """
+        Execute a single gNMI request.
+
+        Args:
+            device: Device to connect to
+            request: gNMI request parameters
+
+        Returns:
+            NetworkResponse from the request
+
+        Raises:
+            Exception: Any exception from the gNMI operation
+        """
+        connection_params = self.connection_manager.create_connection_params(
+            device
+        )
+
+        with gNMIclient(**connection_params) as gnmi_client:
+            raw_response = gnmi_client.get(**request)
+            parsed_data = parse_gnmi_response(raw_response)
+            return self._create_network_response(parsed_data)
+
+    @staticmethod
+    def _create_network_response(
+        parsed_data: ParsedGnmiResponse,
+    ) -> NetworkResponse:
+        """
+        Create a NetworkResponse from parsed gNMI data.
+
+        Args:
+            parsed_data: ParsedGnmiResponse object containing parsed response data
+
+        Returns:
+            Appropriate NetworkResponse
+        """
+        if parsed_data and parsed_data.has_data:
+            first_notification = parsed_data.first_notification
+            if first_notification and first_notification.has_data:
+                data = first_notification.updates
+                timestamp = first_notification.timestamp
+                return SuccessResponse(data=data, timestamp=timestamp)
+
+        return ErrorResponse(
+            type="NO_DATA", message="No data returned from device"
+        )
+
+
+class GnmiErrorHandler:
+    """Handles gNMI-specific exceptions using existing error handlers."""
+
+    @staticmethod
+    def handle_exception(device: Device, error: Exception) -> NetworkResponse:
+        """
+        Handle gNMI exceptions using appropriate error handlers.
+
+        Args:
+            device: Device object
+            error: Exception that occurred
+
+        Returns:
+            Appropriate error response
+        """
+        if isinstance(error, grpc.FutureTimeoutError):
+            return handle_timeout_error(device)
+        elif isinstance(error, grpc.RpcError):
+            return handle_rpc_error(device, error)
+        elif isinstance(error, ConnectionRefusedError):
+            return handle_connection_refused(device)
+        else:
+            return handle_generic_error(device, error)
+
+
+def get_gnmi_data(
+    device: Device,
+    request: GnmiRequest,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+) -> NetworkResponse:
     """
-    Get data from a gNMI target using the GnmiRequest parameter object.
+    Get data from a gNMI target with automatic retry for rate limiting.
+
+    This is the main entry point for gNMI operations. It automatically handles
+    rate limiting with exponential backoff and provides structured error handling.
 
     Args:
-        device: Device object containing device connection information
+        device: Device object containing connection information
         request: GnmiRequest object containing the request parameters
+        max_retries: Maximum number of retry attempts for rate limited requests
+        base_delay: Base delay in seconds for exponential backoff
 
     Returns:
-        Union of SuccessResponse, ErrorResponse, or FeatureNotFoundResponse
+        NetworkResponse containing either success data or error information
     """
-    logger.debug("gNMI request parameters: %s", request)
-    gnmi_params = {
-        "target": (device.ip_address, device.port),
-        "username": device.username,
-        "password": device.password,
-        "insecure": device.insecure,
-        "path_cert": device.path_cert,
-        "path_key": device.path_key,
-        "path_root": device.path_root,
-        "override": device.override,
-        "skip_verify": device.skip_verify,
-        "gnmi_timeout": device.gnmi_timeout,
-        "grpc_options": device.grpc_options,
-        "show_diff": device.show_diff,
-    }
-
-    try:
-        with gNMIclient(**gnmi_params) as gc:
-
-            response_data = gc.get(**request)
-            raw_response = _extract_gnmi_data(response=response_data)
-            return _create_response_from_raw_data(raw_response=raw_response)
-
-    except grpc.FutureTimeoutError:
-        return handle_timeout_error(device)
-    except grpc.RpcError as e:
-        return handle_rpc_error(device, e)
-    except ConnectionRefusedError:
-        return handle_connection_refused(device)
-    except Exception as e:
-        return handle_generic_error(device, e)
-
-
-def _extract_gnmi_data(
-    response: Dict[str, Any],
-) -> Union[Dict[str, Any], None]:
-
-    notifications = response.get("notification", [])
-
-    if not notifications:
-        logger.debug("No notifications found in gNMI response")
-        return None
-
-    updates = notifications[0].get("update", [])
-
-    if not updates:
-        logger.debug("No updates found in gNMI notification")
-        return None
-
-    result = {}
-    result["data"] = updates
-
-    if "timestamp" in notifications[0]:
-        result["timestamp"] = notifications[0]["timestamp"]
-
-    return result
-
-
-def _create_response_from_raw_data(
-    raw_response: Union[Dict[str, Any], None],
-) -> Union[SuccessResponse, ErrorResponse]:
-    if raw_response:
-        data = raw_response.get("data", [])
-        timestamp = raw_response.get("timestamp")
-        return SuccessResponse(data=data, timestamp=timestamp)
-
-    return ErrorResponse(
-        type="NO_DATA", message="No data returned from device"
+    logger.debug(
+        "Executing gNMI request for device '%s': %s", device.name, request
     )
 
+    executor = GnmiRequestExecutor()
+    error_handler = GnmiErrorHandler()
 
+    def execute_operation() -> NetworkResponse:
+        """Inner function for retry mechanism."""
+        try:
+            return executor.execute_request(device, request)
+        except Exception as error:
+            return error_handler.handle_exception(device, error)
+
+    try:
+        # Use retry handler for rate limiting protection
+        return with_retry(
+            operation=execute_operation,
+            device=device,
+            max_retries=max_retries,
+            base_delay=base_delay,
+        )
+    except Exception as error:
+        # Final fallback for any unexpected errors
+        logger.error(
+            "Unexpected error in gNMI operation for device '%s': %s",
+            device.name,
+            str(error),
+        )
+        return error_handler.handle_exception(device, error)
+
+
+# Development and testing code
 if __name__ == "__main__":
     from pprint import pprint as pp
-    from src.utils.logging_config import configure_logging, get_logger
+    from src.logging.config import configure_logging
+    from src.schemas.responses import OperationStatus
 
+    # Configure detailed logging for development
     configure_logging("DEBUG")
     logger = get_logger(__name__)
 
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    # Path to sandbox.json (one level up from the gnmi directory)
-    json_file_path = os.path.join(os.path.dirname(script_dir), "hosts.json")
+    logger.info("Starting gNMI client development testing...")
 
-    # Parse the JSON file to get device information
-    devices = parse_json_file(json_file_path)
+    try:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Path to sandbox.json (one level up from the gnmi directory)
+        json_file_path = os.path.join(
+            os.path.dirname(script_dir), "hosts.json"
+        )
 
-    device = Device(**devices[0])
+        logger.info("Loading device inventory from: %s", json_file_path)
 
-    # Creating a GnmiRequest for an example query
-    request = GnmiRequest(
-        path=[
-            "openconfig-interfaces:interfaces/interface[name=*]/state/admin-status",
-            "openconfig-interfaces:interfaces/interface[name=*]/state/oper-status",
-        ],
-        encoding="json_ietf",
-    )
+        # Parse the JSON file to get device information
+        devices = parse_json_file(json_file_path)
+        if not devices:
+            logger.error("No devices found in inventory file")
+            exit(1)
 
-    result = get_gnmi_data(device, request)
+        device = Device(**devices[0])
+        logger.info(
+            "Testing with device: %s (%s:%d)",
+            device.name,
+            device.ip_address,
+            device.port,
+        )
 
-    pp(result)
+        # Creating a GnmiRequest for an example query
+        request = GnmiRequest(
+            path=[
+                "openconfig-interfaces:interfaces/interface[name=*]/state/admin-status",
+                "openconfig-interfaces:interfaces/interface[name=*]/state/oper-status",
+            ],
+            encoding="json_ietf",
+        )
+
+        logger.info("Executing gNMI request...")
+        logger.debug("Request paths: %s", request.path)
+
+        # Execute the request
+        result = get_gnmi_data(device, request)
+
+        # Display results
+        print("\n" + "=" * 60)
+        print("gNMI REQUEST RESULTS")
+        print("=" * 60)
+
+        print(f"\nDevice: {device.name}")
+        print(f"Status: {result.status.value}")
+
+        if result.status == OperationStatus.SUCCESS:
+            print(f"Operation: {result.operation_type}")
+            print(f"Data items: {len(result.data) if result.data else 0}")
+            print(f"\nResponse data:")
+            pp(result.data)
+
+            if hasattr(result, "metadata") and result.metadata:
+                print(f"\nMetadata:")
+                pp(result.metadata)
+        else:
+            print(
+                f"Error Type: {result.error_response.type if result.error_response else 'Unknown'}"
+            )
+            print(
+                f"Error Message: {result.error_response.message if result.error_response else 'No message'}"
+            )
+
+            if result.feature_not_found_response:
+                print(
+                    f"Feature: {result.feature_not_found_response.feature_name}"
+                )
+                print(
+                    f"Feature Message: {result.feature_not_found_response.message}"
+                )
+
+        print("\n" + "=" * 60)
+        logger.info("Development testing completed successfully")
+
+    except FileNotFoundError as e:
+        logger.error("Inventory file not found: %s", e)
+        print(f"\nERROR: Could not find inventory file at {json_file_path}")
+        print(
+            "Please ensure you have a valid inventory file or update the path."
+        )
+        exit(1)
+
+    except Exception as e:
+        logger.error("Development testing failed: %s", e)
+        print(f"\nERROR: Development testing failed: {e}")
+        pp(e)
+        exit(1)

@@ -139,7 +139,91 @@ class NetworkOperationResult:
     feature_not_found_response: Optional[FeatureNotFoundResponse] = None
 
 
+@dataclass
+class BatchOperationSummary:
+    """
+    Summary metadata for batch operations.
+
+    Contains aggregate information about a batch operation's execution
+    and results across multiple devices.
+
+    Attributes:
+        total_devices: Total number of devices in the batch operation
+        successful: Number of devices that completed successfully
+        failed: Number of devices that failed
+        execution_time: Total time taken for the batch operation
+        operation_type: Type of operation performed on all devices
+    """
+
+    total_devices: int
+    successful: int
+    failed: int
+    execution_time: float
+    operation_type: str
+
+    @property
+    def success_rate(self) -> float:
+        """Calculate success rate as a percentage"""
+        if self.total_devices == 0:
+            return 0.0
+        return (self.successful / self.total_devices) * 100
+
+
+@dataclass
+class BatchOperationResult:
+    """
+    Schema for batch operation results that maintains API consistency.
+
+    This is the standard contract for all batch operations, ensuring
+    consistency across the codebase by using NetworkOperationResult
+    as the base structure for individual device results.
+
+    Attributes:
+        results: List of NetworkOperationResult objects, one per device
+        summary: BatchOperationSummary containing aggregate metadata
+        metadata: Additional batch operation metadata
+    """
+
+    results: List[NetworkOperationResult]
+    summary: BatchOperationSummary
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Validate that summary matches results"""
+        if len(self.results) != self.summary.total_devices:
+            raise ValueError("Summary total_devices must match results count")
+
+        successful_count = sum(
+            1 for r in self.results if r.status == OperationStatus.SUCCESS
+        )
+        if successful_count != self.summary.successful:
+            raise ValueError(
+                "Summary successful count must match actual successful results"
+            )
+
+    @property
+    def successful_results(self) -> List[NetworkOperationResult]:
+        """Get only the successful results"""
+        return [r for r in self.results if r.status == OperationStatus.SUCCESS]
+
+    @property
+    def failed_results(self) -> List[NetworkOperationResult]:
+        """Get only the failed results"""
+        return [r for r in self.results if r.status != OperationStatus.SUCCESS]
+
+    def get_results_by_device(
+        self, device_name: str
+    ) -> Optional[NetworkOperationResult]:
+        """Get result for a specific device"""
+        return next(
+            (r for r in self.results if r.device_name == device_name), None
+        )
+
+
 # Type alias for return types - Go-like error handling pattern
 NetworkResponse = Union[
     SuccessResponse, ErrorResponse, FeatureNotFoundResponse
 ]
+
+# Type alias for batch operations
+BatchResponse = BatchOperationResult

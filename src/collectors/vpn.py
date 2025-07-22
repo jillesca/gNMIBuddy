@@ -14,19 +14,23 @@ from src.schemas.responses import (
 from src.schemas.models import Device
 from src.processors.protocols.vrf import (
     process_vrf_data,
-    generate_vrf_summary,
+    generate_individual_vrf_summary,
     generate_llm_friendly_data,
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.logging.config import get_logger, log_operation
+from src.utils.vrf_utils import (
+    get_non_default_vrf_names,
+    DEFAULT_INTERNAL_VRFS,
+)
 
 logger = get_logger(__name__)
 
 
 def get_vpn_info(
     device: Device,
-    vrf: Optional[str] = None,
+    vrf_name: Optional[str] = None,
     include_details: bool = False,
 ) -> NetworkOperationResult:
     """
@@ -34,7 +38,7 @@ def get_vpn_info(
 
     Args:
         device: Device object from inventory
-        vrf: Optional VRF name filter
+        vrf_name: Optional VRF name filter
         include_details: Whether to show detailed information (default: False, returns summary only)
 
     Returns:
@@ -42,11 +46,7 @@ def get_vpn_info(
     """
 
     # Get all VRF names from the device
-    vrf_names_result = _get_vrfs_name(device)
-
-    # If error occurred while getting VRF names, return the error
-    if isinstance(vrf_names_result, NetworkOperationResult):
-        return vrf_names_result
+    vrf_names_result = get_non_default_vrf_names(device)
 
     if not vrf_names_result:
         logger.info("No VRFs found on device %s", device.name)
@@ -56,71 +56,40 @@ def get_vpn_info(
             nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
-            data={"vrfs": [], "vrf_count": 0},
+            data=[],
             metadata={
-                "vrf_filter": vrf,
+                "total_vrfs_on_device": 0,
+                "vrfs_returned": 0,
+                "vrf_filter_applied": vrf_name is not None,
+                "vrf_filter": vrf_name,
                 "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
                 "message": "No VRFs found",
             },
         )
 
+    total_vrfs_found = len(vrf_names_result)
+
     # If a specific VRF is requested, filter the list
-    if vrf and vrf in vrf_names_result:
-        vrf_names_result = [vrf]
+    if vrf_name:
+        if vrf_name in vrf_names_result:
+            vrf_names_result = [vrf_name]
+        else:
+            # VRF not found, return empty result
+            vrf_names_result = []
 
     # Get detailed information for each VRF
-    return _get_vrf_details(device, vrf_names_result)
-
-
-DEFAULT_INTERNAL_VRFS = ["default", "**iid"]
-
-
-def _get_vrfs_name(device: Device) -> Union[List[str], NetworkOperationResult]:
-    """
-    Get VRF names from a network device, excluding the DEFAULT VRF.
-
-    Returns:
-        Either a list of VRF names or a NetworkOperationResult with issue information
-    """
-    # Create a GnmiRequest for VRF names
-    vrf_names_request = GnmiRequest(
-        path=[
-            "openconfig-network-instance:network-instances/network-instance[name=*]/state/name",
-        ],
+    return _get_vrf_details(
+        device, vrf_names_result, include_details, total_vrfs_found, vrf_name
     )
-
-    response = get_gnmi_data(device, vrf_names_request)
-
-    if isinstance(response, ErrorResponse):
-        logger.error("Error retrieving VRF names: %s", response.message)
-        return NetworkOperationResult(
-            device_name=device.name,
-            ip_address=device.ip_address,
-            nos=device.nos,
-            operation_type="vpn_info",
-            status=OperationStatus.FAILED,
-            error_response=response,
-        )
-
-    # Extract VRF names from the response
-    vrf_names = []
-    if isinstance(response, SuccessResponse) and response.data:
-        for item in response.data:
-            if isinstance(item, dict) and "val" in item:
-                val = item.get("val")
-                if (
-                    val
-                    and isinstance(val, str)
-                    and val.lower()
-                    not in [vrf.lower() for vrf in DEFAULT_INTERNAL_VRFS]
-                ):
-                    vrf_names.append(val)
-    return vrf_names
 
 
 def _get_vrf_details(
     device: Device,
     vrf_names: List[str],
+    include_details: bool = False,
+    total_vrfs_found: int = 0,
+    vrf_name_filter: Optional[str] = None,
 ) -> NetworkOperationResult:
     """
     Get detailed information for specified VRFs.
@@ -128,6 +97,9 @@ def _get_vrf_details(
     Args:
         device: Device object from inventory
         vrf_names: List of VRF names to query
+        include_details: Whether to include detailed data in the response
+        total_vrfs_found: Total number of VRFs found on the device
+        vrf_name_filter: The VRF name filter applied, if any
 
     Returns:
         NetworkOperationResult: Response object containing structured VRF information with parsed data and summary
@@ -140,7 +112,20 @@ def _get_vrf_details(
             nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
-            data={"vpn_data": {}, "summary": {"message": "No VRFs found"}},
+            data=[],
+            metadata={
+                "total_vrfs_on_device": total_vrfs_found,
+                "vrfs_returned": 0,
+                "vrf_filter_applied": vrf_name_filter is not None,
+                "vrf_filter": vrf_name_filter,
+                "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
+                "message": (
+                    "No VRFs found matching filter"
+                    if vrf_name_filter
+                    else "No VRFs found"
+                ),
+            },
         )
 
     # Build path queries for each VRF
@@ -149,12 +134,10 @@ def _get_vrf_details(
         for vrf_name in vrf_names
     ]
 
-    # Create a GnmiRequest for VRF details
     vrf_details_request = GnmiRequest(
         path=vrf_path_queries, encoding="json_ietf"
     )
 
-    # Get detailed VRF data
     response = get_gnmi_data(device, vrf_details_request)
 
     if isinstance(response, ErrorResponse):
@@ -176,11 +159,30 @@ def _get_vrf_details(
 
         processed_data = process_vrf_data(gnmi_data or [])
         llm_data = generate_llm_friendly_data(processed_data)
-        summary = generate_vrf_summary(processed_data)
 
-        vpn_data = {
-            "vrfs": [llm_data] if isinstance(llm_data, dict) else llm_data
-        }
+        # Get timestamp for summaries
+        timestamp = llm_data.get("timestamp", "Unknown")
+
+        # Build the new data structure
+        result_data = []
+
+        # Process each VRF individually
+        for vrf in llm_data.get("vrfs", []):
+            vrf_entry = {}
+
+            if include_details:
+                vrf_entry["detailed_data"] = {
+                    "timestamp": timestamp,
+                    **vrf,
+                }
+            else:
+                vrf_entry["detailed_data"] = {}
+
+            vrf_entry["summary"] = generate_individual_vrf_summary(
+                vrf, timestamp
+            )
+
+            result_data.append(vrf_entry)
 
         return NetworkOperationResult(
             device_name=device.name,
@@ -188,13 +190,15 @@ def _get_vrf_details(
             nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
-            data={
-                "vpn_data": vpn_data,
-                "summary": (
-                    summary
-                    if isinstance(summary, dict)
-                    else {"summary": summary}
-                ),
+            data=result_data,
+            metadata={
+                "total_vrfs_on_device": total_vrfs_found,
+                "vrfs_returned": len(result_data),
+                "vrf_filter_applied": vrf_name_filter is not None,
+                "vrf_filter": vrf_name_filter,
+                "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
+                "message": "VRF information retrieved",
             },
         )
     except (KeyError, ValueError, TypeError) as e:

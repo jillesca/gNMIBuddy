@@ -5,9 +5,11 @@ description = "An opinionated tool that retrieves essential network information 
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "click>=8.1.8",
     "mcp[cli]>=1.6.0",
     "networkx>=3.4.2",
     "pygnmi>=0.8.15",
+    "pyyaml>=6.0.1",
 ]
 
 [build-system]

@@ -28,7 +28,7 @@ def run_command_on_all_devices(
     src.inventory.InventoryManager.initialize()
     # Get the list of all devices
     devices_info = src.inventory.InventoryManager.list_devices()
-    device_names = [device["name"] for device in devices_info["devices"]]
+    device_names = [device.name for device in devices_info.devices]
 
     results = []
 

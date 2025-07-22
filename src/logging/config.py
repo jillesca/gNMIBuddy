@@ -10,6 +10,11 @@ import json
 from datetime import datetime
 from typing import Dict, Optional, Any, Union
 
+from .external_suppression import (
+    ExternalLibrarySuppressor,
+    setup_cli_suppression,
+)
+
 
 # Application-specific logger names for easy filtering
 class LoggerNames:
@@ -89,6 +94,7 @@ class LoggingConfig:
 
     _configured = False
     _module_levels: Dict[str, int] = {}
+    _last_config: Dict[str, Any] = {}
 
     @classmethod
     def configure(
@@ -98,6 +104,8 @@ class LoggingConfig:
         enable_structured: bool = False,
         enable_file_output: bool = True,
         log_file: Optional[str] = None,
+        enable_external_suppression: bool = True,
+        external_suppression_mode: str = "cli",  # "cli", "mcp", "development"
     ) -> logging.Logger:
         """
         Configure application logging with OTel best practices.
@@ -108,9 +116,31 @@ class LoggingConfig:
             enable_structured: Whether to use structured JSON logging
             enable_file_output: Whether to log to file
             log_file: Custom log file path
+            enable_external_suppression: Whether to suppress external library noise
+            external_suppression_mode: Type of suppression ("cli", "mcp", "development")
         """
-        if cls._configured:
+        # Check if configuration has changed
+        current_config = {
+            "global_level": global_level,
+            "module_levels": module_levels,
+            "enable_structured": enable_structured,
+            "enable_file_output": enable_file_output,
+            "log_file": log_file,
+            "enable_external_suppression": enable_external_suppression,
+            "external_suppression_mode": external_suppression_mode,
+        }
+
+        if cls._configured and cls._last_config == current_config:
             return logging.getLogger(LoggerNames.APP_ROOT)
+
+        # Store the new configuration
+        cls._last_config = current_config.copy()
+
+        # Apply external library suppression early (before other logging config)
+        if enable_external_suppression:
+            cls._setup_external_suppression(
+                external_suppression_mode, module_levels
+            )
 
         level_map = {
             "debug": logging.DEBUG,
@@ -171,11 +201,8 @@ class LoggingConfig:
         for handler in handlers:
             root_logger.addHandler(handler)
 
-        # Set module-specific levels
+        # Set module-specific levels (after external suppression)
         cls._set_module_levels(module_levels or {}, level_map)
-
-        # Configure external libraries
-        cls._configure_external_loggers()
 
         cls._configured = True
 
@@ -187,10 +214,47 @@ class LoggingConfig:
                 "structured": enable_structured,
                 "file_output": enable_file_output,
                 "log_file": log_file,
+                "external_suppression": enable_external_suppression,
+                "suppression_mode": external_suppression_mode,
             },
         )
 
         return app_logger
+
+    @classmethod
+    def _setup_external_suppression(
+        cls, mode: str, module_levels: Optional[Dict[str, str]] = None
+    ) -> None:
+        """Setup external library suppression based on mode."""
+
+        # Get any custom external library levels from module_levels
+        external_custom_levels = {}
+        if module_levels:
+            for (
+                lib_name
+            ) in ExternalLibrarySuppressor.get_default_suppressions().keys():
+                if lib_name in module_levels:
+                    external_custom_levels[lib_name] = module_levels[lib_name]
+
+        # Apply suppression based on mode
+        if mode == "mcp":
+            from .external_suppression import setup_mcp_suppression
+
+            setup_mcp_suppression()
+        elif mode == "development":
+            from .external_suppression import setup_development_suppression
+
+            setup_development_suppression()
+        else:  # Default to "cli"
+            from .external_suppression import setup_cli_suppression
+
+            setup_cli_suppression()
+
+        # Apply any custom levels for external libraries
+        if external_custom_levels:
+            ExternalLibrarySuppressor.setup_python_logging_suppression(
+                custom_levels=external_custom_levels, include_defaults=False
+            )
 
     @classmethod
     def _set_module_levels(
@@ -205,21 +269,6 @@ class LoggingConfig:
                 cls._module_levels[module_name] = level
                 logger = logging.getLogger(module_name)
                 logger.setLevel(level)
-
-    @classmethod
-    def _configure_external_loggers(cls):
-        """Configure external library loggers to reduce noise."""
-        # Reduce pygnmi verbosity
-        logging.getLogger(LoggerNames.PYGNMI).setLevel(logging.WARNING)
-
-        # Reduce gRPC verbosity
-        logging.getLogger(LoggerNames.GRPC).setLevel(logging.WARNING)
-
-        # Set urllib3 to WARNING to reduce connection pool messages
-        logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-        # Set asyncio to WARNING to reduce event loop messages
-        logging.getLogger("asyncio").setLevel(logging.WARNING)
 
     @classmethod
     def set_module_level(cls, module_name: str, level: Union[str, int]):
@@ -256,6 +305,7 @@ def configure_logging(
     log_level: Optional[str] = None,
     module_levels: Optional[Dict[str, str]] = None,
     structured: bool = False,
+    external_suppression_mode: str = "cli",
 ) -> logging.Logger:
     """
     Configure the application's logging with OTel best practices.
@@ -264,6 +314,7 @@ def configure_logging(
         log_level: Global logging level (debug, info, warning, error)
         module_levels: Dict mapping module names to specific log levels
         structured: Whether to use structured JSON logging
+        external_suppression_mode: Type of external library suppression
 
     Returns:
         Configured root application logger
@@ -272,6 +323,7 @@ def configure_logging(
         global_level=log_level,
         module_levels=module_levels,
         enable_structured=structured,
+        external_suppression_mode=external_suppression_mode,
     )
 
 
@@ -328,7 +380,7 @@ def log_operation(operation_name: str, device_name: Optional[str] = None):
             if actual_device_name:
                 extra["device_name"] = actual_device_name
 
-            logger.info("Starting %s", operation_name, extra=extra)
+            logger.debug("Starting %s", operation_name, extra=extra)
 
             try:
                 result = func(*args, **kwargs)
@@ -336,7 +388,7 @@ def log_operation(operation_name: str, device_name: Optional[str] = None):
                 duration = (datetime.now() - start_time).total_seconds() * 1000
                 extra["duration_ms"] = round(duration, 2)
 
-                logger.info("Completed %s", operation_name, extra=extra)
+                logger.debug("Completed %s", operation_name, extra=extra)
                 return result
 
             except Exception as e:

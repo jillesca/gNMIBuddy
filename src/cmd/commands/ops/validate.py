@@ -6,10 +6,8 @@ from typing import Dict, Any
 
 import click
 
-from src.cmd.commands.base import (
-    execute_device_command,
-    add_common_device_options,
-)
+from src.cmd.commands.base import execute_device_command
+from src.cmd.commands.decorators import add_common_device_options
 from src.cmd.schemas.commands import Command, CommandGroup
 from src.cmd.error_providers import CommandErrorProvider
 from src.cmd.registries.command_registry import (

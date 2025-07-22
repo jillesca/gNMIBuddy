@@ -6,7 +6,7 @@ from src.logging.config import get_logger
 from src.cmd.formatters import format_output
 from src.inventory.manager import InventoryManager
 from src.schemas.models import DeviceListCommandResult
-from src.cmd.commands.base import (
+from src.cmd.commands.decorators import (
     add_detail_option,
     add_output_option,
 )

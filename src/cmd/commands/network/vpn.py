@@ -4,9 +4,11 @@ import click
 from src.collectors.vpn import get_vpn_info
 from src.cmd.commands.base import (
     execute_device_command,
+    CommandErrorProvider,
+)
+from src.cmd.commands.decorators import (
     add_common_device_options,
     add_detail_option,
-    CommandErrorProvider,
 )
 from src.cmd.schemas import Command, CommandGroup
 

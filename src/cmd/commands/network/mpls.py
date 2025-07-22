@@ -2,8 +2,8 @@
 """Network MPLS command implementation"""
 import click
 from src.collectors.mpls import get_mpls_info
-from src.cmd.commands.base import (
-    execute_device_command,
+from src.cmd.commands.base import execute_device_command
+from src.cmd.commands.decorators import (
     add_common_device_options,
     add_detail_option,
 )

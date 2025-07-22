@@ -1,8 +1,8 @@
 # 🧪 gNMIBuddy
 
-An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) integration, it also provides a full CLI for direct use.
+An _over-engineered_ and _opinionated_ tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) integration, it also provides a full CLI for direct use.
 
-> **Opinionated by design:** gNMI and YANG expose overwhelming amounts of data with countless parameters. This tool provides what I consider the most relevant information for LLMs.
+> **Opinionated by design, over-engineered by passion.** gNMI and YANG expose overwhelming amounts of data with countless parameters. This tool provides what I consider the most relevant information for LLMs. And who doesn't enjoy building complicated solutions.
 
 ## 🎯 What It Does
 
@@ -55,20 +55,63 @@ Run the application:
 uv run gnmibuddy.py --help
 ```
 
-### Basic Usage
+## CLI Reference
 
 ```bash
-# List available devices
-uv run gnmibuddy.py device list
+❯ uv run gnmibuddy.py --help
 
-# Get system information from a device
-uv run gnmibuddy.py device info --device xrd-1
+  ▗▄▄▖▗▖  ▗▖▗▖  ▗▖▗▄▄▄▖▗▄▄▖ ▗▖ ▗▖▗▄▄▄ ▗▄▄▄▗▖  ▗▖
+ ▐▌   ▐▛▚▖▐▌▐▛▚▞▜▌  █  ▐▌ ▐▌▐▌ ▐▌▐▌  █▐▌  █▝▚▞▘
+ ▐▌▝▜▌▐▌ ▝▜▌▐▌  ▐▌  █  ▐▛▀▚▖▐▌ ▐▌▐▌  █▐▌  █ ▐▌
+ ▝▚▄▞▘▐▌  ▐▌▐▌  ▐▌▗▄█▄▖▐▙▄▞▘▝▚▄▞▘▐▙▄▄▀▐▙▄▄▀ ▐▌
 
-# Get routing info from a device
-uv run gnmibuddy.py network routing --device xrd-1 --protocol bgp
+An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models.
+Designed primarily for LLMs with Model Context Protocol (MCP) integration, it also provides a full CLI.
+Help: https://github.com/jillesca/gNMIBuddy
 
-# Check all interfaces across all devices
-uv run gnmibuddy.py --all-devices network interface
+Python Version: 3.13.4
+gNMIBuddy Version: 0.1.0
+Usage:
+  gnmibuddy.py [OPTIONS] COMMAND [ARGS]...
+
+📋 Inventory Requirement:
+  Provide device inventory via --inventory PATH or set NETWORK_INVENTORY env var
+
+Options:
+  -h, --help            Show this message and exit
+  -V, --version         Show version information
+  --log-level LEVEL     Set logging level (debug, info, warning, error)
+  --module-log-help     Show detailed module logging help
+  --all-devices         Run on all devices concurrently
+  --inventory PATH      Path to inventory JSON file
+  --max-workers NUMBER  Maximum number of concurrent workers for batch operations (--all-devices, --devices, --device-file)
+
+Commands:
+  device (d)    Device Information
+    info         Get system information from a network device
+    list         List all available devices in the inventory
+    profile      Get device profile and role information
+
+  network (n)   Network Protocols
+    interface    Get interface status and configuration
+    mpls         Get MPLS forwarding and label information
+    routing      Get routing protocol information (BGP, ISIS, OSPF)
+    vpn          Get VPN/VRF configuration and status
+
+  topology (t)  Network Topology
+    neighbors    Get direct neighbor information via LLDP/CDP
+    network      Get complete network topology information. Queries all devices in inventory.
+
+  ops (o)       Operations
+    logs         Retrieve and filter device logs
+    validate     Validate all collector functions (development tool)
+
+Examples:
+  gnmibuddy.py device info --device R1
+  gnmibuddy.py network routing --device R1
+  gnmibuddy.py --all-devices device list
+
+Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 ```
 
 ## 🤖 LLM Integration (MCP)
@@ -153,61 +196,6 @@ Then test with the provided `xrd_sandbox.json` inventory file.
 ### Testing with AI Agents
 
 Want to see how this MCP tool integrates with actual AI agents? Check out [sp_oncall](https://github.com/jillesca/sp_oncall) - a graph of agents that use gNMIBuddy to demonstrate real-world network operations scenarios.
-
-## CLI Reference
-
-### Command Structure
-
-The CLI uses a hierarchical command structure organized into logical groups:
-
-```bash
-uv run gnmibuddy [GLOBAL_OPTIONS] <group> <command> [COMMAND_OPTIONS]
-```
-
-**Command Groups:**
-
-- **`device`**: Device management and information
-- **`network`**: Network protocol analysis
-- **`topology`**: Network topology discovery
-- **`ops`**: Operational tasks and testing
-- **`manage`**: CLI and system management
-
-### Global Options
-
-- `--inventory PATH`: Custom inventory file (or set `NETWORK_INVENTORY` env var)
-
-For complete options and detailed command information, use:
-
-```bash
-uv run gnmibuddy.py --help
-uv run gnmibuddy.py <group> --help
-uv run gnmibuddy.py <group> <command> --help
-```
-
-### Examples
-
-```bash
-# Device information commands
-uv run gnmibuddy.py device info --device xrd-1
-uv run gnmibuddy.py device profile --device xrd-2
-uv run gnmibuddy.py device list
-
-# Network protocol commands
-uv run gnmibuddy.py network routing --device xrd-1 --protocol bgp --detail
-uv run gnmibuddy.py network interface --device xrd-2 --name GigabitEthernet0/0/0/0
-uv run gnmibuddy.py network mpls --device xrd-1 --detail
-uv run gnmibuddy.py network vpn --device xrd-3 --vrf customer-a
-
-# Topology commands
-uv run gnmibuddy.py topology neighbors --device xrd-1
-uv run gnmibuddy.py topology adjacency --device xrd-2
-
-# Operational commands
-uv run gnmibuddy.py ops logs --device xrd-2 --keywords "bgp|error"
-
-# Run on all devices
-uv run gnmibuddy.py --all-devices network interface
-```
 
 ## 📋 Response Format
 

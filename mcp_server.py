@@ -5,15 +5,52 @@ Uses a decorator factory to register API functions without duplicating signature
 """
 import os
 import sys
+import logging
 from functools import wraps
+
+
+from src.logging.external_suppression import ExternalLibrarySuppressor
+
+ExternalLibrarySuppressor.setup_environment_suppression()
 
 from mcp.server.fastmcp import FastMCP
 
 import api
 from src.utils.version_utils import load_gnmibuddy_version
 from src.cmd.formatters import make_serializable
-from src.logging.config import get_logger
+from src.logging import configure_logging, get_logger
 
+
+def setup_mcp_logging():
+    """Configure logging specifically for MCP server operation."""
+
+    configure_logging(
+        log_level="info",
+        external_suppression_mode="mcp",  # Uses the most aggressive suppression
+    )
+
+    # For MCP servers, redirect all logging to stderr to keep stdout clean for JSON
+    root_logger = logging.getLogger()
+
+    # Remove all existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Add stderr-only handler with clean format
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter(
+        "%(asctime)s | %(levelname)-8s | %(name)-30s | %(funcName)-20s:%(lineno)-4d | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    stderr_handler.setFormatter(formatter)
+    stderr_handler.setLevel(logging.INFO)
+
+    root_logger.addHandler(stderr_handler)
+    root_logger.setLevel(logging.DEBUG)
+
+
+# Configure logging for MCP server
+setup_mcp_logging()
 
 logger = get_logger(__name__)
 

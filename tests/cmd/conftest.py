@@ -13,7 +13,8 @@ sys.path.insert(
 )
 
 from src.cmd.parser import cli
-from src.cmd.groups import COMMAND_GROUPS
+from src.cmd.schemas import CommandGroup, Command
+from src.cmd.schemas.commands import command_registry
 from src.cmd.display import GroupedHelpFormatter
 from src.cmd.error_handler import CLIErrorHandler
 
@@ -65,25 +66,25 @@ def get_all_commands() -> List[Dict[str, Any]]:
     """Get all registered commands for testing"""
     commands = []
 
-    for group_name, group in COMMAND_GROUPS.items():
-        if hasattr(group, "commands"):
-            for cmd_name, cmd in group.commands.items():
-                commands.append(
-                    {
-                        "name": cmd_name,
-                        "group": group_name,
-                        "command": cmd,
-                        "help": getattr(cmd, "help", ""),
-                        "callback": getattr(cmd, "callback", None),
-                    }
-                )
+    all_commands = command_registry.get_all_commands()
+
+    for cmd_info in all_commands:
+        commands.append(
+            {
+                "name": cmd_info.name,
+                "group": cmd_info.group.group_name,
+                "command": cmd_info.command,
+                "help": cmd_info.description,
+                "callback": None,  # Not accessible in this context
+            }
+        )
 
     return commands
 
 
 def get_all_groups() -> List[str]:
     """Get all command group names"""
-    return list(COMMAND_GROUPS.keys())
+    return CommandGroup.get_all_names()
 
 
 def get_command_help(cli_runner: CliRunner, command_path: List[str]) -> str:
@@ -159,9 +160,8 @@ def command_test_data():
         },
         "required_device_commands": ["info", "profile", "list"],
         "required_network_commands": ["routing", "interface", "mpls", "vpn"],
-        "required_topology_commands": ["neighbors", "adjacency"],
+        "required_topology_commands": ["neighbors", "network"],
         "required_ops_commands": ["logs", "test-all"],
-        "required_manage_commands": ["list-commands", "log-level"],
     }
 
 

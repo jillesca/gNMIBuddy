@@ -48,13 +48,6 @@ Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):
 brew install uv
 ```
 
-Run the application:
-
-```bash
-# Creates virtual environment, installs dependencies, and shows help
-uv run gnmibuddy.py --help
-```
-
 ## CLI Reference
 
 ```bash

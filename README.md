@@ -39,6 +39,9 @@ See the [API definition](/api.py) for all available APIs and options.
 - **Tested on:**
   - **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
 
+> [!NOTE]
+> The function to get logs from the devices, only works on XR systems.
+
 ### Installation
 
 Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):
@@ -47,6 +50,14 @@ Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):
 # macOS
 brew install uv
 ```
+
+After cloning the project, sync dependencies:
+
+```bash
+uv sync --frozen --no-install-project --no-dev
+```
+
+This is needed only the first time you install the project.
 
 ## CLI Reference
 
@@ -171,7 +182,8 @@ uv run --with "mcp[cli],pygnmi,networkx" \
 mcp run mcp_server.py
 ```
 
-> **Note:** Set the `NETWORK_INVENTORY` environment variable to your inventory file or you'll get errors.
+> [!IMPORTANT]
+> For MCP set the `NETWORK_INVENTORY` environment variable to your inventory file or you'll get errors.
 
 ## 🧪 Testing with DevNet Sandbox
 
@@ -293,11 +305,3 @@ gNMIBuddy operates with **two levels of concurrency**:
 # Process 3 devices, 2 operations per device = 6 total requests
 uv run gnmibuddy.py --max-workers 3 ops validate --devices xrd-1,xrd-2,xrd-3 --per-device-workers 2
 ```
-
-## 🚧 Development Notes
-
-**Planned Improvements:**
-
-- [ ] Capability check for minimum OpenConfig model support.
-- [ ] Standardized processor interfaces and output formats.
-- [ ] Device compatibility validation.

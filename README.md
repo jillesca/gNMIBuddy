@@ -40,7 +40,7 @@ See the [API definition](/api.py) for all available APIs and options.
   - **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
 
 > [!NOTE]
-> The function to get logs from the devices, only works on XR systems.
+> The function to get logs from devices, only works on XR systems.
 
 ### Installation
 
@@ -54,7 +54,7 @@ brew install uv
 After cloning the project, sync dependencies:
 
 ```bash
-uv sync --frozen --no-install-project --no-dev
+uv sync --frozen --no-dev
 ```
 
 This is needed only the first time you install the project.

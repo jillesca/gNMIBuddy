@@ -40,14 +40,13 @@ def get_logs(
         NetworkOperationResult: Response object containing logs or error information
     """
     logger.debug(
-        "Getting logs",
-        extra={
-            "device_name": device.name,
-            "keywords": keywords,
-            "minutes": minutes,
-            "show_all_logs": show_all_logs,
-        },
+        "Getting logs from device %s - keywords: %s, minutes: %s, show_all: %s",
+        device.name,
+        keywords,
+        minutes,
+        show_all_logs,
     )
+
     # Prepare filter information for inclusion in the response
     filter_info = {
         "keywords": keywords,
@@ -63,15 +62,26 @@ def get_logs(
         log_filter = f"(-[1-5]-|{keywords}) | utility egrep -v logged"
 
     log_query = f"show logging | utility egrep '{log_filter}' | utility egrep -v logged "
+    logger.debug("Generated log query: %s", log_query)
 
     # Create a GnmiRequest with the appropriate parameters for logs
     log_request = GnmiRequest(path=[log_query], encoding="ascii")
 
     response = get_gnmi_data(device=device, request=log_request)
+    logger.debug(
+        "gNMI response type: %s, status: %s",
+        type(response).__name__,
+        getattr(response, "status", "N/A"),
+    )
 
     # logger.debug("Raw log response: %s", response)
 
     if isinstance(response, ErrorResponse):
+        logger.debug(
+            "ErrorResponse details - type: %s, message: %s",
+            response.type,
+            response.message,
+        )
         logger.error(
             "Failed to get logs from %s: %s", device.name, response.message
         )
@@ -91,12 +101,23 @@ def get_logs(
             if response.data:
                 gnmi_data = response.data
 
+        logger.debug(
+            "Extracted gNMI data length: %d",
+            len(gnmi_data) if gnmi_data else 0,
+        )
+
         # Process the logs through the filter
         filtered_logs = filter_logs(
             gnmi_data or [], show_all_logs, minutes or 5
         )
+        logger.debug(
+            "Filtered logs - error: %s, log count: %d",
+            "error" in filtered_logs,
+            len(filtered_logs.get("logs", [])),
+        )
 
         if "error" in filtered_logs:
+            logger.debug("Log processing error: %s", filtered_logs["error"])
             error_response = ErrorResponse(
                 type="LOG_PROCESSING_ERROR", message=filtered_logs["error"]
             )
@@ -109,6 +130,17 @@ def get_logs(
                 error_response=error_response,
             )
 
+        log_count = len(filtered_logs.get("logs", []))
+
+        if log_count == 0:
+            logger.info("No logs found on %s matching filters", device.name)
+        else:
+            logger.info(
+                "Successfully processed %d logs from %s",
+                log_count,
+                device.name,
+            )
+
         # Create a response with the filtered logs
         return NetworkOperationResult(
             device_name=device.name,
@@ -119,7 +151,7 @@ def get_logs(
             data={
                 "logs": filtered_logs.get("logs", []),
                 "summary": {
-                    "count": len(filtered_logs.get("logs", [])),
+                    "count": log_count,
                     "filter_info": filter_info,
                 },
                 "filters_applied": filter_info,
@@ -127,6 +159,7 @@ def get_logs(
         )
     except Exception as e:
         logger.error("Error processing logs from %s: %s", device.name, str(e))
+        logger.debug("Exception details: %s", str(e), exc_info=True)
         error_response = ErrorResponse(
             type="LOG_PROCESSING_ERROR",
             message=f"Error processing logs: {str(e)}",

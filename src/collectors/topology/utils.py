@@ -17,6 +17,10 @@ _cached_graph = None
 
 
 def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
+    logger.debug(
+        "Building IP graph from %d interface results", len(interface_results)
+    )
+
     interface_results = [
         dict(result, device=result.get("device_name"))
         for result in interface_results
@@ -39,18 +43,35 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
         all_devices.add(device_name)
         if device_name not in device_order:
             device_order[device_name] = i
+
+    logger.debug(
+        "Found %d unique devices from interface results", len(all_devices)
+    )
+
     # Add all devices as nodes before processing edges, in input order
     for device in sorted(
         all_devices, key=lambda x: device_order.get(x, float("inf"))
     ):
         topology_graph.add_node(device)
+
+    logger.debug(
+        "Added %d nodes to topology graph", topology_graph.number_of_nodes()
+    )
+
     ip_subnet_entries = extract_interface_subnets(interface_results)
+    logger.debug("Extracted %d IP subnet entries", len(ip_subnet_entries))
+
     mgmt_names = {"MgmtEth0/RP0/CPU0/0"}
     ip_subnet_entries = [
         entry
         for entry in ip_subnet_entries
         if entry["interface"] not in mgmt_names
     ]
+    logger.debug(
+        "After filtering management interfaces: %d subnet entries",
+        len(ip_subnet_entries),
+    )
+
     network_to_interface_entries: Dict[str, List[Dict[str, Any]]] = (
         defaultdict(list)
     )
@@ -64,6 +85,13 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
         network_to_interface_entries[interface_entry["network"]].append(
             interface_entry
         )
+
+    logger.debug(
+        "Grouped interfaces into %d unique networks",
+        len(network_to_interface_entries),
+    )
+
+    connections_added = 0
     for network, interface_entry_list in network_to_interface_entries.items():
         if len(interface_entry_list) == 2:
             endpoint_a = interface_entry_list[0]
@@ -99,6 +127,24 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
                 local_ip=source_endpoint["ip"],
                 remote_ip=target_endpoint["ip"],
             )
+            connections_added += 1
+
+            logger.debug(
+                "Added connection %d: %s (%s) <-> %s (%s) on network %s",
+                connections_added,
+                source_endpoint["device"],
+                source_endpoint["interface"],
+                target_endpoint["device"],
+                target_endpoint["interface"],
+                network,
+            )
+
+    logger.debug(
+        "Final topology graph: %d nodes, %d edges",
+        topology_graph.number_of_nodes(),
+        topology_graph.number_of_edges(),
+    )
+
     return topology_graph
 
 
@@ -108,7 +154,7 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
     device_list_result = InventoryManager.list_devices()
     device_objs = device_list_result.devices
     device_names = [d.name for d in device_objs]
-    logger.debug("Found %d devices: %s", len(device_names), device_names)
+    logger.debug("Found %d devices: %s", len(device_names), str(device_names))
 
     logger.debug("Running interface commands on all devices")
     raw_interface_results = run_command_on_all_devices(
@@ -122,13 +168,42 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
     ]
 
     # Log some details about the results
+    success_count = 0
+    error_count = 0
     for i, result in enumerate(interface_results):
+        if isinstance(result, dict):
+            if "error" in result or "feature_not_found" in result:
+                error_count += 1
+            else:
+                success_count += 1
         logger.debug(
             "Device %s: %s - keys: %s",
             device_names[i],
             type(result).__name__,
-            list(result.keys()) if isinstance(result, dict) else "not a dict",
+            (
+                str(list(result.keys()))
+                if isinstance(result, dict)
+                else "not a dict"
+            ),
         )
+
+    logger.debug(
+        "Interface collection summary - success: %d, errors: %d",
+        success_count,
+        error_count,
+    )
+
+    # Warn if significant portion of interface collection failed
+    total_devices = success_count + error_count
+    if total_devices > 0 and error_count > 0:
+        error_percentage = (error_count / total_devices) * 100
+        if error_percentage >= 25:  # Warn if 25% or more failed
+            logger.warning(
+                "High interface collection failure rate: %d/%d devices failed (%.1f%%) - topology may be incomplete",
+                error_count,
+                total_devices,
+                error_percentage,
+            )
 
     logger.debug("Building graph from interface results")
     graph = build_ip_only_graph_from_interface_results(interface_results)
@@ -142,11 +217,23 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
 
 
 def _get_interface(device: str) -> dict:
+    logger.debug("Getting interface info for device %s", device)
+
     device_obj = _get_device_or_error_dict(device)
     if not isinstance(device_obj, Device):
+        logger.debug(
+            "Device %s: error getting device object: %s",
+            device,
+            str(device_obj),
+        )
         return device_obj
 
     interface_response = get_interfaces(device_obj)
+    logger.debug(
+        "Device %s: interface response type: %s",
+        device,
+        type(interface_response).__name__,
+    )
 
     # Handle NetworkOperationResult
     if hasattr(interface_response, "status"):
@@ -154,11 +241,13 @@ def _get_interface(device: str) -> dict:
             # Return the data from NetworkOperationResult
             result = interface_response.data.copy()
             result["device_name"] = device
+            logger.debug("Device %s: successful interface collection", device)
             return result
         elif (
             interface_response.status == OperationStatus.FEATURE_NOT_AVAILABLE
         ):
             feature_response = interface_response.feature_not_found_response
+            logger.debug("Device %s: feature not available", device)
             return {
                 "feature_not_found": (
                     feature_response.feature_name
@@ -173,6 +262,16 @@ def _get_interface(device: str) -> dict:
                 "device_name": device,
             }
         else:  # failed
+            logger.debug("Device %s: interface collection failed", device)
+            logger.error(
+                "Failed to collect interfaces from %s for topology building: %s",
+                device,
+                (
+                    interface_response.error_response.message
+                    if interface_response.error_response
+                    else "Unknown error"
+                ),
+            )
             return {
                 "error": (
                     interface_response.error_response.message
@@ -183,6 +282,7 @@ def _get_interface(device: str) -> dict:
             }
 
     # Fallback for unexpected response type
+    logger.debug("Device %s: unexpected response type", device)
     return {
         "error": "Unexpected response from get_interface_information",
         "device_name": device,

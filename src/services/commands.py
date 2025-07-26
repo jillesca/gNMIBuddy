@@ -51,10 +51,26 @@ def run(
     Returns:
         NetworkOperationResult: The result of the network operation
     """
+    logger.debug(
+        "Running command %s for device: %s, args: %s",
+        (
+            command_func.__name__
+            if hasattr(command_func, "__name__")
+            else "unknown"
+        ),
+        device_name,
+        str(args),
+    )
+
     # Handle network-wide operations that don't need a device
     if device_name is None:
         logger.debug("Executing network-wide command")
         command_result = command_func(*args)
+        logger.debug(
+            "Network-wide command result type: %s, status: %s",
+            type(command_result).__name__,
+            getattr(command_result, "status", "N/A"),
+        )
 
         assert isinstance(command_result, NetworkOperationResult), (
             f"Network command function must return NetworkOperationResult, "
@@ -65,12 +81,14 @@ def run(
         return command_result
 
     # Handle device-specific operations
+    logger.debug("Getting device %s from inventory", device_name)
     device = src.inventory.get_device(device_name)
 
     if isinstance(device, DeviceErrorResult):
         logger.warning("Failed to retrieve device: %s", device_name)
-        # Return NetworkOperationResult for device errors
+        logger.debug("Device error details: %s", device.msg)
 
+        # Return NetworkOperationResult for device errors
         error_response = ErrorResponse(
             type="DEVICE_ERROR",
             message=device.msg,
@@ -85,8 +103,20 @@ def run(
             metadata={"error_type": "device_not_found"},
         )
 
+    logger.debug(
+        "Successfully retrieved device %s (%s, %s)",
+        device_name,
+        device.ip_address,
+        device.nos,
+    )
     logger.debug("Executing command on device: %s", device_name)
+
     command_result = command_func(device, *args)
+    logger.debug(
+        "Device command result type: %s, status: %s",
+        type(command_result).__name__,
+        getattr(command_result, "status", "N/A"),
+    )
 
     assert isinstance(command_result, NetworkOperationResult), (
         f"Network command function must return NetworkOperationResult, "
@@ -94,6 +124,7 @@ def run(
         f"Please ensure the network command function implements the NetworkOperationResult schema."
     )
 
+    logger.debug("Command execution completed for device %s", device_name)
     return command_result
 
 
@@ -112,4 +143,20 @@ def run_network_wide(
     Returns:
         NetworkOperationResult: The result of the network operation
     """
-    return run(None, command_func, *args)
+    logger.debug(
+        "Running network-wide command %s with args: %s",
+        (
+            command_func.__name__
+            if hasattr(command_func, "__name__")
+            else "unknown"
+        ),
+        str(args),
+    )
+
+    result = run(None, command_func, *args)
+    logger.debug(
+        "Network-wide command completed with status: %s",
+        getattr(result, "status", "N/A"),
+    )
+
+    return result

@@ -7,6 +7,8 @@ import os
 import sys
 import logging
 import json
+import glob
+import re
 from datetime import datetime
 from typing import Dict, Optional, Any, Union
 
@@ -14,6 +16,125 @@ from .external_suppression import (
     ExternalLibrarySuppressor,
     setup_cli_suppression,
 )
+
+
+def _read_logging_environment_variables() -> Dict[str, Any]:
+    """
+    Read logging configuration from environment variables.
+
+    Supported environment variables:
+    - GNMIBUDDY_LOG_LEVEL: Global log level (debug, info, warning, error)
+    - GNMIBUDDY_MODULE_LEVELS: Module-specific levels (format: module1=debug,module2=warning)
+    - GNMIBUDDY_STRUCTURED_LOGGING: Enable structured JSON logging (true/false)
+    - GNMIBUDDY_LOG_FILE: Custom log file path
+    - GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE: External library suppression mode (cli, mcp, development)
+
+    Returns:
+        Dictionary with parsed environment variable values
+    """
+    config = {}
+
+    # Global log level
+    if log_level := os.getenv("GNMIBUDDY_LOG_LEVEL"):
+        if log_level.lower() in ["debug", "info", "warning", "error"]:
+            config["global_level"] = log_level.lower()
+
+    # Module-specific levels
+    if module_levels_str := os.getenv("GNMIBUDDY_MODULE_LEVELS"):
+        module_levels = {}
+        try:
+            for pair in module_levels_str.split(","):
+                if "=" in pair:
+                    module, level = pair.strip().split("=", 1)
+                    module = module.strip()
+                    level = level.strip().lower()
+                    if level in ["debug", "info", "warning", "error"]:
+                        module_levels[module] = level
+            if module_levels:
+                config["module_levels"] = module_levels
+        except Exception:
+            # Ignore malformed module levels
+            pass
+
+    # Structured logging
+    if structured_str := os.getenv("GNMIBUDDY_STRUCTURED_LOGGING"):
+        config["enable_structured"] = structured_str.lower() in [
+            "true",
+            "1",
+            "yes",
+            "on",
+        ]
+
+    # Custom log file
+    if log_file := os.getenv("GNMIBUDDY_LOG_FILE"):
+        config["log_file"] = log_file
+
+    # External suppression mode
+    if suppression_mode := os.getenv("GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE"):
+        if suppression_mode.lower() in ["cli", "mcp", "development"]:
+            config["external_suppression_mode"] = suppression_mode.lower()
+
+    return config
+
+
+def _get_next_log_file_path(log_dir: str, base_name: str = "gnmibuddy") -> str:
+    """
+    Generate the next sequential log file path.
+
+    Creates numbered log files like:
+    - gnmibuddy_001.log
+    - gnmibuddy_002.log
+    - gnmibuddy_003.log
+
+    Args:
+        log_dir: Directory where log files are stored
+        base_name: Base name for the log files
+
+    Returns:
+        Full path to the next sequential log file
+    """
+    # Ensure log directory exists
+    os.makedirs(log_dir, exist_ok=True)
+
+    # Pattern to match existing log files
+    pattern = os.path.join(log_dir, f"{base_name}_*.log")
+    existing_files = glob.glob(pattern)
+
+    # Extract numbers from existing files
+    numbers = []
+    number_pattern = re.compile(rf"{re.escape(base_name)}_(\d+)\.log$")
+
+    for file_path in existing_files:
+        filename = os.path.basename(file_path)
+        match = number_pattern.match(filename)
+        if match:
+            numbers.append(int(match.group(1)))
+
+    # Find the next number
+    if numbers:
+        next_number = max(numbers) + 1
+    else:
+        next_number = 1
+
+    # Generate the new filename with zero-padded number
+    new_filename = f"{base_name}_{next_number:03d}.log"
+    return os.path.join(log_dir, new_filename)
+
+
+def _get_project_root() -> str:
+    """
+    Get the project root directory reliably.
+
+    Returns:
+        Path to the project root directory
+    """
+    # Start from this file's location: src/logging/config.py
+    # Go up three levels to get to project root
+    current_file = os.path.abspath(__file__)
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(current_file))
+    )
+    return project_root
 
 
 # Application-specific logger names for easy filtering
@@ -119,6 +240,28 @@ class LoggingConfig:
             enable_external_suppression: Whether to suppress external library noise
             external_suppression_mode: Type of suppression ("cli", "mcp", "development")
         """
+        # Read environment variables first
+        env_config = _read_logging_environment_variables()
+
+        # Use environment variables as defaults if parameters not explicitly provided
+        global_level = global_level or env_config.get("global_level")
+        enable_structured = enable_structured or env_config.get(
+            "enable_structured", False
+        )
+        log_file = log_file or env_config.get("log_file")
+        external_suppression_mode = (
+            external_suppression_mode
+            or env_config.get("external_suppression_mode", "cli")
+        )
+
+        # Merge module levels: explicit params override environment
+        merged_module_levels = env_config.get("module_levels", {})
+        if module_levels:
+            merged_module_levels.update(module_levels)
+        module_levels = (
+            merged_module_levels if merged_module_levels else module_levels
+        )
+
         # Check if configuration has changed
         current_config = {
             "global_level": global_level,
@@ -171,8 +314,11 @@ class LoggingConfig:
         # Create handlers
         handlers = []
 
-        # Console handler
-        console_handler = logging.StreamHandler(sys.stdout)
+        # Console handler - for MCP servers, use stderr to keep stdout clean
+        if external_suppression_mode == "mcp":
+            console_handler = logging.StreamHandler(sys.stderr)
+        else:
+            console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
         console_handler.setLevel(global_log_level)
         handlers.append(console_handler)
@@ -180,16 +326,12 @@ class LoggingConfig:
         # File handler
         if enable_file_output:
             if not log_file:
-                log_dir = os.path.join(
-                    os.path.dirname(
-                        os.path.dirname(
-                            os.path.dirname(os.path.abspath(__file__))
-                        )
-                    ),
-                    "logs",
-                )
-                os.makedirs(log_dir, exist_ok=True)
-                log_file = os.path.join(log_dir, "gnmibuddy.log")
+                # Use project root with logs subdirectory
+                project_root = _get_project_root()
+                log_dir = os.path.join(project_root, "logs")
+
+                # Generate sequential log file name
+                log_file = _get_next_log_file_path(log_dir)
 
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(formatter)
@@ -208,7 +350,8 @@ class LoggingConfig:
 
         app_logger = logging.getLogger(LoggerNames.APP_ROOT)
         app_logger.debug(
-            "Logging configured",
+            "Logging configured with sequential file: %s",
+            log_file if enable_file_output else "disabled",
             extra={
                 "global_level": global_level or "info",
                 "structured": enable_structured,

@@ -132,7 +132,7 @@ Create `.vscode/mcp.json` in your project:
       "args": [
         "run",
         "--with",
-        "mcp[cli],pygnmi,networkx",
+        "mcp[cli],pygnmi,networkx,pyyaml",
         "mcp",
         "run",
         "${workspaceFolder}/mcp_server.py"
@@ -157,7 +157,7 @@ Add to Claude's configuration (Settings > Developer > Edit config):
       "args": [
         "run",
         "--with",
-        "mcp[cli],pygnmi,networkx",
+        "mcp[cli],pygnmi,networkx,pyyaml",
         "mcp",
         "run",
         "/absolute/path/to/mcp_server.py"
@@ -178,7 +178,7 @@ Use the MCP inspector for testing.
 # Replace `xrd_sandbox.json` with your actual inventory file.
 NETWORK_INVENTORY=xrd_sandbox.json \
 npx @modelcontextprotocol/inspector \
-uv run --with "mcp[cli],pygnmi,networkx" \
+uv run --with "mcp[cli],pygnmi,networkx,pyyaml" \
 mcp run mcp_server.py
 ```
 
@@ -201,6 +201,28 @@ Then test with the provided `xrd_sandbox.json` inventory file.
 ### Testing with AI Agents
 
 Want to see how this MCP tool integrates with actual AI agents? Check out [sp_oncall](https://github.com/jillesca/sp_oncall) - a graph of agents that use gNMIBuddy to demonstrate real-world network operations scenarios.
+
+## ⚙️ Environment Variables
+
+gNMIBuddy supports environment variables for configuration, which work for both CLI and MCP server usage.
+
+### Global Configuration
+
+| Variable                              | Description                                 | Values                              | Default                  |
+| ------------------------------------- | ------------------------------------------- | ----------------------------------- | ------------------------ |
+| `GNMIBUDDY_LOG_LEVEL`                 | Global log level                            | `debug`, `info`, `warning`, `error` | `info`                   |
+| `GNMIBUDDY_MODULE_LEVELS`             | Module-specific log levels                  | `module1=debug,module2=warning`     | -                        |
+| `GNMIBUDDY_LOG_FILE`                  | Custom log file path (overrides sequential) | File path                           | `logs/gnmibuddy_XXX.log` |
+| `GNMIBUDDY_STRUCTURED_LOGGING`        | Enable JSON logging                         | `true`, `false`                     | `false`                  |
+| `GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE` | External library suppression                | `cli`, `mcp`, `development`         | `cli`                    |
+| `NETWORK_INVENTORY`                   | Device inventory file path                  | File path                           | -                        |
+
+> [!NOTE] > **Sequential Log Files**: gNMIBuddy automatically creates numbered log files (`gnmibuddy_001.log`, `gnmibuddy_002.log`, etc.) for each execution in the `logs/` directory. The highest number is always the most recent run.
+
+> [!NOTE]
+> Environment variables serve as defaults and can be overridden by CLI arguments like `--log-level` and `--module-log-levels`.
+
+For complete logging environment variable documentation, see [Logging README](src/logging/README.md).
 
 ## 📋 Response Format
 

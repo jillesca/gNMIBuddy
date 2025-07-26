@@ -91,11 +91,41 @@ def get_routing_info(
     Returns:
         NetworkOperationResult: Response object containing structured routing information
     """
+    logger.debug(
+        "Getting routing info from device %s - protocol: %s, include_details: %s",
+        device.name,
+        protocol,
+        include_details,
+    )
+
     protocols_to_query = _normalize_protocols(protocol)
+    logger.debug(
+        "Normalized protocols to query: %s",
+        [p.value for p in protocols_to_query],
+    )
+
     collection_result = _collect_protocol_data(
         device, protocols_to_query, include_details
     )
+    logger.debug(
+        "Protocol collection result - successful: %d, failed: %d, feature_not_found: %d",
+        collection_result.successful_count,
+        collection_result.failed_count,
+        collection_result.feature_not_found_count,
+    )
+
     overall_status = _determine_overall_status(collection_result)
+    logger.debug("Overall routing operation status: %s", overall_status)
+
+    # Warn about partial success conditions
+    if overall_status == OperationStatus.PARTIAL_SUCCESS:
+        logger.warning(
+            "Partial routing protocol collection on %s: %d successful, %d failed, %d not found",
+            device.name,
+            collection_result.successful_count,
+            collection_result.failed_count,
+            collection_result.feature_not_found_count,
+        )
 
     return NetworkOperationResult(
         device_name=device.name,
@@ -201,14 +231,23 @@ def _collect_protocol_data(
     include_details: bool,
 ) -> ProtocolCollectionResult:
     """Collect data from multiple protocols and return aggregated results."""
+    logger.debug("Collecting data for %d protocols", len(protocols_to_query))
+
     protocols = []
     protocol_statuses = {}
     protocol_errors = {}
 
     for protocol_enum in protocols_to_query:
         protocol_name = protocol_enum.value
+        logger.debug("Processing protocol: %s", protocol_name)
+
         protocol_result = _get_protocol_data(
             device, protocol_enum, include_details
+        )
+        logger.debug(
+            "Protocol %s result status: %s",
+            protocol_name,
+            protocol_result.status,
         )
 
         protocol_statuses[protocol_name] = protocol_result.status.value
@@ -231,11 +270,14 @@ def _get_protocol_data(
     device: Device, protocol: RoutingProtocol, include_details: bool
 ) -> NetworkOperationResult:
     """Get data for a specific protocol."""
+    logger.debug("Getting %s data for device %s", protocol.value, device.name)
+
     if protocol == RoutingProtocol.BGP:
         return _get_bgp_info(device, include_details)
     elif protocol == RoutingProtocol.ISIS:
         return _get_isis_info(device, include_details)
     else:
+        logger.warning("Unsupported protocol: %s", protocol.value)
         return _create_unsupported_protocol_result(device, protocol)
 
 
@@ -373,10 +415,22 @@ def _get_isis_info(
     device: Device, include_details: bool = False
 ) -> NetworkOperationResult:
     """Get ISIS routing information from a device."""
+    logger.debug(
+        "Getting ISIS info for device %s, include_details: %s",
+        device.name,
+        include_details,
+    )
+
     response = get_gnmi_data(device, isis_request())
+    logger.debug(
+        "ISIS gNMI response type: %s, status: %s",
+        type(response).__name__,
+        getattr(response, "status", "N/A"),
+    )
 
     if isinstance(response, FeatureNotFoundResponse):
-        logger.info("No ISIS configuration found: %s", response)
+        logger.debug("ISIS feature not found: %s", response.message)
+        logger.debug("No ISIS configuration found on %s", device.name)
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
@@ -387,6 +441,11 @@ def _get_isis_info(
         )
 
     if isinstance(response, ErrorResponse):
+        logger.debug(
+            "ISIS ErrorResponse details - type: %s, message: %s",
+            response.type,
+            response.message,
+        )
         logger.error("Error retrieving ISIS information: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
@@ -398,10 +457,25 @@ def _get_isis_info(
         )
 
     try:
-        isis_data = process_isis_data(
+        raw_data = (
             response.data if isinstance(response, SuccessResponse) else []
         )
+        logger.debug(
+            "ISIS raw data length: %d", len(raw_data) if raw_data else 0
+        )
+
+        isis_data = process_isis_data(raw_data)
+        logger.debug(
+            "Processed ISIS data keys: %s",
+            str(list(isis_data.keys()) if isis_data else []),
+        )
+
         summary = generate_isis_summary(isis_data)
+        logger.debug("Generated ISIS summary type: %s", type(summary).__name__)
+
+        logger.info(
+            "ISIS protocol data successfully processed for %s", device.name
+        )
 
         return NetworkOperationResult(
             device_name=device.name,
@@ -420,6 +494,7 @@ def _get_isis_info(
         )
     except (KeyError, ValueError, TypeError) as e:
         logger.error("Error parsing ISIS data: %s", str(e))
+        logger.debug("Exception details: %s", str(e), exc_info=True)
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing ISIS data: {str(e)}",
@@ -438,10 +513,22 @@ def _get_bgp_info(
     device: Device, include_details: bool = False
 ) -> NetworkOperationResult:
     """Get BGP routing information from a device."""
+    logger.debug(
+        "Getting BGP info for device %s, include_details: %s",
+        device.name,
+        include_details,
+    )
+
     response = get_gnmi_data(device, bgp_request())
+    logger.debug(
+        "BGP gNMI response type: %s, status: %s",
+        type(response).__name__,
+        getattr(response, "status", "N/A"),
+    )
 
     if isinstance(response, FeatureNotFoundResponse):
-        logger.info("No BGP configuration found: %s", response)
+        logger.debug("BGP feature not found: %s", response.message)
+        logger.debug("No BGP configuration found on %s", device.name)
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
@@ -452,6 +539,11 @@ def _get_bgp_info(
         )
 
     if isinstance(response, ErrorResponse):
+        logger.debug(
+            "BGP ErrorResponse details - type: %s, message: %s",
+            response.type,
+            response.message,
+        )
         logger.error("Error retrieving BGP information: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
@@ -468,8 +560,22 @@ def _get_bgp_info(
             if isinstance(response, SuccessResponse) and response.data
             else []
         )
+        logger.debug(
+            "BGP gNMI data length: %d", len(gnmi_data) if gnmi_data else 0
+        )
+
         bgp_data = process_bgp_data(gnmi_data)
+        logger.debug(
+            "Processed BGP data keys: %s",
+            str(list(bgp_data.keys()) if bgp_data else []),
+        )
+
         summary = generate_bgp_summary(bgp_data)
+        logger.debug("Generated BGP summary type: %s", type(summary).__name__)
+
+        logger.info(
+            "BGP protocol data successfully processed for %s", device.name
+        )
 
         return NetworkOperationResult(
             device_name=device.name,
@@ -488,6 +594,7 @@ def _get_bgp_info(
         )
     except (KeyError, ValueError, TypeError) as e:
         logger.error("Error parsing BGP data: %s", str(e))
+        logger.debug("Exception details: %s", str(e), exc_info=True)
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing BGP data: {str(e)}",

@@ -25,6 +25,9 @@ def get_network_topology() -> NetworkOperationResult:
             "Building complete IP topology graph for all devices in inventory"
         )
         topology_graph = _build_graph_ip_only()
+        logger.debug(
+            "Topology graph build result: %s", type(topology_graph).__name__
+        )
 
         if topology_graph is None:
             logger.warning("Topology graph is None")
@@ -43,8 +46,8 @@ def get_network_topology() -> NetworkOperationResult:
                 },
             )
 
-        logger.debug(
-            "Topology graph has %d nodes and %d edges",
+        logger.info(
+            "Built network topology: %d devices, %d connections",
             topology_graph.number_of_nodes(),
             topology_graph.number_of_edges(),
         )
@@ -63,7 +66,24 @@ def get_network_topology() -> NetworkOperationResult:
                 }
             )
 
-        logger.debug("Found %d direct connections", len(direct_connections))
+        logger.info(
+            "Network topology complete: %d direct connections discovered",
+            len(direct_connections),
+        )
+
+        # Warn if topology seems sparse (fewer connections than devices)
+        device_count = topology_graph.number_of_nodes()
+        if device_count > 0 and len(direct_connections) < device_count:
+            logger.warning(
+                "Sparse network topology detected: %d connections for %d devices - check device connectivity",
+                len(direct_connections),
+                device_count,
+            )
+
+        logger.debug(
+            "Sample connections (first 3): %s",
+            str(direct_connections[:3]) if direct_connections else "none",
+        )
 
         return NetworkOperationResult(
             device_name="ALL_DEVICES",
@@ -84,6 +104,7 @@ def get_network_topology() -> NetworkOperationResult:
 
     except (KeyError, ValueError, TypeError, AttributeError) as e:
         logger.error("Error in get_network_topology: %s", str(e))
+        logger.debug("Exception details: %s", str(e), exc_info=True)
         error_response = ErrorResponse(
             type="TOPOLOGY_ERROR",
             message=f"Error building network topology: {str(e)}",

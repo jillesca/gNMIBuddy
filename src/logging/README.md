@@ -438,9 +438,21 @@ python gnmibuddy.py --log-level warning \
 
 ### Log File Locations
 
-- **Default log file**: `logs/gnmibuddy.log`
-- **Log rotation**: Implement using external tools (logrotate, etc.)
-- **Structured logs**: Same file, JSON format when enabled
+- **Default log directory**: `logs/` (in project root)
+- **Sequential log files**: `gnmibuddy_001.log`, `gnmibuddy_002.log`, `gnmibuddy_003.log`, etc.
+- **New file per execution**: Each run creates a new numbered log file
+- **Easy to find latest**: Highest number is the most recent execution
+- **Structured logs**: Same sequential naming, JSON format when enabled
+
+### Log File Examples
+
+```bash
+logs/
+├── gnmibuddy_001.log  # First execution
+├── gnmibuddy_002.log  # Second execution
+├── gnmibuddy_003.log  # Third execution (latest)
+└── gnmibuddy_004.log  # Next execution will be 004
+```
 
 ## Migration from Old Logging
 

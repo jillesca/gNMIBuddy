@@ -38,6 +38,16 @@ from src.logging.external_suppression import (
     setup_development_suppression,
 )
 
+# Re-export MCP-specific utilities
+from src.logging.mcp_config import (
+    setup_mcp_logging,
+    get_mcp_logger,
+    MCPContextLogger,
+    enable_tool_debug,
+    disable_tool_debug,
+    read_mcp_environment_config,
+)
+
 __all__ = [
     "LoggingConfig",
     "LoggerNames",
@@ -49,4 +59,11 @@ __all__ = [
     "setup_mcp_suppression",
     "setup_cli_suppression",
     "setup_development_suppression",
+    # MCP-specific exports
+    "setup_mcp_logging",
+    "get_mcp_logger",
+    "MCPContextLogger",
+    "enable_tool_debug",
+    "disable_tool_debug",
+    "read_mcp_environment_config",
 ]

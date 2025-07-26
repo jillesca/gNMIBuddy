@@ -42,9 +42,25 @@ def get_mpls_info(
     Returns:
         NetworkOperationResult: Response object containing structured MPLS information
     """
+    logger.debug(
+        "Getting MPLS info from device %s, include_details: %s",
+        device.name,
+        include_details,
+    )
+
     response = get_gnmi_data(device, mpls_request())
+    logger.debug(
+        "gNMI response type: %s, status: %s",
+        type(response).__name__,
+        getattr(response, "status", "N/A"),
+    )
 
     if isinstance(response, ErrorResponse):
+        logger.debug(
+            "ErrorResponse details - type: %s, message: %s",
+            response.type,
+            response.message,
+        )
         logger.error("Error retrieving MPLS information: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
@@ -58,15 +74,28 @@ def get_mpls_info(
     try:
         # Work directly with response data
         if isinstance(response, SuccessResponse):
-            mpls_data = process_mpls_data(response.data)
+            raw_data = response.data
+            logger.debug(
+                "SuccessResponse data length: %d",
+                len(raw_data) if raw_data else 0,
+            )
+            mpls_data = process_mpls_data(raw_data)
         else:
+            logger.debug("No SuccessResponse, processing empty data")
             mpls_data = process_mpls_data([])
+
+        logger.debug(
+            "Processed MPLS data keys: %s",
+            str(list(mpls_data.keys()) if mpls_data else []),
+        )
+
         summary = generate_mpls_summary(mpls_data)
+        logger.debug("Generated MPLS summary type: %s", type(summary).__name__)
 
         # Add summary to the mpls_data for consistent return format
         mpls_data["summary"] = summary
 
-        return NetworkOperationResult(
+        final_result = NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
             nos=device.nos,
@@ -82,8 +111,19 @@ def get_mpls_info(
             },
             metadata={"include_details": include_details},
         )
+
+        logger.info("MPLS data successfully processed for %s", device.name)
+        logger.debug(
+            "Final NetworkOperationResult - status: %s, data keys: %s",
+            final_result.status,
+            str(list(final_result.data.keys())),
+        )
+
+        return final_result
+
     except (KeyError, ValueError, TypeError) as e:
         logger.error("Error parsing MPLS data: %s", str(e))
+        logger.debug("Exception details: %s", str(e), exc_info=True)
         error_response = ErrorResponse(
             type="PARSING_ERROR",
             message=f"Error parsing MPLS data: {str(e)}",

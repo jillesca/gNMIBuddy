@@ -3,7 +3,7 @@
 API module for gNMIBuddy - Contains the core network tool functions
 that can be used by both MCP and CLI interfaces.
 """
-from typing import Optional
+from typing import Optional, Union
 
 from src.services.commands import run
 from src.inventory import list_available_devices
@@ -94,7 +94,7 @@ def get_routing_info(
 def get_logs(
     device_name: str,
     keywords: Optional[str] = None,
-    minutes: Optional[int] = 5,
+    minutes: Optional[Union[str, int]] = 5,
     show_all_logs: bool = False,
 ) -> NetworkOperationResult:
     """
@@ -103,7 +103,7 @@ def get_logs(
     Args:
         device_name: Name of the device in the inventory
         keywords: Optional keywords to filter logs
-        minutes: Number of minutes to filter logs (default: 5 minutes)
+        minutes: Number of minutes to filter logs (default: 5 minutes). Can be provided as string or integer.
         show_all_logs: If True, return all logs without time filtering (default: False)
 
     Returns:

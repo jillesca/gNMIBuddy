@@ -42,7 +42,7 @@ where = ["."]
 include = ["src*"]
 
 [tool.setuptools]
-py-modules = ["gnmibuddy"]
+py-modules = ["gnmibuddy", "mcp_server"]
 
 [dependency-groups]
 dev = [

@@ -51,15 +51,51 @@ Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):
 brew install uv
 ```
 
-After cloning the project, sync dependencies:
+## 🚀 Quick Start (Tool Usage)
+
+**Don't want to clone the repo?** Use gNMIBuddy as a tool directly from GitHub:
+
+### One-time execution
+
+```bash
+# Run directly without installation
+uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --help
+
+# Example with commands
+uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --inventory your_inventory.json device list
+```
+
+> ![TIP] Don't want to always type the inventory? use the `NETWORK_INVENTORY` env var.
+
+### Install as a persistent tool
+
+```bash
+# Install the tool globally
+uv tool install git+https://github.com/jillesca/gNMIBuddy.git
+
+# Use it directly
+gnmibuddy --help
+gnmibuddy device info --device R1
+
+# Uninstall when no longer needed
+uv tool uninstall gnmibuddy
+
+# To get updates
+uv tool upgrade gnmibuddy
+```
+
+> [!TIP]
+> The `uvx` method automatically builds and runs the tool in an isolated environment without affecting your system.
+
+## CLI Reference
+
+If you don't want to use `uvx`, clone this repo and do.
 
 ```bash
 uv sync --frozen --no-dev
 ```
 
 This is needed only the first time you install the project.
-
-## CLI Reference
 
 ```bash
 ❯ uv run gnmibuddy.py --help

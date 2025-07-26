@@ -4,7 +4,6 @@ MCP entry point for gNMIBuddy - Registers network tool functions as MCP tools.
 Uses a decorator factory to register API functions without duplicating signatures and docstrings.
 """
 import os
-import sys
 from functools import wraps
 from typing import Optional
 
@@ -19,7 +18,7 @@ config = SuppressionConfiguration.create_default()
 ExternalLibrarySuppressor.apply_suppression(config)
 
 import api
-from src.utils.version_utils import load_gnmibuddy_version
+from src.utils.version_utils import load_gnmibuddy_version, get_python_version
 from src.cmd.formatters import make_serializable
 from src.logging import (
     setup_mcp_logging,
@@ -40,8 +39,9 @@ logger.std_logger.info(
 )
 
 gnmibuddy_version = load_gnmibuddy_version()
+python_version = get_python_version()
 logger.std_logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
-logger.std_logger.info("Python version: %s", sys.version)
+logger.std_logger.info("Python version: %s", python_version)
 
 
 def register_as_mcp_tool(func):

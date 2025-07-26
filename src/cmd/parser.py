@@ -302,8 +302,15 @@ def configure_logging_from_cli_options(
             enable_file_output=True,  # Always enable file output
         )
 
-        # Log the successful configuration
+        # Log the successful configuration and version info
         app_logger = get_logger(__name__)
+
+        # First log messages: Version information for debugging
+        gnmibuddy_version = load_gnmibuddy_version()
+        python_version = get_python_version()
+        app_logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
+        app_logger.info("Python version: %s", python_version)
+
         app_logger.debug(
             "Logging configured from CLI options",
             extra={

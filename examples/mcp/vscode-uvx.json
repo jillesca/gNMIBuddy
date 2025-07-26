@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "gNMIBuddy": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/jillesca/gNMIBuddy.git",
+        "gnmibuddy-mcp"
+      ],
+      "env": {
+        "NETWORK_INVENTORY": "path/to/your_inventory.json"
+      }
+    }
+  }
+}

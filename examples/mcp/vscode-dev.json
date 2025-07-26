@@ -1,0 +1,18 @@
+{
+  "servers": {
+    "gNMIBuddy": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp[cli],pygnmi,networkx,pyyaml",
+        "mcp",
+        "run",
+        "path/to/mcp_server.py"
+      ],
+      "env": {
+        "NETWORK_INVENTORY": "path/to/your_inventory.json"
+      }
+    }
+  }
+}

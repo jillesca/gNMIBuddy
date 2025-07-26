@@ -7,7 +7,7 @@ import click
 from src.cmd.schemas import Command, CommandGroup
 from src.cmd.registries.group_registry import group_registry
 from src.cmd.registries.command_modules import get_command_modules
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

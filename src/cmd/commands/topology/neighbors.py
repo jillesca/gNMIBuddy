@@ -10,7 +10,7 @@ from src.cmd.registries.command_registry import (
     register_command,
     register_error_provider,
 )
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.collectors.topology.neighbors import neighbors
 
 from src.cmd.examples.example_builder import (

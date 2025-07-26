@@ -14,7 +14,7 @@ https://github.com/python/cpython/issues/130522
 import atexit
 import logging
 import threading
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

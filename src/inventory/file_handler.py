@@ -11,7 +11,7 @@ from typing import Dict, List, Any, Optional, cast
 from pathlib import Path
 
 from src.schemas.models import Device
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 # Type alias for device inventory data from JSON
 DeviceData = Dict[str, Any]

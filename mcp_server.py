@@ -8,12 +8,15 @@ import sys
 from functools import wraps
 from typing import Optional
 
-from src.logging.external_suppression import ExternalLibrarySuppressor
+from mcp.server.fastmcp import FastMCP, Context
+
+from src.logging import ExternalLibrarySuppressor
 
 # Early environment suppression (before any gRPC imports)
-ExternalLibrarySuppressor.setup_environment_suppression()
+from src.logging.suppression.external import SuppressionConfiguration
 
-from mcp.server.fastmcp import FastMCP, Context
+config = SuppressionConfiguration.create_default()
+ExternalLibrarySuppressor.apply_suppression(config)
 
 import api
 from src.utils.version_utils import load_gnmibuddy_version

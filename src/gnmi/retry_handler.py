@@ -9,7 +9,7 @@ import time
 import random
 from typing import Callable, TypeVar, Optional
 from src.schemas.models import Device
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

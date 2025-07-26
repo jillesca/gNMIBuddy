@@ -11,7 +11,7 @@ Separated from base.py for improved code organization and clarity.
 from typing import Callable, List
 import click
 
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.cmd.formatters import format_output
 from src.inventory.manager import InventoryManager
 from src.cmd.batch import BatchOperationExecutor

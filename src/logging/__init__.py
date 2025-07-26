@@ -5,8 +5,16 @@ gNMIBuddy logging module.
 This module provides comprehensive logging functionality with OpenTelemetry compatibility,
 structured logging, and module-specific log level control.
 
+Modular architecture:
+- Core components: enums, models, logger names, formatters
+- Configuration: environment reading, file utils, main configurator
+- Suppression: external library noise reduction with strategies
+- MCP: specialized MCP server logging
+- Decorators: operation tracking
+- Utils: dynamic logger creation and level management
+
 Key Components:
-- LoggingConfig: Centralized logging configuration
+- LoggingConfigurator: Centralized logging configuration
 - OTelFormatter: OpenTelemetry-compatible structured logging
 - LoggerNames: Standardized logger naming hierarchy
 - ExternalLibrarySuppressor: External library noise suppression
@@ -20,26 +28,40 @@ Usage:
     module_logger = get_logger(__name__)
 """
 
-# Re-export main logging utilities for convenience
-from src.logging.config import (
-    LoggingConfig,
+# Core components
+from .core import (
+    LogLevel,
+    SuppressionMode,
+    LoggingConfiguration,
+    ModuleLevelConfiguration,
     LoggerNames,
     OTelFormatter,
-    configure_logging,
-    get_logger,
-    log_operation,
 )
 
-# Re-export external suppression utilities
-from src.logging.external_suppression import (
+# Configuration components
+from .config import (
+    LoggingConfigurator,
+    EnvironmentConfigReader,
+    LogFilePathGenerator,
+)
+
+# Suppression components
+from .suppression import (
     ExternalLibrarySuppressor,
-    setup_mcp_suppression,
     setup_cli_suppression,
+    setup_mcp_suppression,
     setup_development_suppression,
 )
 
-# Re-export MCP-specific utilities
-from src.logging.mcp_config import (
+# Decorators
+from .decorators import log_operation
+
+# Utilities
+from .utils.dynamic import get_logger, set_module_level, get_module_levels
+from .utils.convenience import configure_logging
+
+# MCP-specific utilities
+from .mcp import (
     setup_mcp_logging,
     get_mcp_logger,
     MCPContextLogger,
@@ -49,15 +71,28 @@ from src.logging.mcp_config import (
 )
 
 __all__ = [
-    "LoggingConfig",
+    # Core components
+    "LogLevel",
+    "SuppressionMode",
+    "LoggingConfiguration",
+    "ModuleLevelConfiguration",
     "LoggerNames",
     "OTelFormatter",
+    # Configuration
+    "LoggingConfigurator",
+    "EnvironmentConfigReader",
+    "LogFilePathGenerator",
+    # Main API functions
     "configure_logging",
     "get_logger",
     "log_operation",
+    # Dynamic level management
+    "set_module_level",
+    "get_module_levels",
+    # External suppression
     "ExternalLibrarySuppressor",
-    "setup_mcp_suppression",
     "setup_cli_suppression",
+    "setup_mcp_suppression",
     "setup_development_suppression",
     # MCP-specific exports
     "setup_mcp_logging",

@@ -4,7 +4,7 @@
 from typing import Dict, Optional, List, Callable, TYPE_CHECKING
 from src.cmd.schemas import Command, CommandGroup
 from src.cmd.schemas.commands import command_registry
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 if TYPE_CHECKING:
     from src.cmd.error_providers import CommandErrorProvider

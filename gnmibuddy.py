@@ -10,7 +10,7 @@ from src.utils.thread_safety import apply_thread_safety_patches
 apply_thread_safety_patches()
 
 from src.cmd import run_cli_mode
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 
 def setup_error_handling() -> None:

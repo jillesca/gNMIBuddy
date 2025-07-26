@@ -32,7 +32,7 @@ from src.gnmi.error_handlers import (
 )
 from src.gnmi.retry_handler import with_retry
 from src.gnmi.response_parser import parse_gnmi_response, ParsedGnmiResponse
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -326,7 +326,7 @@ def get_gnmi_data(
 # Development and testing code
 if __name__ == "__main__":
     from pprint import pprint as pp
-    from src.logging.config import configure_logging
+    from src.logging import configure_logging
     from src.schemas.responses import OperationStatus
 
     # Configure detailed logging for development

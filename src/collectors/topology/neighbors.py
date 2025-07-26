@@ -5,7 +5,7 @@ from src.schemas.responses import (
     NetworkOperationResult,
 )
 from .utils import _build_graph_ip_only
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

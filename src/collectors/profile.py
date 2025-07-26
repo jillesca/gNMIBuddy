@@ -15,7 +15,7 @@ from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
 from src.utils.vrf_utils import get_non_default_vrf_names
 from src.processors.deviceprofile_processor import DeviceProfileProcessor
-from src.logging.config import get_logger, log_operation
+from src.logging import get_logger, log_operation
 
 logger = get_logger(__name__)
 

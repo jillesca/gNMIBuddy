@@ -19,7 +19,7 @@ from src.processors.protocols.vrf import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.logging.config import get_logger, log_operation
+from src.logging import get_logger, log_operation
 from src.utils.vrf_utils import (
     get_non_default_vrf_names,
     DEFAULT_INTERNAL_VRFS,

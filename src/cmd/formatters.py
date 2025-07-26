@@ -9,7 +9,7 @@ from dataclasses import is_dataclass, asdict
 import json
 import yaml
 
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

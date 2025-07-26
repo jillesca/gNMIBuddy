@@ -8,7 +8,7 @@ from src.processors.topology_processor import extract_interface_subnets
 from src.collectors.routing import get_routing_info
 from src.utils.parallel_execution import run_command_on_all_devices
 from src.collectors.interfaces import get_interfaces
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

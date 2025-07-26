@@ -25,7 +25,7 @@ from src.processors.protocols.isis.isis_processor import (
     process_isis_data,
     generate_isis_summary,
 )
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

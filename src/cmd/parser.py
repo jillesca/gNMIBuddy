@@ -4,10 +4,9 @@ import os
 import sys
 from typing import Optional
 import click
-from src.logging.config import get_logger, LoggingConfig
+from src.logging import get_logger, LoggingConfigurator
 from src.cmd.cli_utils import display_program_banner
 from src.cmd.context import CLIContext
-from src.cmd.display import display_all_commands
 from src.cmd.error_handler import handle_click_exception
 from src.utils.version_utils import load_gnmibuddy_version, get_python_version
 from src.cmd.templates.usage_templates import UsageTemplates
@@ -296,7 +295,7 @@ def configure_logging_from_cli_options(
 
     # Configure the logging system
     try:
-        LoggingConfig.configure(
+        LoggingConfigurator.configure(
             global_level=log_level,
             module_levels=parsed_module_levels,
             enable_structured=structured_logging,
@@ -454,7 +453,7 @@ def run_cli_mode():
         else:
             # For truly unexpected errors, still log but provide better user message
             logger.error("Unexpected error in CLI: %s", e, exc_info=True)
-            click.echo(f"❌ An unexpected error occurred.", err=True)
+            click.echo("❌ An unexpected error occurred.", err=True)
             click.echo(f"Details: {error_msg}", err=True)
             click.echo(
                 "\n💡 For help, run: uv run gnmibuddy.py --help", err=True

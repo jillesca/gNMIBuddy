@@ -16,7 +16,7 @@ from src.processors.protocols.mpls.mpls_processor import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.logging.config import get_logger, log_operation
+from src.logging import get_logger, log_operation
 
 logger = get_logger(__name__)
 

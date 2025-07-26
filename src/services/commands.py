@@ -6,7 +6,7 @@ Simplified network command service for executing commands with standardized erro
 from typing import Any, Protocol, runtime_checkable, Union, Optional
 
 import src.inventory
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.schemas.responses import (
     NetworkOperationResult,
 )

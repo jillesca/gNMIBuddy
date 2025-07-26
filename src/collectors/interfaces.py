@@ -20,7 +20,7 @@ from src.processors.interfaces.data_processor import (
 from src.processors.interfaces.single_interface_processor import (
     process_single_interface_data,
 )
-from src.logging.config import get_logger, log_operation
+from src.logging import get_logger, log_operation
 
 logger = get_logger(__name__)
 

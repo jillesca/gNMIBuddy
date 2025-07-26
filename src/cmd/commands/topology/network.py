@@ -14,7 +14,7 @@ from src.cmd.examples.example_builder import (
     ExampleSet,
 )
 from src.cmd.formatters import format_output
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.collectors.topology.network_topology import get_network_topology
 from src.services.commands import run_network_wide
 

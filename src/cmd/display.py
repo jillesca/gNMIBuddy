@@ -4,7 +4,7 @@
 from typing import List, Optional
 from src.cmd.schemas import Command, CommandGroup
 from src.cmd.schemas.commands import command_registry
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

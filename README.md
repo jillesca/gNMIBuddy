@@ -156,134 +156,63 @@ Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 
 ## 🤖 LLM Integration (MCP)
 
-<details>
-<summary><strong>🚀 Easy Setup with uvx (No Repository Cloning Required)</strong></summary>
+gNMIBuddy integrates with LLMs through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction), providing network telemetry tools for AI agents.
 
-### VSCode Setup (uvx)
+### 🚀 Quick Start (Recommended)
 
-Create `.vscode/mcp.json` in your project:
+**No installation required** - runs directly from GitHub using `uvx`:
 
-```json
-{
-  "servers": {
-    "gNMIBuddy": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/jillesca/gNMIBuddy.git",
-        "gnmibuddy-mcp"
-      ],
-      "env": {
-        "NETWORK_INVENTORY": "${workspaceFolder}/<your_inventory_file>.json"
-      }
-    }
-  }
-}
-```
+| **MCP Client**     | **Configuration**                                      | **Location**       |
+| ------------------ | ------------------------------------------------------ | ------------------ |
+| **VSCode**         | [📋 Copy config](examples/mcp/vscode-uvx.json)         | `.vscode/mcp.json` |
+| **Cursor**         | [📋 Copy config](examples/mcp/cursor-uvx.json)         | `.cursor/mcp.json` |
+| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-uvx.json) | See Claude Docs    |
 
-### Claude Desktop Setup (uvx)
+> [!TIP]
+> Copy the configuration file contents and update `path/to/your_inventory.json` with your actual inventory file path.
 
-Add to Claude's configuration (Settings > Developer > Edit config):
-
-```json
-{
-  "mcpServers": {
-    "gNMIBuddy": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/jillesca/gNMIBuddy.git",
-        "gnmibuddy-mcp"
-      ],
-      "env": {
-        "NETWORK_INVENTORY": "/absolute/path/to/your_inventory.json"
-      }
-    }
-  }
-}
-```
-
-### Testing MCP (uvx)
-
-Use the MCP inspector for testing:
+### 🧪 Testing Your Setup
 
 ```bash
-# Replace `your_inventory.json` with your actual inventory file
+# Test the MCP integration
 NETWORK_INVENTORY=your_inventory.json \
 npx @modelcontextprotocol/inspector \
 uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp
 ```
 
+<details>
+<summary><strong>🔧 Development Setup</strong></summary>
+
+If you're developing or want full control over the installation:
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/jillesca/gNMIBuddy.git
+   cd gNMIBuddy
+   ```
+
+2. **Choose your configuration**:
+
+| **MCP Client**     | **Configuration**                                      |
+| ------------------ | ------------------------------------------------------ |
+| **VSCode**         | [📋 Copy config](examples/mcp/vscode-dev.json)         |
+| **Cursor**         | [📋 Copy config](examples/mcp/cursor-dev.json)         |
+| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-dev.json) |
+
+3. **Test the development setup**:
+
+   ```bash
+   NETWORK_INVENTORY=your_inventory.json \
+   npx @modelcontextprotocol/inspector \
+   uv run --with "mcp[cli],pygnmi,networkx,pyyaml" \
+   mcp run mcp_server.py
+   ```
+
 </details>
 
-### Traditional Setup (Requires Repository Cloning)
-
-If you prefer to clone the repository and have more control over the setup:
-
-#### VSCode Setup
-
-Create `.vscode/mcp.json` in your project:
-
-```json
-{
-  "servers": {
-    "gNMIBuddy": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "mcp[cli],pygnmi,networkx,pyyaml",
-        "mcp",
-        "run",
-        "${workspaceFolder}/mcp_server.py"
-      ],
-      "env": {
-        "NETWORK_INVENTORY": "${workspaceFolder}/<your_inventory_file>.json"
-      }
-    }
-  }
-}
-```
-
-#### Claude Desktop Setup
-
-Add to Claude's configuration (Settings > Developer > Edit config):
-
-```json
-{
-  "mcpServers": {
-    "gNMIBuddy": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "mcp[cli],pygnmi,networkx,pyyaml",
-        "mcp",
-        "run",
-        "/absolute/path/to/mcp_server.py"
-      ],
-      "env": {
-        "NETWORK_INVENTORY": "/absolute/path/to/your_inventory.json"
-      }
-    }
-  }
-}
-```
-
-#### Testing MCP
-
-Use the MCP inspector for testing.
-
-```bash
-# Replace `xrd_sandbox.json` with your actual inventory file.
-NETWORK_INVENTORY=xrd_sandbox.json \
-npx @modelcontextprotocol/inspector \
-uv run --with "mcp[cli],pygnmi,networkx,pyyaml" \
-mcp run mcp_server.py
-```
-
 > [!IMPORTANT]
-> For MCP set the `NETWORK_INVENTORY` environment variable to your inventory file or you'll get errors.
+> Set the `NETWORK_INVENTORY` environment variable to your inventory file.
 
 ## 🧪 Testing with DevNet Sandbox
 
@@ -301,7 +230,6 @@ Then test with the provided `xrd_sandbox.json` inventory file.
 ### Testing with AI Agents
 
 Want to see how this MCP tool integrates with actual AI agents? Check out [sp_oncall](https://github.com/jillesca/sp_oncall) - a graph of agents that use gNMIBuddy to demonstrate real-world network operations scenarios.
-.
 
 ## 📋 Response Format
 

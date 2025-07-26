@@ -15,7 +15,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: System :: Networking",
     "Topic :: System :: Systems Administration",
-    "License :: OSI Approved :: BSD License",
 ]
 dependencies = [
     "click>=8.1.8",

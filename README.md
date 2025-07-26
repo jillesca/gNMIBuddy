@@ -170,7 +170,7 @@ gNMIBuddy integrates with LLMs through the [Model Context Protocol (MCP)](https:
 | **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-uvx.json) | See Claude Docs    |
 
 > [!TIP]
-> Copy the configuration file contents and update `path/to/your_inventory.json` with your actual inventory file path.
+> Copy the configuration file contents and update the paths.
 
 ### 🧪 Testing Your Setup
 

@@ -21,7 +21,9 @@ This directory contains ready-to-use configuration files for integrating gNMIBud
 **Cursor**: Copy contents to `.cursor/mcp.json` in your project  
 **Claude Desktop**: Add contents to your Claude configuration file
 
-### 3. Update Inventory Path
+### 3. Update Paths
+
+Replace `path/to/mcp_server.py` with the path to the `mcp_server` file.
 
 Replace `path/to/your_inventory.json` with the actual path to your network inventory file.
 

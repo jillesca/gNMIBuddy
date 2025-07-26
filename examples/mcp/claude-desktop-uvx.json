@@ -8,7 +8,7 @@
         "gnmibuddy-mcp"
       ],
       "env": {
-        "NETWORK_INVENTORY": "/absolute/path/to/your_inventory.json"
+        "NETWORK_INVENTORY": "path/to/your_inventory.json"
       }
     }
   }

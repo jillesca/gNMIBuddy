@@ -8,10 +8,10 @@
         "mcp[cli],pygnmi,networkx,pyyaml",
         "mcp",
         "run",
-        "/absolute/path/to/mcp_server.py"
+        "path/to/mcp_server.py"
       ],
       "env": {
-        "NETWORK_INVENTORY": "/absolute/path/to/your_inventory.json"
+        "NETWORK_INVENTORY": "path/to/your_inventory.json"
       }
     }
   }

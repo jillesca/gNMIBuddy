@@ -8,7 +8,7 @@
         "mcp[cli],pygnmi,networkx,pyyaml",
         "mcp",
         "run",
-        "${workspaceFolder}/mcp_server.py"
+        "path/to/mcp_server.py"
       ],
       "env": {
         "NETWORK_INVENTORY": "path/to/your_inventory.json"

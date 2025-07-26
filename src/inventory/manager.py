@@ -6,7 +6,7 @@ Manages device inventory with a singleton pattern.
 
 from typing import Dict, Optional, Union
 
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
 
 from .file_handler import get_inventory_path, load_inventory

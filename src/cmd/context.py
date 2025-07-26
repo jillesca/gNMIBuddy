@@ -2,7 +2,7 @@
 """Command context objects for dependency injection in Click-based CLI"""
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -36,7 +36,7 @@ class CLIContext:
         if self._logger_configured:
             return
 
-        from src.logging.config import LoggingConfig
+        from src.logging import LoggingConfigurator
 
         # Parse module-specific log levels
         module_levels = {}
@@ -51,7 +51,7 @@ class CLIContext:
                     "Invalid module-log-levels format. Use 'module1=debug,module2=warning'"
                 )
 
-        LoggingConfig.configure(
+        LoggingConfigurator.configure(
             global_level=self.log_level or "info",
             module_levels=module_levels,
             enable_structured=self.structured_logging,

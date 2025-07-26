@@ -12,7 +12,7 @@ from src.schemas.responses import (
     OperationStatus,
     ErrorResponse,
 )
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.inventory.manager import InventoryManager
 
 logger = get_logger(__name__)

@@ -4,73 +4,51 @@ MCP entry point for gNMIBuddy - Registers network tool functions as MCP tools.
 Uses a decorator factory to register API functions without duplicating signatures and docstrings.
 """
 import os
-import sys
-import logging
 from functools import wraps
+from typing import Optional
 
+from mcp.server.fastmcp import FastMCP, Context
 
-from src.logging.external_suppression import ExternalLibrarySuppressor
+from src.logging import ExternalLibrarySuppressor
 
-ExternalLibrarySuppressor.setup_environment_suppression()
+# Early environment suppression (before any gRPC imports)
+from src.logging.suppression.external import SuppressionConfiguration
 
-from mcp.server.fastmcp import FastMCP
+config = SuppressionConfiguration.create_default()
+ExternalLibrarySuppressor.apply_suppression(config)
 
 import api
-from src.utils.version_utils import load_gnmibuddy_version
+from src.utils.version_utils import load_gnmibuddy_version, get_python_version
 from src.cmd.formatters import make_serializable
-from src.logging import configure_logging, get_logger
+from src.logging import (
+    setup_mcp_logging,
+    get_mcp_logger,
+    read_mcp_environment_config,
+)
 
 
-def setup_mcp_logging():
-    """Configure logging specifically for MCP server operation."""
-
-    configure_logging(
-        log_level="info",
-        external_suppression_mode="mcp",  # Uses the most aggressive suppression
-    )
-
-    # For MCP servers, redirect all logging to stderr to keep stdout clean for JSON
-    root_logger = logging.getLogger()
-
-    # Remove all existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
-    # Add stderr-only handler with clean format
-    stderr_handler = logging.StreamHandler(sys.stderr)
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)-8s | %(name)-30s | %(funcName)-20s:%(lineno)-4d | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    stderr_handler.setFormatter(formatter)
-    stderr_handler.setLevel(logging.INFO)
-
-    root_logger.addHandler(stderr_handler)
-    root_logger.setLevel(logging.DEBUG)
-
-
-# Configure logging for MCP server
-setup_mcp_logging()
-
-logger = get_logger(__name__)
-
+mcp_env_config = read_mcp_environment_config()
+setup_mcp_logging(tool_debug_mode=mcp_env_config.get("tool_debug_mode", False))
 
 mcp = FastMCP("gNMIBuddy")
-logger.info("Started MCP server for gNMIBuddy")
-logger.debug("Network Inventory: %s", os.environ.get("NETWORK_INVENTORY"))
+logger = get_mcp_logger(__name__)
 
+logger.std_logger.info("Started MCP server for gNMIBuddy")
+logger.std_logger.info(
+    "Network Inventory: %s", os.environ.get("NETWORK_INVENTORY")
+)
 
-# Load and log gNMIBuddy version
 gnmibuddy_version = load_gnmibuddy_version()
-logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
-logger.info("Python version: %s", sys.version)
+python_version = get_python_version()
+logger.std_logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
+logger.std_logger.info("Python version: %s", python_version)
 
 
 def register_as_mcp_tool(func):
     """
     Decorator factory that creates an MCP tool wrapper for an API function.
     This preserves the original function's name, signature, docstring, and type hints.
-    The wrapper automatically serializes the response to ensure MCP compatibility.
+    The wrapper automatically serializes the response and uses MCP context logging.
 
     Args:
         func: The API function to register as an MCP tool
@@ -78,27 +56,47 @@ def register_as_mcp_tool(func):
     Returns:
         A decorated function that will be registered as an MCP tool
     """
-    logger.debug("Registering MCP tool: %s", func.__name__)
 
-    # Define a dynamic wrapper that preserves the original function's signature
     @mcp.tool()
     @wraps(
         func
     )  # This preserves docstring, name, and other function attributes
-    def wrapper(*args, **kwargs):
-        # Call the original function from the api module
-        result = func(*args, **kwargs)
+    async def wrapper(*args, ctx: Optional[Context] = None, **kwargs):
+        tool_logger = get_mcp_logger(
+            f"gnmibuddy.mcp.tools.{func.__name__}", ctx
+        )
 
-        serialized_result = make_serializable(result)
+        try:
+            await tool_logger.info("Executing tool: %s", func.__name__)
+            await tool_logger.debug(
+                "Arguments: args=%s, kwargs=%s", args, kwargs
+            )
 
-        logger.debug("MCP tool '%s' executed successfully", func.__name__)
+            result = func(*args, **kwargs)
 
-        return serialized_result
+            serialized_result = make_serializable(result)
 
-    # Return the decorated function
+            await tool_logger.info(
+                "Tool '%s' completed successfully", func.__name__
+            )
+
+            return serialized_result
+
+        except Exception as e:
+            await tool_logger.error(
+                "Tool '%s' failed: %s",
+                func.__name__,
+                str(e),
+                exception=str(e),
+                function=func.__name__,
+                exception_type=type(e).__name__,
+            )
+            raise
+
     return wrapper
 
 
+# Register all API functions as MCP tools
 register_as_mcp_tool(api.get_routing_info)
 register_as_mcp_tool(api.get_logs)
 register_as_mcp_tool(api.get_interface_info)
@@ -113,6 +111,7 @@ register_as_mcp_tool(api.get_topology_neighbors)
 
 def main():
     """Run the MCP server"""
+    logger.std_logger.info("Starting FastMCP server")
     mcp.run()
 
 

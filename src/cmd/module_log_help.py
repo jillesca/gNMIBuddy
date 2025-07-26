@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
 import click
-from src.logging.config import LoggerNames
+from src.logging import LoggerNames
 
 
 @dataclass

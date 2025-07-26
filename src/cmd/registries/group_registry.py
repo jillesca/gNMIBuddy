@@ -4,7 +4,7 @@
 from typing import Dict, Optional, List
 import click
 from src.cmd.schemas import CommandGroup
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

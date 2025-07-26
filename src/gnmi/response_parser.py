@@ -7,7 +7,7 @@ handling, validation, and structured data extraction.
 """
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

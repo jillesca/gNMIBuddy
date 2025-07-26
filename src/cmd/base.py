@@ -3,7 +3,7 @@
 from typing import Any, Dict, Optional
 
 from src.cmd.context import CLIContext
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

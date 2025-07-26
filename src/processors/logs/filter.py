@@ -7,7 +7,7 @@ Provides functions for filtering logs based on time and other criteria.
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional, List
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

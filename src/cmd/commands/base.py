@@ -15,7 +15,7 @@ Related modules:
 from typing import Callable, List
 import click
 
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.schemas.models import DeviceErrorResult
 from src.inventory.manager import InventoryManager
 from src.cmd.formatters import format_output

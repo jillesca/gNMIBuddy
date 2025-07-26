@@ -5,7 +5,7 @@ Processes MPLS data from gNMI responses and formats it for easier consumption by
 """
 
 from typing import Dict, Any, List
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

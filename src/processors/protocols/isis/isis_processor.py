@@ -7,7 +7,7 @@ and format it in a way that's easier for small LLMs to understand.
 """
 
 from typing import Dict, Any, List, Optional
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

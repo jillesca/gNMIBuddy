@@ -5,7 +5,7 @@ import platform
 import importlib.metadata
 from typing import Dict, Any, Optional
 from src.utils.version_utils import load_gnmibuddy_version, get_python_version
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

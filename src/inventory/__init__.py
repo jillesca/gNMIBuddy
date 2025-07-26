@@ -7,7 +7,7 @@ Provides functions and classes for managing network device inventory.
 from typing import Optional, Union
 
 from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
-from src.logging.config import get_logger
+from src.logging import get_logger
 from .manager import InventoryManager
 
 # Setup module logger

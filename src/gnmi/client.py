@@ -32,7 +32,7 @@ from src.gnmi.error_handlers import (
 )
 from src.gnmi.retry_handler import with_retry
 from src.gnmi.response_parser import parse_gnmi_response, ParsedGnmiResponse
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -51,7 +51,14 @@ class GnmiConnectionManager:
         Returns:
             Dictionary of gNMI connection parameters
         """
-        return {
+        logger.debug(
+            "Creating gNMI connection params for device %s (%s:%d)",
+            device.name,
+            device.ip_address,
+            device.port,
+        )
+
+        params = {
             "target": (device.ip_address, device.port),
             "username": device.username,
             "password": device.password,
@@ -65,6 +72,16 @@ class GnmiConnectionManager:
             "grpc_options": device.grpc_options,
             "show_diff": device.show_diff,
         }
+
+        logger.debug(
+            "Connection params created - target: %s, username: %s, insecure: %s, timeout: %s",
+            params["target"],
+            params["username"],
+            params["insecure"],
+            params["gnmi_timeout"],
+        )
+
+        return params
 
 
 class GnmiRequestExecutor:
@@ -89,14 +106,54 @@ class GnmiRequestExecutor:
         Raises:
             Exception: Any exception from the gNMI operation
         """
+        logger.debug("Executing gNMI request for device %s", device.name)
+        logger.debug("Request paths: %s", str(request.path))
+        logger.debug(
+            "Request encoding: %s", getattr(request, "encoding", "default")
+        )
+
         connection_params = self.connection_manager.create_connection_params(
             device
         )
 
-        with gNMIclient(**connection_params) as gnmi_client:
-            raw_response = gnmi_client.get(**request)
-            parsed_data = parse_gnmi_response(raw_response)
-            return self._create_network_response(parsed_data)
+        logger.debug("Establishing gNMI connection to %s", device.name)
+        try:
+            with gNMIclient(**connection_params) as gnmi_client:
+                logger.debug("gNMI client connected, executing get request")
+
+                # Execute the gNMI get request
+                request_params = request._as_dict()
+                raw_response = gnmi_client.get(**request_params)
+
+                # Log the raw response for debugging
+                logger.debug("Raw gNMI response received from %s", device.name)
+                logger.debug(
+                    "Raw response type: %s", type(raw_response).__name__
+                )
+                logger.debug("Raw response content: %s", str(raw_response))
+
+                # Parse the response
+                logger.debug(
+                    "Parsing gNMI response for device %s", device.name
+                )
+                parsed_data = parse_gnmi_response(raw_response)
+                logger.debug(
+                    "Response parsing completed - has_data: %s",
+                    parsed_data.has_data if parsed_data else False,
+                )
+
+                # Create network response
+                network_response = self._create_network_response(parsed_data)
+                logger.debug(
+                    "Created NetworkResponse - type: %s",
+                    type(network_response).__name__,
+                )
+
+                return network_response
+
+        except Exception as e:
+            logger.debug("Exception during gNMI request execution: %s", str(e))
+            raise  # Re-raise for error handler to process
 
     @staticmethod
     def _create_network_response(
@@ -111,13 +168,32 @@ class GnmiRequestExecutor:
         Returns:
             Appropriate NetworkResponse
         """
+        logger.debug("Creating NetworkResponse from parsed data")
+        logger.debug("Parsed data exists: %s", parsed_data is not None)
+
         if parsed_data and parsed_data.has_data:
+            logger.debug(
+                "Parsed data has content, extracting first notification"
+            )
             first_notification = parsed_data.first_notification
+
             if first_notification and first_notification.has_data:
                 data = first_notification.updates
                 timestamp = first_notification.timestamp
-                return SuccessResponse(data=data, timestamp=timestamp)
 
+                logger.debug(
+                    "SuccessResponse created - data items: %d, timestamp: %s",
+                    len(data) if data else 0,
+                    timestamp,
+                )
+
+                return SuccessResponse(data=data, timestamp=timestamp)
+            else:
+                logger.debug("First notification has no data")
+        else:
+            logger.debug("Parsed data is empty or has no content")
+
+        logger.debug("Creating ErrorResponse for no data")
         return ErrorResponse(
             type="NO_DATA", message="No data returned from device"
         )
@@ -138,13 +214,27 @@ class GnmiErrorHandler:
         Returns:
             Appropriate error response
         """
+        logger.debug(
+            "Handling gNMI exception for device %s: %s",
+            device.name,
+            type(error).__name__,
+        )
+        logger.debug("Exception details: %s", str(error))
+
         if isinstance(error, grpc.FutureTimeoutError):
+            logger.debug("Handling timeout error")
             return handle_timeout_error(device)
         elif isinstance(error, grpc.RpcError):
+            logger.debug(
+                "Handling RPC error - code: %s",
+                getattr(error, "code", "unknown"),
+            )
             return handle_rpc_error(device, error)
         elif isinstance(error, ConnectionRefusedError):
+            logger.debug("Handling connection refused error")
             return handle_connection_refused(device)
         else:
+            logger.debug("Handling generic error: %s", type(error).__name__)
             return handle_generic_error(device, error)
 
 
@@ -170,7 +260,14 @@ def get_gnmi_data(
         NetworkResponse containing either success data or error information
     """
     logger.debug(
-        "Executing gNMI request for device '%s': %s", device.name, request
+        "Starting gNMI operation for device '%s' with %d max retries",
+        device.name,
+        max_retries,
+    )
+    logger.debug(
+        "Request details - paths: %d, encoding: %s",
+        len(request.path) if request.path else 0,
+        getattr(request, "encoding", "default"),
     )
 
     executor = GnmiRequestExecutor()
@@ -178,19 +275,41 @@ def get_gnmi_data(
 
     def execute_operation() -> NetworkResponse:
         """Inner function for retry mechanism."""
+        logger.debug(
+            "Executing gNMI operation attempt for device %s", device.name
+        )
         try:
-            return executor.execute_request(device, request)
+            result = executor.execute_request(device, request)
+            logger.debug(
+                "gNMI operation completed successfully for device %s",
+                device.name,
+            )
+            return result
         except Exception as error:
+            logger.debug(
+                "gNMI operation failed for device %s, handling error",
+                device.name,
+            )
             return error_handler.handle_exception(device, error)
 
     try:
+        logger.debug("Starting retry mechanism for device %s", device.name)
         # Use retry handler for rate limiting protection
-        return with_retry(
+        final_result = with_retry(
             operation=execute_operation,
             device=device,
             max_retries=max_retries,
             base_delay=base_delay,
         )
+
+        logger.debug(
+            "gNMI operation completed for device %s - result type: %s",
+            device.name,
+            type(final_result).__name__,
+        )
+
+        return final_result
+
     except Exception as error:
         # Final fallback for any unexpected errors
         logger.error(
@@ -198,17 +317,20 @@ def get_gnmi_data(
             device.name,
             str(error),
         )
+        logger.debug(
+            "Final fallback error handling for device %s", device.name
+        )
         return error_handler.handle_exception(device, error)
 
 
 # Development and testing code
 if __name__ == "__main__":
     from pprint import pprint as pp
-    from src.logging.config import configure_logging
+    from src.logging import LoggingConfigurator
     from src.schemas.responses import OperationStatus
 
     # Configure detailed logging for development
-    configure_logging("DEBUG")
+    LoggingConfigurator.configure(global_level="DEBUG")
     logger = get_logger(__name__)
 
     logger.info("Starting gNMI client development testing...")

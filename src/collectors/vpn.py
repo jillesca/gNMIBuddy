@@ -19,7 +19,7 @@ from src.processors.protocols.vrf import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.logging.config import get_logger, log_operation
+from src.logging import get_logger, log_operation
 from src.utils.vrf_utils import (
     get_non_default_vrf_names,
     DEFAULT_INTERNAL_VRFS,
@@ -47,6 +47,11 @@ def get_vpn_info(
 
     # Get all VRF names from the device
     vrf_names_result = get_non_default_vrf_names(device)
+    logger.debug(
+        "VRF names discovery result for device %s: %s",
+        device.name,
+        str(vrf_names_result),
+    )
 
     if not vrf_names_result:
         logger.info("No VRFs found on device %s", device.name)
@@ -56,7 +61,7 @@ def get_vpn_info(
             nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
-            data=[],
+            data={"vrfs": []},
             metadata={
                 "total_vrfs_on_device": 0,
                 "vrfs_returned": 0,
@@ -69,14 +74,29 @@ def get_vpn_info(
         )
 
     total_vrfs_found = len(vrf_names_result)
+    logger.info(
+        "Discovered %d VRFs on device %s", total_vrfs_found, device.name
+    )
 
     # If a specific VRF is requested, filter the list
     if vrf_name:
+        logger.debug(
+            "Applying VRF filter '%s' to found VRFs: %s",
+            vrf_name,
+            vrf_names_result,
+        )
         if vrf_name in vrf_names_result:
             vrf_names_result = [vrf_name]
         else:
             # VRF not found, return empty result
+            logger.warning(
+                "Requested VRF '%s' not found on device %s (available VRFs: %s)",
+                vrf_name,
+                device.name,
+                str(vrf_names_result),
+            )
             vrf_names_result = []
+        logger.debug("VRFs after filtering: %s", str(vrf_names_result))
 
     # Get detailed information for each VRF
     return _get_vrf_details(
@@ -112,7 +132,7 @@ def _get_vrf_details(
             nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
-            data=[],
+            data={"vrfs": []},
             metadata={
                 "total_vrfs_on_device": total_vrfs_found,
                 "vrfs_returned": 0,
@@ -133,14 +153,29 @@ def _get_vrf_details(
         f"openconfig-network-instance:network-instances/network-instance[name={vrf_name}]"
         for vrf_name in vrf_names
     ]
+    logger.debug(
+        "Building gNMI paths for VRFs %s: %s",
+        str(vrf_names),
+        str(vrf_path_queries),
+    )
 
     vrf_details_request = GnmiRequest(
         path=vrf_path_queries, encoding="json_ietf"
     )
 
     response = get_gnmi_data(device, vrf_details_request)
+    logger.debug(
+        "gNMI response type: %s, status: %s",
+        type(response).__name__,
+        getattr(response, "status", "N/A"),
+    )
 
     if isinstance(response, ErrorResponse):
+        logger.debug(
+            "ErrorResponse details - type: %s, message: %s",
+            response.type,
+            response.message,
+        )
         logger.error("Error retrieving VRF details: %s", response.message)
         return NetworkOperationResult(
             device_name=device.name,
@@ -156,9 +191,23 @@ def _get_vrf_details(
         gnmi_data = (
             response.data if isinstance(response, SuccessResponse) else []
         )
+        logger.debug(
+            "Extracted gNMI data length: %d",
+            len(gnmi_data) if gnmi_data else 0,
+        )
 
         processed_data = process_vrf_data(gnmi_data or [])
+        logger.debug(
+            "Processed VRF data keys: %s",
+            str(list(processed_data.keys()) if processed_data else []),
+        )
+
         llm_data = generate_llm_friendly_data(processed_data)
+        logger.debug(
+            "LLM-friendly data - VRF count: %d, keys: %s",
+            len(llm_data.get("vrfs", [])),
+            str(list(llm_data.keys())),
+        )
 
         # Get timestamp for summaries
         timestamp = llm_data.get("timestamp", "Unknown")
@@ -184,13 +233,13 @@ def _get_vrf_details(
 
             result_data.append(vrf_entry)
 
-        return NetworkOperationResult(
+        final_result = NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
             nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
-            data=result_data,
+            data={"vrfs": result_data},
             metadata={
                 "total_vrfs_on_device": total_vrfs_found,
                 "vrfs_returned": len(result_data),
@@ -201,8 +250,25 @@ def _get_vrf_details(
                 "message": "VRF information retrieved",
             },
         )
+
+        logger.info(
+            "VRF processing complete for %s: %d VRFs processed",
+            device.name,
+            len(result_data),
+        )
+
+        logger.debug(
+            "Final NetworkOperationResult - status: %s, data entries: %d, metadata keys: %s",
+            final_result.status,
+            len(final_result.data),
+            str(list(final_result.metadata.keys())),
+        )
+
+        return final_result
+
     except (KeyError, ValueError, TypeError) as e:
         logger.error("Error processing VRF data: %s", str(e))
+        logger.debug("Exception details: %s", str(e), exc_info=True)
         error_response = ErrorResponse(
             type="PROCESSING_ERROR",
             message=f"Error processing VRF data: {str(e)}",

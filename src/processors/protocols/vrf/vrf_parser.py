@@ -7,7 +7,7 @@ in a simplified way for easier consumption by small LLMs.
 
 import time
 from typing import Dict, Any, List
-from src.logging.config import get_logger
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 

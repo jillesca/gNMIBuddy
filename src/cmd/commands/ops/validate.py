@@ -14,7 +14,7 @@ from src.cmd.registries.command_registry import (
     register_command,
     register_error_provider,
 )
-from src.logging.config import get_logger
+from src.logging import get_logger
 from src.schemas.responses import OperationStatus, NetworkOperationResult
 
 # Import all collector functions

@@ -20,7 +20,7 @@ from src.processors.interfaces.data_processor import (
 from src.processors.interfaces.single_interface_processor import (
     process_single_interface_data,
 )
-from src.logging.config import get_logger, log_operation
+from src.logging import get_logger, log_operation
 
 logger = get_logger(__name__)
 
@@ -41,8 +41,9 @@ def get_interfaces(
         NetworkOperationResult: Response object containing interface information
     """
     logger.debug(
-        "Getting interface information",
-        extra={"device_name": device.name, "interface": interface},
+        "Getting interface information for device %s, interface filter: %s",
+        device.name,
+        interface,
     )
 
     if interface:
@@ -66,9 +67,23 @@ def _get_interface_brief(
     interface_brief_request = GnmiRequest(
         path=["openconfig-interfaces:interfaces"],
     )
+    logger.debug(
+        "Making gNMI request for interface brief on device %s", device.name
+    )
+
     response = get_gnmi_data(device, interface_brief_request)
+    logger.debug(
+        "gNMI response type: %s, status: %s",
+        type(response).__name__,
+        getattr(response, "status", "N/A"),
+    )
 
     if isinstance(response, ErrorResponse):
+        logger.debug(
+            "ErrorResponse details - type: %s, message: %s",
+            response.type,
+            response.message,
+        )
         logger.error(
             "Error retrieving interface brief information: %s",
             response.message,
@@ -87,7 +102,20 @@ def _get_interface_brief(
         if response.data:
             gnmi_data = response.data
 
+    logger.debug(
+        "Extracted gNMI data length: %d", len(gnmi_data) if gnmi_data else 0
+    )
+
     formatted_data = format_interface_data_for_llm(gnmi_data)
+    logger.debug(
+        "Formatted data type: %s, keys: %s",
+        type(formatted_data).__name__,
+        (
+            list(formatted_data.keys())
+            if isinstance(formatted_data, dict)
+            else "not a dict"
+        ),
+    )
 
     interfaces = (
         formatted_data["interfaces"]
@@ -112,6 +140,20 @@ def _get_interface_brief(
         "is_single_interface": False,
         "operation_details": "Retrieved summary of all interfaces",
     }
+
+    interface_count = result_data.get("interface_count", 0)
+
+    if interface_count == 0:
+        logger.warning(
+            "No interfaces found on device %s - check device connectivity or interface collection",
+            device.name,
+        )
+    else:
+        logger.info(
+            "Interface brief complete for %s: %d interfaces found",
+            device.name,
+            interface_count,
+        )
 
     return NetworkOperationResult(
         device_name=device.name,
@@ -138,10 +180,28 @@ def _get_single_interface_info(
     Returns:
         NetworkOperationResult: Response object containing structured interface information
     """
+    logger.debug(
+        "Getting detailed info for interface %s on device %s",
+        interface_name,
+        device.name,
+    )
+
     request = _create_single_interface_request(interface_name)
+    logger.debug("Created gNMI request for interface %s", interface_name)
+
     response = get_gnmi_data(device, request)
+    logger.debug(
+        "gNMI response type: %s, status: %s",
+        type(response).__name__,
+        getattr(response, "status", "N/A"),
+    )
 
     if isinstance(response, ErrorResponse):
+        logger.debug(
+            "ErrorResponse details - type: %s, message: %s",
+            response.type,
+            response.message,
+        )
         logger.error(
             "Error retrieving information for interface %s: %s",
             interface_name,
@@ -161,7 +221,12 @@ def _get_single_interface_info(
         if response.data:
             gnmi_data = response.data
 
+    logger.debug(
+        "Extracted gNMI data length: %d", len(gnmi_data) if gnmi_data else 0
+    )
+
     if not gnmi_data:
+        logger.debug("No gNMI data found for interface %s", interface_name)
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
@@ -176,9 +241,17 @@ def _get_single_interface_info(
         )
 
     processed_result = process_single_interface_data(gnmi_data)
+    logger.debug(
+        "Processed interface data, result type: %s",
+        type(processed_result).__name__,
+    )
+
     interfaces = [processed_result] if processed_result else []
 
     if _is_empty_interface(processed_result):
+        logger.debug(
+            "Interface %s detected as empty/unconfigured", interface_name
+        )
         logger.info(
             "Interface %s exists but appears to be empty/unconfigured",
             interface_name,
@@ -199,6 +272,12 @@ def _get_single_interface_info(
         "is_single_interface": True,
         "operation_details": f"Retrieved details for interface {interface_name}",
     }
+
+    logger.info(
+        "Interface collection complete for %s: %d interfaces found",
+        device.name,
+        result_data.get("interface_count", 0),
+    )
 
     return NetworkOperationResult(
         device_name=device.name,

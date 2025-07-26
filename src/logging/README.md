@@ -1,478 +1,361 @@
-# gNMIBuddy Enhanced Logging Guide
+# gNMIBuddy Logging System
 
-This document explains the enhanced logging system in gNMIBuddy, which follows OpenTelemetry (OTel) best practices for observability-ready logging.
+A modern, modular logging system built following the Zen of Python principles and Martin Fowler's refactoring best practices.
 
-## Table of Contents
+## 🎯 Overview
 
-1. [Overview](#overview)
-2. [Key Features](#key-features)
-3. [Configuration](#configuration)
-4. [CLI Usage](#cli-usage)
-5. [Module-Specific Logging](#module-specific-logging)
-6. [Structured Logging](#structured-logging)
-7. [Operation Tracking](#operation-tracking)
-8. [Dynamic Log Level Management](#dynamic-log-level-management)
-9. [Integration with Observability Tools](#integration-with-observability-tools)
-10. [Best Practices](#best-practices)
-11. [Troubleshooting](#troubleshooting)
+This refactored logging system provides:
 
-## Overview
+- **Type-safe configuration** using data classes and enums
+- **Modular architecture** with single-responsibility components
+- **OpenTelemetry compatibility** for observability
+- **External library suppression** with configurable strategies
+- **MCP server integration** with context-aware logging
+- **Operation tracking** with automatic timing and context
+- **Dynamic level management** at runtime
 
-The enhanced logging system provides:
+## 🏗️ Architecture
 
-- **Hierarchical logger naming** following OTel conventions
-- **Module-specific log level control** to reduce noise
-- **Structured JSON logging** for machine parsing
-- **Operation tracking** with timing and context
-- **Dynamic log level changes** at runtime
-- **External library noise reduction**
-- **Future OTel integration readiness**
-
-## Key Features
-
-### 1. Standardized Logger Names
-
-All loggers follow a consistent naming convention:
-
-```plaintext
-gnmibuddy                          # Root application logger
-├── gnmibuddy.api                  # API layer
-├── gnmibuddy.cli                  # CLI components
-├── gnmibuddy.mcp                  # MCP server
-├── gnmibuddy.collectors           # Data collection modules
-│   ├── gnmibuddy.collectors.interfaces
-│   ├── gnmibuddy.collectors.routing
-│   ├── gnmibuddy.collectors.mpls
-│   ├── gnmibuddy.collectors.vpn
-│   ├── gnmibuddy.collectors.logs
-│   ├── gnmibuddy.collectors.system
-│   ├── gnmibuddy.collectors.topology
-│   └── gnmibuddy.collectors.profile
-├── gnmibuddy.gnmi                 # gNMI client operations
-├── gnmibuddy.inventory            # Device inventory
-├── gnmibuddy.processors           # Data processors
-├── gnmibuddy.services             # Service layer
-├── gnmibuddy.utils                # Utilities
-├── pygnmi                         # External pygnmi library
-└── grpc                          # External gRPC library
+```
+src/logging/
+├── core/              # Fundamental types and data structures
+│   ├── enums.py       # LogLevel, SuppressionMode enums
+│   ├── models.py      # Configuration data classes
+│   ├── logger_names.py # Centralized logger naming
+│   └── formatter.py   # OTel-compatible formatters
+├── config/            # Configuration components
+│   ├── environment.py # Environment variable reading
+│   ├── configurator.py # Main logging configuration
+│   └── file_utils.py  # Log file path management
+├── suppression/       # External library noise reduction
+│   ├── external.py    # Core suppression functionality
+│   └── strategies.py  # CLI/MCP/Development strategies
+├── mcp/               # MCP server integration
+│   ├── config.py      # MCP-specific configuration
+│   └── context_logger.py # FastMCP context integration
+├── decorators/        # Operation tracking
+│   └── operation.py   # @log_operation decorator
+├── utils/             # Utilities and helpers
+│   ├── dynamic.py     # Runtime logger management
+│   └── convenience.py # Main API functions
+├── examples/          # Usage demonstrations
+│   └── demo.py        # Comprehensive examples
+└── docs/              # Documentation
+    └── README.md      # Architecture overview
 ```
 
-### 2. Module-Specific Log Levels
+## 🚀 Quick Start
 
-Control logging verbosity per module:
+### Basic Configuration
 
 ```python
-module_levels = {
-    "gnmibuddy.collectors": "debug",        # Verbose for data collection
-    "gnmibuddy.gnmi": "info",              # Normal for gNMI operations
-    "pygnmi": "warning",                   # Minimal for external library
-    "grpc": "error",                       # Only errors for gRPC
-}
+from src.logging import LoggingConfigurator, get_logger
+
+# Configure logging
+LoggingConfigurator.configure(global_level="info")
+
+# Get a module logger
+module_logger = get_logger(__name__)
+module_logger.info("Hello from the new logging system!")
 ```
 
-## Configuration
-
-### Programmatic Configuration
+### Advanced Configuration
 
 ```python
-from src.logging.config import LoggingConfig, LoggerNames
+from src.logging import LoggingConfigurator, LogLevel
 
-# Basic configuration
-LoggingConfig.configure(
+# Advanced configuration with type safety
+LoggingConfigurator.configure(
     global_level="info",
     module_levels={
-        LoggerNames.COLLECTORS: "debug",
-        LoggerNames.PYGNMI: "warning",
+        "gnmibuddy.collectors": "debug",
+        "pygnmi": "error"
     },
-    enable_structured=False,
-    enable_file_output=True,
+    enable_structured=True,
+    external_suppression_mode="mcp"
 )
 ```
 
-### Environment-Based Configuration
-
-The system automatically reads configuration from the CLI and applies appropriate settings.
-
-## CLI Usage
-
-### Basic Log Level Control
-
-```bash
-# Set global log level
-python gnmibuddy.py --log-level debug --device xrd-1 interfaces
-
-# Available levels: debug, info, warning, error
-python gnmibuddy.py --log-level warning --device xrd-1 routing
-```
-
-### Module-Specific Logging
-
-```bash
-# Control specific modules
-python gnmibuddy.py --log-level info \
-  --module-log-levels "gnmibuddy.collectors=debug,pygnmi=error" \
-  --device xrd-1 interfaces
-
-# Multiple modules
-python gnmibuddy.py --log-level info \
-  --module-log-levels "gnmibuddy.collectors.interfaces=debug,gnmibuddy.gnmi=warning,pygnmi=error" \
-  --device xrd-1 interfaces
-```
-
-### Structured Logging
-
-```bash
-# Enable JSON structured logging
-python gnmibuddy.py --log-level info --structured-logging \
-  --device xrd-1 interfaces
-
-# Output example:
-# {"timestamp": "2025-07-14T10:30:00.123", "level": "INFO", "logger": "gnmibuddy.collectors.interfaces", "message": "Getting interface information", "device_name": "xrd-1", "operation": "get_interfaces"}
-```
-
-### Runtime Log Level Management
-
-```bash
-# Show current log levels
-python gnmibuddy.py --device xrd-1 log-level show
-
-# Set log level for specific module
-python gnmibuddy.py --device xrd-1 log-level set gnmibuddy.gnmi debug
-
-# List available modules
-python gnmibuddy.py --device xrd-1 log-level modules
-```
-
-## Module-Specific Logging
-
-### Available Modules
-
-| Module                            | Purpose                     | Recommended Level                              |
-| --------------------------------- | --------------------------- | ---------------------------------------------- |
-| `gnmibuddy.collectors.interfaces` | Interface data collection   | `debug` for troubleshooting                    |
-| `gnmibuddy.collectors.routing`    | Routing protocol data       | `debug` for BGP/ISIS issues                    |
-| `gnmibuddy.collectors.mpls`       | MPLS data collection        | `info` normally                                |
-| `gnmibuddy.gnmi`                  | gNMI client operations      | `info` normally, `debug` for connection issues |
-| `gnmibuddy.inventory`             | Device inventory management | `warning` normally                             |
-| `pygnmi`                          | External pygnmi library     | `warning` or `error`                           |
-| `grpc`                            | External gRPC library       | `error` only                                   |
-
-### Common Scenarios
-
-#### Debugging Interface Issues
-
-```bash
-python gnmibuddy.py --log-level warning \
-  --module-log-levels "gnmibuddy.collectors.interfaces=debug" \
-  --device xrd-1 interfaces
-```
-
-#### Debugging gNMI Connection Issues
-
-```bash
-python gnmibuddy.py --log-level warning \
-  --module-log-levels "gnmibuddy.gnmi=debug,pygnmi=info" \
-  --device xrd-1 system
-```
-
-#### Quiet Mode (Minimal Logging)
-
-```bash
-python gnmibuddy.py --log-level error \
-  --module-log-levels "pygnmi=error,grpc=error" \
-  --device xrd-1 interfaces
-```
-
-#### Verbose Mode (Full Debugging)
-
-```bash
-python gnmibuddy.py --log-level debug \
-  --device xrd-1 interfaces
-```
-
-## Structured Logging
-
-When `--structured-logging` is enabled, logs are output in JSON format suitable for log aggregation systems:
-
-```json
-{
-  "timestamp": "2025-07-14T10:30:00.123456",
-  "level": "INFO",
-  "logger": "gnmibuddy.collectors.interfaces",
-  "message": "Starting get_interfaces",
-  "module": "interfaces",
-  "function": "get_interfaces",
-  "line": 42,
-  "device_name": "xrd-1",
-  "operation": "get_interfaces"
-}
-```
-
-### OTel-Compatible Fields
-
-The structured logs include fields that are compatible with OpenTelemetry:
-
-- `timestamp`: ISO 8601 timestamp
-- `level`: Log level
-- `logger`: Logger name (service/component)
-- `message`: Human-readable message
-- `trace_id`: Trace ID (when available)
-- `span_id`: Span ID (when available)
-- `device_name`: Network device context
-- `operation`: Operation being performed
-- `duration_ms`: Operation duration
-
-## Operation Tracking
-
-The system includes automatic operation tracking using decorators:
+### Module-Specific Levels
 
 ```python
-from src.logging.config import log_operation
+from src.logging import set_module_level, get_module_levels
 
-@log_operation("get_device_interfaces")
-def get_interfaces(device, interface=None):
-    # Function implementation
-    pass
-```
+# Runtime level changes
+set_module_level("gnmibuddy.collectors.interfaces", "debug")
 
-This automatically logs:
-
-- Operation start with context
-- Operation completion with duration
-- Operation failure with error details
-
-Example output:
-
-```
-2025-07-14 10:30:00 | INFO     | gnmibuddy.collectors.interfaces | Starting get_interfaces | device_name=xrd-1
-2025-07-14 10:30:01 | INFO     | gnmibuddy.collectors.interfaces | Completed get_interfaces | device_name=xrd-1 duration_ms=850.23
-```
-
-## Dynamic Log Level Management
-
-### CLI Commands
-
-```bash
-# Show current module log levels
-python gnmibuddy.py --device xrd-1 log-level show
-
-# Set log level for a specific module
-python gnmibuddy.py --device xrd-1 log-level set gnmibuddy.collectors.routing debug
-
-# List all available modules for logging control
-python gnmibuddy.py --device xrd-1 log-level modules
-```
-
-### Programmatic Control
-
-```python
-from src.logging.config import LoggingConfig
-
-# Change log level at runtime
-LoggingConfig.set_module_level("gnmibuddy.gnmi", "debug")
-
-# Get current levels
-current_levels = LoggingConfig.get_module_levels()
+# Check current levels
+current_levels = get_module_levels()
 print(current_levels)
 ```
 
-## Integration with Observability Tools
+## 📊 Core Components
 
-### Preparation for OpenTelemetry
+### Enums for Type Safety
 
-The logging system is designed to integrate easily with OTel:
+```python
+from src.logging.core import LogLevel, SuppressionMode
 
-1. **Logger names** map to OTel service/component names
-2. **Structured logs** include OTel-compatible fields
-3. **Operation tracking** can be extended to spans
-4. **Context propagation** is ready for trace correlation
-
-### Log Aggregation
-
-Structured logs can be sent to various systems:
-
-- **ELK Stack**: Elasticsearch, Logstash, Kibana
-- **Grafana Loki**: With Promtail or Grafana Agent
-- **Splunk**: Universal forwarder
-- **Cloud Services**: AWS CloudWatch, Azure Monitor, GCP Logging
-
-### Example Grafana Loki Configuration
-
-```yaml
-# promtail configuration
-clients:
-  - url: http://loki:3100/loki/api/v1/push
-
-scrape_configs:
-  - job_name: gnmibuddy
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: gnmibuddy
-          __path__: /path/to/gnmibuddy/logs/*.log
-    pipeline_stages:
-      - json:
-          expressions:
-            level: level
-            logger: logger
-            device_name: device_name
-            operation: operation
+# Type-safe log levels
+level = LogLevel.DEBUG
+mode = SuppressionMode.MCP
 ```
 
-## Best Practices
+### Data Classes Replace Dictionaries
 
-### 1. Module-Specific Levels
+```python
+from src.logging.core import LoggingConfiguration, ModuleLevelConfiguration
 
-- Use `debug` only for modules you're actively troubleshooting
-- Keep external libraries (`pygnmi`, `grpc`) at `warning` or `error`
-- Use `info` as the default for application modules
-
-### 2. Structured Logging
-
-- Enable structured logging for production deployments
-- Use structured logging when integrating with log aggregation systems
-- Keep human-readable logging for development
-
-### 3. Operation Context
-
-- Always include device context in network operations
-- Use the `@log_operation` decorator for timing critical operations
-- Log operation parameters for debugging
-
-### 4. Log Level Hierarchy
-
-```
-DEBUG   - Detailed diagnostic information
-INFO    - General operational information
-WARNING - Something unexpected happened but we can continue
-ERROR   - Serious problem that prevented operation completion
+# Structured configuration with validation
+config = LoggingConfiguration(
+    global_level=LogLevel.INFO,
+    module_levels=ModuleLevelConfiguration.from_string_dict({
+        "gnmibuddy.collectors": "debug"
+    }),
+    enable_structured=True
+)
 ```
 
-### 5. Performance Considerations
+### Strategy Pattern for Suppression
 
-- Avoid string formatting in debug logs when debug is disabled
-- Use lazy evaluation: `logger.debug("Value: %s", expensive_function())`
-- Be mindful of log volume in production
+```python
+from src.logging.suppression import setup_mcp_suppression
 
-## Troubleshooting
+# Context-appropriate suppression
+setup_mcp_suppression()       # For MCP servers
+setup_cli_suppression()       # For CLI tools
+setup_development_suppression()  # For debugging
+```
 
-### Common Issues
+## 🎨 Logger Naming Convention
 
-#### 1. Too Much Log Noise
+All loggers follow a hierarchical naming structure:
 
-**Problem**: Logs are too verbose, making it hard to find relevant information.
+```
+gnmibuddy                      # Root application
+├── gnmibuddy.collectors       # Data collection
+│   ├── gnmibuddy.collectors.interfaces
+│   ├── gnmibuddy.collectors.routing
+│   └── gnmibuddy.collectors.vpn
+├── gnmibuddy.gnmi            # gNMI operations
+├── gnmibuddy.mcp             # MCP server
+└── gnmibuddy.utils           # Utilities
+```
 
-**Solution**:
+Use `LoggerNames` constants to avoid typos:
+
+```python
+from src.logging import LoggerNames
+
+# Type-safe logger names
+collectors_level = LoggerNames.COLLECTORS
+interfaces_level = LoggerNames.INTERFACES
+```
+
+## 🔧 Operation Tracking
+
+Automatic operation logging with timing and context:
+
+```python
+from src.logging import log_operation, get_logger
+
+logger = get_logger(__name__)
+
+@log_operation("get_device_interfaces")
+def get_interfaces(device, interface=None):
+    logger.info(f"Processing {device}")
+    # Function implementation...
+    return result
+```
+
+Output:
+
+```
+2025-01-15 10:30:00 | DEBUG | gnmibuddy.collectors | Starting get_device_interfaces | device=xrd-1
+2025-01-15 10:30:01 | DEBUG | gnmibuddy.collectors | Completed get_device_interfaces | device=xrd-1 duration_ms=850.23
+```
+
+## 🌐 External Library Suppression
+
+Three strategies for different contexts:
+
+### CLI Strategy (Moderate)
+
+```python
+from src.logging.suppression import setup_cli_suppression
+setup_cli_suppression()
+# pygnmi: WARNING, grpc: WARNING
+```
+
+### MCP Strategy (Aggressive)
+
+```python
+from src.logging.suppression import setup_mcp_suppression
+setup_mcp_suppression()
+# pygnmi: ERROR, grpc: ERROR, logs to stderr
+```
+
+### Development Strategy (Minimal)
+
+```python
+from src.logging.suppression import setup_development_suppression
+setup_development_suppression()
+# pygnmi: INFO, grpc: WARNING (for debugging)
+```
+
+## 🖥️ MCP Server Integration
+
+### Basic MCP Setup
+
+```python
+from src.logging.mcp import setup_mcp_logging
+
+setup_mcp_logging(
+    log_level="info",
+    tool_debug_mode=False
+)
+```
+
+### Context-Aware Logging
+
+```python
+from src.logging.mcp import get_mcp_logger
+
+# In MCP tool functions
+async def get_device_info(device_name: str, context: Context):
+    logger = get_mcp_logger(__name__, context)
+
+    await logger.info(f"Getting info for {device_name}")
+    # Implementation...
+```
+
+### Environment Variables
 
 ```bash
-# Reduce external library noise
-python gnmibuddy.py --log-level info \
-  --module-log-levels "pygnmi=error,grpc=error" \
-  --device xrd-1 interfaces
+# MCP-specific configuration
+export GNMIBUDDY_MCP_TOOL_DEBUG=true
+export GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE=mcp
+export GNMIBUDDY_LOG_LEVEL=info
 ```
 
-#### 2. Missing Debug Information
+## 📁 File Management
 
-**Problem**: Can't see detailed information for troubleshooting.
-
-**Solution**:
+Sequential log files with smart numbering:
 
 ```bash
-# Enable debug for specific modules only
-python gnmibuddy.py --log-level warning \
-  --module-log-levels "gnmibuddy.collectors.interfaces=debug,gnmibuddy.gnmi=debug" \
-  --device xrd-1 interfaces
+logs/
+├── gnmibuddy_001.log  # First execution
+├── gnmibuddy_002.log  # Second execution
+└── gnmibuddy_003.log  # Latest execution
 ```
 
-#### 3. gNMI Connection Issues
+```python
+from src.logging.config import LogFilePathGenerator
 
-**Problem**: Can't connect to devices, need detailed connection information.
+# Custom log file management
+log_path = LogFilePathGenerator.get_next_log_file_path()
+latest = LogFilePathGenerator.get_latest_log_file()
+```
 
-**Solution**:
+## 🔍 Structured Logging
+
+OpenTelemetry-compatible JSON output:
+
+```python
+# Enable structured logging
+LoggingConfigurator.configure(global_level="info", enable_structured=True)
+
+# Results in JSON output:
+{
+  "timestamp": "2025-01-15T10:30:00.123456",
+  "level": "INFO",
+  "logger": "gnmibuddy.collectors.interfaces",
+  "message": "Getting interface data",
+  "device_name": "xrd-1",
+  "operation": "get_interfaces",
+  "duration_ms": 150.5
+}
+```
+
+## 📈 Environment Configuration
+
+All configuration can be controlled via environment variables:
 
 ```bash
-# Enable detailed gNMI and pygnmi logging
-python gnmibuddy.py --log-level warning \
-  --module-log-levels "gnmibuddy.gnmi=debug,pygnmi=info" \
-  --device xrd-1 system
+# Global settings
+export GNMIBUDDY_LOG_LEVEL=debug
+export GNMIBUDDY_STRUCTURED_LOGGING=true
+
+# Module-specific levels
+export GNMIBUDDY_MODULE_LEVELS="gnmibuddy.collectors=debug,pygnmi=error"
+
+# Suppression mode
+export GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE=mcp
+
+# Custom log file
+export GNMIBUDDY_LOG_FILE=/var/log/gnmibuddy.log
 ```
 
-#### 4. Performance Debugging
+## 🧪 Examples
 
-**Problem**: Operations are slow, need timing information.
-
-**Solution**:
+Run the comprehensive demo:
 
 ```bash
-# Enable structured logging to see operation timings
-python gnmibuddy.py --log-level info --structured-logging \
-  --device xrd-1 interfaces
+cd /Users/jillesca/DevNet/cisco_live/25clus/gNMIBuddy
+python src/logging/examples/demo.py
 ```
 
-### Debugging Specific Scenarios
+The demo shows:
 
-#### BGP Issues
+- Basic and advanced configuration
+- Module-specific levels
+- Structured logging
+- Operation tracking
+- Dynamic level changes
+- Suppression strategies
+- MCP integration examples
 
-```bash
-python gnmibuddy.py --log-level warning \
-  --module-log-levels "gnmibuddy.collectors.routing=debug" \
-  --device xrd-1 routing --protocol bgp
-```
-
-#### Interface State Issues
-
-```bash
-python gnmibuddy.py --log-level warning \
-  --module-log-levels "gnmibuddy.collectors.interfaces=debug" \
-  --device xrd-1 interfaces --interface GigabitEthernet0/0/0/0
-```
-
-#### Inventory Problems
-
-```bash
-python gnmibuddy.py --log-level warning \
-  --module-log-levels "gnmibuddy.inventory=debug" \
-  --device xrd-1 system
-```
-
-### Log File Locations
-
-- **Default log file**: `logs/gnmibuddy.log`
-- **Log rotation**: Implement using external tools (logrotate, etc.)
-- **Structured logs**: Same file, JSON format when enabled
-
-## Migration from Old Logging
+## 🎯 Key Benefits
 
 ### For Developers
 
-Old pattern:
+- **Type safety**: Enums and data classes prevent configuration errors
+- **Modular design**: Easy to understand and modify individual components
+- **Clear interfaces**: Well-defined boundaries between modules
+- **Comprehensive examples**: Learn by working examples
+
+### For Operations
+
+- **Runtime flexibility**: Change log levels without restarts
+- **Context awareness**: Automatic device and operation tracking
+- **Observability ready**: OTel-compatible structured logging
+- **Noise reduction**: Configurable external library suppression
+
+### For Maintenance
+
+- **Single responsibility**: Each module has one clear purpose
+- **Easy testing**: Isolated components with focused functionality
+- **Clear documentation**: Every component thoroughly documented
+- **Backward compatibility**: Smooth migration path
+
+## 🔄 Migration from Old System
+
+The refactored system maintains compatibility:
 
 ```python
-import logging
-logger = logging.getLogger(__name__)
+# Clean, modern imports
+from src.logging import LoggingConfigurator, get_logger, log_operation
+
+# Type-safe imports for advanced usage
+from src.logging import LogLevel, SuppressionMode
 ```
 
-New pattern:
+## 📚 Further Reading
 
-```python
-from src.logging.config import get_logger
-logger = get_logger(__name__)
-```
+- See `examples/demo.py` for comprehensive usage examples
+- Check `docs/README.md` for detailed architecture information
+- Review individual module docstrings for implementation details
 
-### Configuration Changes
+---
 
-Old way (manual configuration):
-
-```python
-logging.basicConfig(level=logging.INFO)
-```
-
-New way (centralized configuration):
-
-```python
-from src.logging.config import LoggingConfig
-LoggingConfig.configure(global_level="info")
-```
-
-The enhanced logging system is backward compatible, so existing code will continue to work while you migrate to the new patterns.
+_Built following the Zen of Python: "Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex."_

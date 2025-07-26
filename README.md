@@ -156,7 +156,71 @@ Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 
 ## 🤖 LLM Integration (MCP)
 
-### VSCode Setup
+<details>
+<summary><strong>🚀 Easy Setup with uvx (No Repository Cloning Required)</strong></summary>
+
+### VSCode Setup (uvx)
+
+Create `.vscode/mcp.json` in your project:
+
+```json
+{
+  "servers": {
+    "gNMIBuddy": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/jillesca/gNMIBuddy.git",
+        "gnmibuddy-mcp"
+      ],
+      "env": {
+        "NETWORK_INVENTORY": "${workspaceFolder}/<your_inventory_file>.json"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop Setup (uvx)
+
+Add to Claude's configuration (Settings > Developer > Edit config):
+
+```json
+{
+  "mcpServers": {
+    "gNMIBuddy": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/jillesca/gNMIBuddy.git",
+        "gnmibuddy-mcp"
+      ],
+      "env": {
+        "NETWORK_INVENTORY": "/absolute/path/to/your_inventory.json"
+      }
+    }
+  }
+}
+```
+
+### Testing MCP (uvx)
+
+Use the MCP inspector for testing:
+
+```bash
+# Replace `your_inventory.json` with your actual inventory file
+NETWORK_INVENTORY=your_inventory.json \
+npx @modelcontextprotocol/inspector \
+uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp
+```
+
+</details>
+
+### Traditional Setup (Requires Repository Cloning)
+
+If you prefer to clone the repository and have more control over the setup:
+
+#### VSCode Setup
 
 Create `.vscode/mcp.json` in your project:
 
@@ -181,7 +245,7 @@ Create `.vscode/mcp.json` in your project:
 }
 ```
 
-### Claude Desktop Setup
+#### Claude Desktop Setup
 
 Add to Claude's configuration (Settings > Developer > Edit config):
 
@@ -206,7 +270,7 @@ Add to Claude's configuration (Settings > Developer > Edit config):
 }
 ```
 
-### Testing MCP
+#### Testing MCP
 
 Use the MCP inspector for testing.
 

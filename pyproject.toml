@@ -27,6 +27,7 @@ dependencies = [
 
 [project.scripts]
 gnmibuddy = "gnmibuddy:main"
+gnmibuddy-mcp = "mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/jillesca/gNMIBuddy"

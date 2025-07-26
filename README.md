@@ -65,7 +65,8 @@ uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --help
 uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --inventory your_inventory.json device list
 ```
 
-> ![TIP] Don't want to always type the inventory? use the `NETWORK_INVENTORY` env var.
+> ![TIP]
+> Don't want to always type the inventory? use the `NETWORK_INVENTORY` env var.
 
 ### Install as a persistent tool
 

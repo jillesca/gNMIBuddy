@@ -326,11 +326,11 @@ def get_gnmi_data(
 # Development and testing code
 if __name__ == "__main__":
     from pprint import pprint as pp
-    from src.logging import configure_logging
+    from src.logging import LoggingConfigurator
     from src.schemas.responses import OperationStatus
 
     # Configure detailed logging for development
-    configure_logging("DEBUG")
+    LoggingConfigurator.configure(global_level="DEBUG")
     logger = get_logger(__name__)
 
     logger.info("Starting gNMI client development testing...")

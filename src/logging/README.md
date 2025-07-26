@@ -49,10 +49,10 @@ src/logging/
 ### Basic Configuration
 
 ```python
-from src.logging import configure_logging, get_logger
+from src.logging import LoggingConfigurator, get_logger
 
 # Configure logging
-logger = configure_logging(log_level="info")
+LoggingConfigurator.configure(global_level="info")
 
 # Get a module logger
 module_logger = get_logger(__name__)
@@ -263,7 +263,7 @@ OpenTelemetry-compatible JSON output:
 
 ```python
 # Enable structured logging
-configure_logging(log_level="info", structured=True)
+LoggingConfigurator.configure(global_level="info", enable_structured=True)
 
 # Results in JSON output:
 {
@@ -343,11 +343,11 @@ The demo shows:
 The refactored system maintains compatibility:
 
 ```python
-# Old imports still work
-from src.logging import configure_logging, get_logger, log_operation
+# Clean, modern imports
+from src.logging import LoggingConfigurator, get_logger, log_operation
 
-# But new imports are cleaner
-from src.logging import LoggingConfigurator, LogLevel, SuppressionMode
+# Type-safe imports for advanced usage
+from src.logging import LogLevel, SuppressionMode
 ```
 
 ## 📚 Further Reading

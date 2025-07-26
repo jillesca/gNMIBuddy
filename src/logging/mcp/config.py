@@ -9,7 +9,7 @@ ensuring logs go to stderr and integrating with the new logging architecture.
 import os
 from typing import Optional, Dict, Any
 
-from ..utils.convenience import configure_logging
+from ..config.configurator import LoggingConfigurator
 from ..utils.dynamic import set_module_level
 from ..core.logger_names import LoggerNames
 from ..suppression.external import ExternalLibrarySuppressor
@@ -79,11 +79,14 @@ def setup_mcp_logging(
         module_levels.update(custom_module_levels)
 
     # Configure logging with MCP-specific settings
-    configure_logging(
-        log_level=log_level or "info",
+    LoggingConfigurator.configure(
+        global_level=log_level or "info",
         module_levels=module_levels,
+        enable_structured=False,  # Keep human-readable for MCP server logs
+        enable_file_output=True,
+        log_file=None,
+        enable_external_suppression=True,
         external_suppression_mode="mcp",  # Uses stderr and aggressive suppression
-        structured=False,  # Keep human-readable for MCP server logs
     )
 
 

@@ -22,9 +22,9 @@ Key Components:
 - Dynamic log level management
 
 Usage:
-    from src.logging import configure_logging, get_logger
+    from src.logging import LoggingConfigurator, get_logger
 
-    logger = configure_logging(log_level="info")
+    LoggingConfigurator.configure(global_level="info")
     module_logger = get_logger(__name__)
 """
 
@@ -58,7 +58,6 @@ from .decorators import log_operation
 
 # Utilities
 from .utils.dynamic import get_logger, set_module_level, get_module_levels
-from .utils.convenience import configure_logging
 
 # MCP-specific utilities
 from .mcp import (
@@ -83,7 +82,6 @@ __all__ = [
     "EnvironmentConfigReader",
     "LogFilePathGenerator",
     # Main API functions
-    "configure_logging",
     "get_logger",
     "log_operation",
     # Dynamic level management

@@ -4,6 +4,18 @@ version = "0.1.0"
 description = "An opinionated tool that retrieves essential network information from devices using gNMI and OpenConfig models. Designed primarily for LLMs with Model Context Protocol (MCP) integration, it also provides a full CLI for direct use."
 readme = "README.md"
 requires-python = ">=3.13"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+license = "MIT"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Networking",
+    "Topic :: System :: Systems Administration",
+]
 dependencies = [
     "click>=8.1.8",
     "mcp[cli]>=1.6.0",
@@ -12,12 +24,21 @@ dependencies = [
     "pyyaml>=6.0.1",
 ]
 
+[project.scripts]
+gnmibuddy = "gnmibuddy:main"
+
+[project.urls]
+Homepage = "https://github.com/jillesca/gNMIBuddy"
+Repository = "https://github.com/jillesca/gNMIBuddy"
+Issues = "https://github.com/jillesca/gNMIBuddy/issues"
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["src"]
+py-modules = ["gnmibuddy"]
 
 [dependency-groups]
 dev = [

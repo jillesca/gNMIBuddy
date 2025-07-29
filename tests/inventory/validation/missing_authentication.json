@@ -1,0 +1,20 @@
+[
+  {
+    "name": "xrd-no-auth",
+    "ip_address": "10.10.20.175",
+    "nos": "iosxr",
+    "port": 57400
+  },
+  {
+    "name": "xrd-partial-userpass",
+    "ip_address": "10.10.20.176",
+    "nos": "iosxr",
+    "username": "admin"
+  },
+  {
+    "name": "xrd-partial-cert",
+    "ip_address": "10.10.20.177",
+    "nos": "iosxr",
+    "path_cert": "/opt/certs/xrd1.pem"
+  }
+]

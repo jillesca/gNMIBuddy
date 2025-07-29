@@ -17,37 +17,78 @@ Retrieve structured network data in JSON format:
 
 See the [API definition](/api.py) for all available APIs and options.
 
-## ⚡ Quick Start
-
-### Prerequisites
+## ⚡ Prerequisites
 
 - Python `3.13+`
 - Network devices with gNMI _enabled_.
-- Device inventory file (JSON format).
 
-### Device Compatibility Requirements
+### Device Compatibility
 
 > [!IMPORTANT]
-> gNMIBuddy requires devices to support specific OpenConfig models depending on the functionality used.
+> gNMIBuddy requires devices to support specific `OpenConfig` models depending on the functionality used.
 
 - **OpenConfig Models dependencies**
 
-  - `openconfig-system` (`0.17.1`)
-  - `openconfig-interfaces` (`4.0.0`)
-  - `openconfig-network-instance` (`1.3.0`)
+  - `openconfig-system >= 0.17.1`
+  - `openconfig-interfaces >= 4.0.0`
+  - `openconfig-network-instance >= 1.3.0`
 
 - **Tested on:**
-  - **Platform:** cisco XRd Control Plane (`24.4.1.26I`)
+  - Cisco XRd Control Plane (`24.4.1.26I`)
 
 > [!NOTE]
 > The function to get logs from devices, only works on XR systems.
 
-### Installation
+### Device Inventory
 
-Install `uv` package manager ([docs](https://docs.astral.sh/uv/#installation)):
+gNMIBuddy identifies devices by hostname and looks up their corresponding IP addresses and credentials from the inventory.
+
+Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
+
+> [!IMPORTANT]
+> Without a device inventory, gNMIBuddy cannot operate.
+
+The inventory must be a **JSON list** of `Device` objects with these required fields:
+
+- `name`: Device hostname
+- `ip_address`: IP for gNMI connections
+- `nos`: Network OS identifier (e.g., "iosxr")
+
+**Authentication (choose one method):**
+
+- **Username/Password**: Both `username` and `password` fields
+- **Certificate-based**: Both `path_cert` and `path_key` fields
+
+**Schema:** [`src/schemas/models.py`](src/schemas/models.py) | **Example:** [`xrd_sandbox.json`](xrd_sandbox.json)
+
+```json
+[
+  {
+    "name": "xrd-1",
+    "ip_address": "10.10.20.101",
+    "nos": "iosxr",
+    "username": "cisco",
+    "password": "C1sco12345"
+  },
+  {
+    "name": "xrd-2",
+    "ip_address": "10.10.20.102",
+    "nos": "iosxr",
+    "path_cert": "/opt/certs/device.pem",
+    "path_key": "/opt/certs/device.key"
+  }
+]
+```
+
+> [!TIP]
+> Validate your inventory: Use `gnmibuddy inventory validate` to check your inventory file for proper format, valid IP addresses, required fields, and authentication configuration before running network commands.
+
+### Install uv
+
+This project relies heavily on `uv`. It is highly recommended to install `uv` if you don't have it. See the [docs](https://docs.astral.sh/uv/#installation) for how to install it.
 
 ```bash
-# macOS
+# On macOS this is how it worked for me
 brew install uv
 ```
 
@@ -147,10 +188,14 @@ Commands:
     logs         Retrieve and filter device logs
     validate     Validate all collector functions (development tool)
 
+  inventory (i) Inventory Management
+    validate     Validate inventory file format and schema
+
 Examples:
   gnmibuddy.py device info --device R1
   gnmibuddy.py network routing --device R1
   gnmibuddy.py --all-devices device list
+  gnmibuddy.py inventory validate --inventory inventory.json
 
 Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 ```

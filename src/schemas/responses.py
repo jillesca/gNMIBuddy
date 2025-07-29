@@ -220,6 +220,70 @@ class BatchOperationResult:
         )
 
 
+# Validation-related schemas for inventory validation
+
+
+class ValidationStatus(Enum):
+    """Enumeration for validation status values"""
+
+    PASSED = "PASSED"
+    FAILED = "FAILED"
+
+
+@dataclass
+class ValidationError:
+    """
+    Represents an error that occurred during inventory validation.
+
+    Attributes:
+        device_name: Name of the device that failed validation (None for file-level errors)
+        device_index: Position of the device in the JSON array (None for file-level errors)
+        field: The field that failed validation (None for file-level errors)
+        error_type: Type of validation error (e.g., "REQUIRED_FIELD", "INVALID_FORMAT")
+        message: Human-readable error message
+        suggestion: Suggestion for fixing the error
+    """
+
+    device_name: Optional[str] = None
+    device_index: Optional[int] = None
+    field: Optional[str] = None
+    error_type: str = ""
+    message: str = ""
+    suggestion: str = ""
+
+    def __str__(self) -> str:
+        """String representation for debugging."""
+        if self.device_name:
+            return f"ValidationError(device='{self.device_name}', field='{self.field}', type='{self.error_type}')"
+        return f"ValidationError(file-level, type='{self.error_type}')"
+
+
+@dataclass
+class ValidationResult:
+    """
+    Represents the result of inventory validation.
+
+    Attributes:
+        status: Overall validation status (PASSED or FAILED)
+        total_devices: Total number of devices in the inventory
+        valid_devices: Number of devices that passed validation
+        invalid_devices: Number of devices that failed validation
+        errors: List of validation errors found
+        file_path: Path to the inventory file that was validated
+    """
+
+    status: ValidationStatus
+    total_devices: int
+    valid_devices: int
+    invalid_devices: int
+    errors: List[ValidationError]
+    file_path: str
+
+    def __str__(self) -> str:
+        """String representation for debugging."""
+        return f"ValidationResult(status={self.status.value}, total={self.total_devices}, valid={self.valid_devices}, invalid={self.invalid_devices}, errors={len(self.errors)})"
+
+
 # Type alias for return types - Go-like error handling pattern
 NetworkResponse = Union[
     SuccessResponse, ErrorResponse, FeatureNotFoundResponse

@@ -6,8 +6,15 @@ Contains data models for representing network devices and related
 inventory structures used throughout the application.
 """
 
+from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Union
+
+
+class NetworkOS(Enum):
+    """Supported Network Operating Systems"""
+
+    IOSXR = "iosxr"
 
 
 @dataclass
@@ -47,24 +54,31 @@ class Device:
         ip_address: IP address for device management
         port: Port number for device connections
         nos: Network Operating System identifier
-        username: Authentication username
-        password: Authentication password
-        path_cert: Path to client certificate file (optional)
-        path_key: Path to client private key file (optional)
+        username: Authentication username (optional, required if not using certificates)
+        password: Authentication password (optional, required if not using certificates)
+        path_cert: Path to client certificate file (optional, required if not using username/password)
+        path_key: Path to client private key file (optional, required if not using username/password)
         path_root: Path to root CA certificate file (optional)
         override: Override server name for certificate validation (optional)
         skip_verify: Skip certificate verification (defaults to False)
         gnmi_timeout: Timeout for gNMI requests in seconds (defaults to 5)
         grpc_options: List of gRPC options (optional)
         show_diff: Show differences in responses (optional)
+        insecure: Use insecure connection (defaults to True)
+
+    Authentication:
+        gNMI clients require authentication. Two methods are supported:
+        1. Username/Password: Provide both 'username' and 'password' fields
+        2. Certificate-based: Provide both 'path_cert' and 'path_key' fields
+        At least one authentication method must be configured.
     """
 
     name: str = ""
     ip_address: str = ""
     port: int = 830
-    nos: str = ""
-    username: str = ""
-    password: str = ""
+    nos: NetworkOS = NetworkOS.IOSXR
+    username: Optional[str] = None
+    password: Optional[str] = None
     path_cert: Optional[str] = None
     path_key: Optional[str] = None
     path_root: Optional[str] = None
@@ -82,9 +96,14 @@ class Device:
         Returns:
             Dictionary with non-sensitive device information
         """
+        # Handle both enum and string values for backward compatibility
+        nos_value = (
+            self.nos.value if isinstance(self.nos, NetworkOS) else self.nos
+        )
+
         return {
             "name": self.name,
             "ip_address": self.ip_address,
             "port": self.port,
-            "nos": self.nos,
+            "nos": nos_value,
         }

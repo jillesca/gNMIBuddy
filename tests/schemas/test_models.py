@@ -7,8 +7,13 @@ proper validation and functionality.
 """
 
 from dataclasses import fields
-from typing import get_type_hints
-from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
+from typing import get_type_hints, Optional
+from src.schemas.models import (
+    Device,
+    DeviceListResult,
+    DeviceErrorResult,
+    NetworkOS,
+)
 
 
 class TestDeviceModel:
@@ -17,15 +22,15 @@ class TestDeviceModel:
     def test_device_creation_with_minimal_fields(self):
         """Test Device creation with only required fields."""
         device = Device(
-            name="test-device", ip_address="192.168.1.1", nos="iosxr"
+            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
         )
 
         assert device.name == "test-device"
         assert device.ip_address == "192.168.1.1"
-        assert device.nos == "iosxr"
+        assert device.nos == NetworkOS.IOSXR
         assert device.port == 830  # Default value
-        assert device.username == ""  # Default value
-        assert device.password == ""  # Default value
+        assert device.username is None  # Default value (optional)
+        assert device.password is None  # Default value (optional)
         assert device.skip_verify is False  # Default value
         assert device.gnmi_timeout == 5  # Default value
         assert device.insecure is True  # Default value
@@ -36,7 +41,7 @@ class TestDeviceModel:
             name="test-device",
             ip_address="192.168.1.1",
             port=57400,
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="admin123",
             path_cert="/path/to/cert.pem",
@@ -53,7 +58,7 @@ class TestDeviceModel:
         assert device.name == "test-device"
         assert device.ip_address == "192.168.1.1"
         assert device.port == 57400
-        assert device.nos == "iosxr"
+        assert device.nos == NetworkOS.IOSXR
         assert device.username == "admin"
         assert device.password == "admin123"
         assert device.path_cert == "/path/to/cert.pem"
@@ -74,9 +79,9 @@ class TestDeviceModel:
         assert device.name == ""
         assert device.ip_address == ""
         assert device.port == 830
-        assert device.nos == ""
-        assert device.username == ""
-        assert device.password == ""
+        assert device.nos == NetworkOS.IOSXR
+        assert device.username is None  # Now optional
+        assert device.password is None  # Now optional
         assert device.path_cert is None
         assert device.path_key is None
         assert device.path_root is None
@@ -93,7 +98,7 @@ class TestDeviceModel:
             name="test-device",
             ip_address="192.168.1.1",
             port=57400,
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="secret123",
         )
@@ -149,9 +154,9 @@ class TestDeviceModel:
         assert type_hints["name"] == str
         assert type_hints["ip_address"] == str
         assert type_hints["port"] == int
-        assert type_hints["nos"] == str
-        assert type_hints["username"] == str
-        assert type_hints["password"] == str
+        assert type_hints["nos"] == NetworkOS
+        assert type_hints["username"] == Optional[str]  # Now optional
+        assert type_hints["password"] == Optional[str]  # Now optional
         assert type_hints["skip_verify"] == bool
         assert type_hints["gnmi_timeout"] == int
         assert type_hints["insecure"] == bool
@@ -159,15 +164,17 @@ class TestDeviceModel:
     def test_device_equality(self):
         """Test Device equality comparison."""
         device1 = Device(
-            name="test-device", ip_address="192.168.1.1", nos="iosxr"
+            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
         )
 
         device2 = Device(
-            name="test-device", ip_address="192.168.1.1", nos="iosxr"
+            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
         )
 
         device3 = Device(
-            name="different-device", ip_address="192.168.1.1", nos="iosxr"
+            name="different-device",
+            ip_address="192.168.1.1",
+            nos=NetworkOS.IOSXR,
         )
 
         assert device1 == device2
@@ -176,7 +183,7 @@ class TestDeviceModel:
     def test_device_string_representation(self):
         """Test Device string representation."""
         device = Device(
-            name="test-device", ip_address="192.168.1.1", nos="iosxr"
+            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
         )
 
         device_str = str(device)
@@ -252,6 +259,8 @@ class TestDeviceModelIntegration:
 
     def test_device_creation_from_inventory_data(self):
         """Test Device creation from typical inventory data."""
+        from src.inventory.file_handler import _convert_device_data
+
         inventory_data = {
             "name": "PE1-NYC",
             "ip_address": "10.0.1.100",
@@ -264,12 +273,14 @@ class TestDeviceModelIntegration:
             "gnmi_timeout": 30,
         }
 
-        device = Device(**inventory_data)
+        # Convert data as it would be done in inventory loading
+        converted_data = _convert_device_data(inventory_data)
+        device = Device(**converted_data)
 
         assert device.name == "PE1-NYC"
         assert device.ip_address == "10.0.1.100"
         assert device.port == 57400
-        assert device.nos == "iosxr"
+        assert device.nos == NetworkOS.IOSXR
         assert device.username == "gnmi"
         assert device.password == "gnmi123"
         assert device.insecure is True
@@ -282,7 +293,7 @@ class TestDeviceModelIntegration:
             name="test-device",
             ip_address="192.168.1.1",
             port=57400,
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
         )
 
         device_info = device.to_device_info()
@@ -312,7 +323,7 @@ class TestDeviceModelIntegration:
         extended_device = ExtendedDevice(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             region="us-east",
             datacenter="dc1",
         )

@@ -56,6 +56,8 @@ COMMAND_MODULES: List[str] = [
     # Operations commands - Commands for operational tasks and testing
     "src.cmd.commands.ops.logs",
     "src.cmd.commands.ops.validate",
+    # Inventory commands - Commands for inventory file validation and management
+    "src.cmd.commands.inventory.validate",
 ]
 
 

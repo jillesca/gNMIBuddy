@@ -39,6 +39,12 @@ class Command(Enum):
         "Validate all collector functions (development tool)",
     )
 
+    # Inventory commands
+    INVENTORY_VALIDATE = (
+        "validate",
+        "Validate inventory file format and schema",
+    )
+
     def __init__(self, command_name: str, description: str):
         self.command_name = command_name
         self.description = description

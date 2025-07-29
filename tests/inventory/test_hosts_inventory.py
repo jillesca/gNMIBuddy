@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from src.inventory.manager import InventoryManager
-from src.schemas.models import DeviceErrorResult, DeviceListResult
+from src.schemas.models import DeviceErrorResult, DeviceListResult, NetworkOS
 
 
 class TestHostsInventory:
@@ -33,7 +33,7 @@ class TestHostsInventory:
         ), "Should successfully retrieve test-device-1 device"
         assert device.ip_address == "10.0.0.1"
         assert device.port == 57777
-        assert device.nos == "iosxr"
+        assert device.nos == NetworkOS.IOSXR
         assert device.username == "test_user"
         assert device.password == "test_pass"
 
@@ -83,4 +83,4 @@ class TestHostsInventory:
         test_device_2 = devices["test-device-2"]
         assert test_device_2.ip_address == "10.0.0.2"
         assert test_device_2.port == 57777
-        assert test_device_2.nos == "iosxr"
+        assert test_device_2.nos == NetworkOS.IOSXR

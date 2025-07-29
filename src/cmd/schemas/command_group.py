@@ -32,6 +32,12 @@ class CommandGroup(Enum):
         "Operations",
         "Commands for operational tasks and testing",
     )
+    INVENTORY = (
+        "inventory",
+        "i",
+        "Inventory Management",
+        "Commands for inventory file validation and management",
+    )
 
     def __init__(
         self, group_name: str, alias: str, title: str, description: str

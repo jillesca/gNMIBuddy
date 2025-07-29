@@ -1,0 +1,26 @@
+[
+  {
+    "name": "xrd-1",
+    "ip_address": "10.10.20.175",
+    "nos": "iosxr",
+    "port": "invalid_port",
+    "gnmi_timeout": "not_a_number",
+    "skip_verify": "not_boolean",
+    "insecure": 123,
+    "path_cert": "",
+    "path_key": ""
+  },
+  {
+    "name": "xrd-2",
+    "ip_address": "10.10.20.176",
+    "nos": "iosxr",
+    "port": -1,
+    "gnmi_timeout": 0
+  },
+  {
+    "name": "xrd-3",
+    "ip_address": "10.10.20.177",
+    "nos": "iosxr",
+    "port": 70000
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "name": "xrd-1",
+    "ip_address": "10.10.20.175",
+    "nos": "iosxr",
+    "port": 57400,
+    "gnmi_timeout": 30,
+    "path_cert": "tests/certificates/device.pem",
+    "path_key": "tests/certificates/device.key",
+    "skip_verify": true,
+    "insecure": false
+  },
+  {
+    "name": "xrd-2",
+    "ip_address": "2001:db8::1",
+    "nos": "iosxr",
+    "port": 57400,
+    "gnmi_timeout": 30,
+    "username": "admin",
+    "password": "secret123"
+  },
+  {
+    "name": "xrd-3",
+    "ip_address": "192.168.1.100",
+    "nos": "iosxr",
+    "username": "cisco",
+    "password": "cisco"
+  }
+]

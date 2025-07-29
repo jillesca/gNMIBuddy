@@ -1,0 +1,27 @@
+[
+  {
+    "name": "xrd-1",
+    "ip_address": "10.10.20.175",
+    "nos": "iosxr",
+    "username": "admin",
+    "password": "secret123"
+  },
+  {
+    "name": "",
+    "ip_address": "10.10.20.176",
+    "nos": "iosxr"
+  },
+  {
+    "name": "xrd-3",
+    "nos": "iosxr"
+  },
+  {
+    "name": "xrd-4",
+    "ip_address": "",
+    "nos": "iosxr"
+  },
+  {
+    "name": "xrd-5",
+    "ip_address": "10.10.20.178"
+  }
+]

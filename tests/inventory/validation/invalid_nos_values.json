@@ -1,0 +1,22 @@
+[
+  {
+    "name": "xrd-1",
+    "ip_address": "10.10.20.175",
+    "nos": "cisco_ios"
+  },
+  {
+    "name": "xrd-2",
+    "ip_address": "10.10.20.176",
+    "nos": "nxos"
+  },
+  {
+    "name": "xrd-3",
+    "ip_address": "10.10.20.177",
+    "nos": "invalid_nos"
+  },
+  {
+    "name": "xrd-4",
+    "ip_address": "10.10.20.178",
+    "nos": ""
+  }
+]

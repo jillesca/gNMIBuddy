@@ -53,7 +53,11 @@ The inventory must be a **JSON list** of `Device` objects with these required fi
 - `name`: Device hostname
 - `ip_address`: IP for gNMI connections
 - `nos`: Network OS identifier (e.g., "iosxr")
-- `username` & `password`: Authentication credentials
+
+**Authentication (choose one method):**
+
+- **Username/Password**: Both `username` and `password` fields
+- **Certificate-based**: Both `path_cert` and `path_key` fields
 
 **Schema:** [`src/schemas/models.py`](src/schemas/models.py) | **Example:** [`xrd_sandbox.json`](xrd_sandbox.json)
 
@@ -65,9 +69,19 @@ The inventory must be a **JSON list** of `Device` objects with these required fi
     "nos": "iosxr",
     "username": "cisco",
     "password": "C1sco12345"
+  },
+  {
+    "name": "xrd-2",
+    "ip_address": "10.10.20.102",
+    "nos": "iosxr",
+    "path_cert": "/opt/certs/device.pem",
+    "path_key": "/opt/certs/device.key"
   }
 ]
 ```
+
+> [!TIP]
+> Validate your inventory: Use `gnmibuddy inventory validate` to check your inventory file for proper format, valid IP addresses, required fields, and authentication configuration before running network commands.
 
 ### Install uv
 
@@ -174,10 +188,14 @@ Commands:
     logs         Retrieve and filter device logs
     validate     Validate all collector functions (development tool)
 
+  inventory (i) Inventory Management
+    validate     Validate inventory file format and schema
+
 Examples:
   gnmibuddy.py device info --device R1
   gnmibuddy.py network routing --device R1
   gnmibuddy.py --all-devices device list
+  gnmibuddy.py inventory validate --inventory inventory.json
 
 Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 ```

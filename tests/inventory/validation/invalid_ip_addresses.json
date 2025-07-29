@@ -1,0 +1,27 @@
+[
+  {
+    "name": "xrd-1",
+    "ip_address": "10.10.20.999",
+    "nos": "iosxr"
+  },
+  {
+    "name": "xrd-2",
+    "ip_address": "300.400.500.600",
+    "nos": "iosxr"
+  },
+  {
+    "name": "xrd-3",
+    "ip_address": "10.10.20.175/24",
+    "nos": "iosxr"
+  },
+  {
+    "name": "xrd-4",
+    "ip_address": "invalid-ip-address",
+    "nos": "iosxr"
+  },
+  {
+    "name": "xrd-5",
+    "ip_address": "2001:db8::gggg",
+    "nos": "iosxr"
+  }
+]

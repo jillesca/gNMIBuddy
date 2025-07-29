@@ -10,7 +10,7 @@ import sys
 from typing import Dict, List, Any, Optional, cast
 from pathlib import Path
 
-from src.schemas.models import Device
+from src.schemas.models import Device, NetworkOS
 from src.logging import get_logger
 
 # Type alias for device inventory data from JSON
@@ -126,6 +126,37 @@ def resolve_inventory_path(file_path: str) -> str:
     raise FileNotFoundError(error_msg)
 
 
+def _convert_device_data(device_data: DeviceData) -> DeviceData:
+    """
+    Convert device data from JSON format to Device-compatible format.
+
+    Handles conversion of string 'nos' field to NetworkOS enum.
+
+    Args:
+        device_data: Raw device data from JSON
+
+    Returns:
+        Device data with enum conversions applied
+
+    Raises:
+        ValueError: If nos value is not supported
+    """
+    converted_data = device_data.copy()
+
+    # Convert nos string to NetworkOS enum if present
+    if "nos" in converted_data and isinstance(converted_data["nos"], str):
+        nos_value = converted_data["nos"]
+        try:
+            converted_data["nos"] = NetworkOS(nos_value)
+        except ValueError as e:
+            valid_values = [nos.value for nos in NetworkOS]
+            error_msg = f"Invalid network OS '{nos_value}'. Must be one of: {valid_values}"
+            logger.error(error_msg)
+            raise ValueError(error_msg) from e
+
+    return converted_data
+
+
 def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
     """
     Load device inventory from a JSON file and convert to Device objects.
@@ -148,16 +179,20 @@ def load_inventory(inventory_file: Optional[str] = None) -> Dict[str, Device]:
 
     try:
         device_inventory = parse_json_file(inventory_file)
-        devices: Dict[str, Device] = {
-            device["name"]: Device(**device) for device in device_inventory
-        }
+        devices: Dict[str, Device] = {}
+
+        for device_data in device_inventory:
+            converted_data = _convert_device_data(device_data)
+            device = Device(**converted_data)
+            devices[device.name] = device
+
         logger.debug(
             "Successfully loaded %d devices from inventory %s",
             len(devices),
             inventory_file,
         )
         return devices
-    except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
+    except (FileNotFoundError, json.JSONDecodeError, IOError, ValueError) as e:
         error_msg = (
             f"Error loading device inventory from {inventory_file}: {e}"
         )

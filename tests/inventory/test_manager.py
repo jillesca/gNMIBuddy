@@ -14,6 +14,7 @@ from src.schemas.models import (
     Device,
     DeviceErrorResult,
     DeviceListResult,
+    NetworkOS,
 )
 
 
@@ -44,7 +45,7 @@ class TestInventoryManager(unittest.TestCase):
         self.assertEqual(device.name, "test-device-1")
         self.assertEqual(device.ip_address, "10.0.0.1")
         self.assertEqual(device.port, 57777)
-        self.assertEqual(device.nos, "iosxr")
+        self.assertEqual(device.nos, NetworkOS.IOSXR)
         self.assertEqual(device.username, "test_user")
         self.assertEqual(device.password, "test_pass")
 
@@ -89,23 +90,20 @@ class TestInventoryManager(unittest.TestCase):
         device1 = devices["test-device-1"]
         self.assertEqual(device1.ip_address, "10.0.0.1")
         self.assertEqual(device1.port, 57777)
-        self.assertEqual(device1.nos, "iosxr")
+        self.assertEqual(device1.nos, NetworkOS.IOSXR)
 
     def test_list_devices_with_empty_inventory(self):
-        """Test listing devices with an empty inventory."""
-        # Initialize with empty inventory
+        """Test listing devices with an empty inventory - should fail validation."""
+        # Initialize with empty inventory should fail validation and exit
         empty_file = os.path.join(
             os.path.dirname(__file__), "empty_inventory.json"
         )
-        InventoryManager.initialize(empty_file)
 
-        # Get the device list
-        result = InventoryManager.list_devices()
+        with self.assertRaises(SystemExit) as cm:
+            InventoryManager.initialize(empty_file)
 
-        # Assertions
-        self.assertIsInstance(result, DeviceListResult)
-        self.assertIsInstance(result.devices, list)
-        self.assertEqual(len(result.devices), 0)
+        # Should exit with code 1 for validation failure
+        self.assertEqual(cm.exception.code, 1)
 
     def test_inventory_initialization_with_specific_file(self):
         """Test initializing inventory with a specific file path."""
@@ -143,7 +141,7 @@ class TestAutoInitialization(unittest.TestCase):
             name="test-device-1",
             ip_address="10.0.0.1",
             port=57777,
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",
         )
@@ -151,7 +149,7 @@ class TestAutoInitialization(unittest.TestCase):
             name="test-device-2",
             ip_address="10.0.0.2",
             port=57777,
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",
         )
@@ -190,7 +188,7 @@ class TestAutoInitialization(unittest.TestCase):
             name="test-device-1",
             ip_address="10.0.0.1",
             port=57777,
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",
         )
@@ -224,7 +222,7 @@ class TestAutoInitialization(unittest.TestCase):
             name="test-device-1",
             ip_address="10.0.0.1",
             port=57777,
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",
         )

@@ -5,14 +5,62 @@ Manages device inventory with a singleton pattern.
 """
 
 from typing import Dict, Optional, Union
+import sys
 
 from src.logging import get_logger
 from src.schemas.models import Device, DeviceListResult, DeviceErrorResult
+from src.schemas.responses import ValidationStatus, ValidationResult
 
 from .file_handler import get_inventory_path, load_inventory
+from .validator import InventoryValidator
 
 # Setup module logger
 logger = get_logger(__name__)
+
+
+def _display_validation_errors_detailed(result: ValidationResult) -> None:
+    """
+    Display validation errors in user-friendly format with detailed layout.
+
+    This function provides the same formatting as the inventory validate command
+    to ensure consistent user experience across automatic and manual validation.
+
+    Args:
+        result: ValidationResult object containing errors to display
+    """
+    print("\n" + "=" * 50)
+    print("Inventory Validation Failed")
+    print("=" * 50)
+    print(f"File: {result.file_path}")
+    print(f"Total Devices: {result.total_devices}")
+    print(f"Valid Devices: {result.valid_devices}")
+    print(f"Invalid Devices: {result.invalid_devices}")
+    print()
+    print("❌ Validation failed with the following errors:")
+    print("-------")
+
+    for error in result.errors:
+        # Format error message based on whether it's device-specific or file-level
+        if error.device_name:
+            error_line = f"Device {error.device_name}"
+            if error.device_index is not None:
+                error_line += f" [index: {error.device_index}]"
+            if error.field:
+                error_line += f" (field: {error.field})"
+            error_line += f": {error.message}"
+        else:
+            error_line = f"File-level error: {error.message}"
+
+        print(error_line)
+
+        if error.suggestion:
+            print(f"  → Suggestion: {error.suggestion}")
+        print()
+
+    print(
+        "💡 For detailed validation analysis, use: 'gnmibuddy inventory validate'"
+    )
+    print("=" * 50)
 
 
 class InventoryManager:
@@ -21,6 +69,13 @@ class InventoryManager:
     _instance: Optional["InventoryManager"] = None
     _devices: Dict[str, Device] = {}
     _initialized: bool = False
+
+    def _display_validation_errors_wrapper(
+        self, validation_result: ValidationResult
+    ) -> None:
+        """Display validation errors using the detailed formatting function."""
+        # Use the standalone function for consistent formatting
+        _display_validation_errors_detailed(validation_result)
 
     @classmethod
     def get_instance(cls) -> "InventoryManager":
@@ -35,11 +90,58 @@ class InventoryManager:
         """Initialize the inventory with the specified path."""
         instance = cls.get_instance()
         if not instance.is_initialized() or cli_path is not None:
-            inventory_path = get_inventory_path(cli_path)
+            try:
+                inventory_path = get_inventory_path(cli_path)
+            except (FileNotFoundError, RuntimeError) as e:
+                logger.error(f"Cannot initialize InventoryManager: {e}")
+                sys.exit(1)
+
             logger.debug(
                 "Initializing inventory from path: %s", inventory_path
             )
-            instance.set_devices(load_inventory(inventory_path))
+
+            # Validate inventory file before loading
+            logger.debug("Validating inventory file before initialization")
+
+            validator = InventoryValidator()
+            try:
+                validation_result = validator.validate_inventory_file(
+                    inventory_path
+                )
+            except FileNotFoundError as e:
+                # Handle file not found with user-friendly message
+                print(f"\n❌ Inventory file not found")
+                print("=" * 50)
+                print(f"File: {inventory_path}")
+                print(f"Error: {str(e)}")
+                print("\n💡 How to fix this:")
+                print("  1. Check that the file path is correct")
+                print("  2. Ensure the file exists")
+                if cli_path:
+                    print(f"  3. You specified: --inventory {cli_path}")
+                else:
+                    print("  3. Set NETWORK_INVENTORY environment variable")
+                print("=" * 50)
+                sys.exit(1)
+
+            if validation_result.status == ValidationStatus.FAILED:
+                # Display user-friendly error messages
+                _display_validation_errors_detailed(validation_result)
+                sys.exit(1)
+
+            logger.debug(
+                "Inventory validation passed: %d/%d devices valid",
+                validation_result.valid_devices,
+                validation_result.total_devices,
+            )
+
+            try:
+                instance.set_devices(load_inventory(inventory_path))
+            except FileNotFoundError as e:
+                # This shouldn't happen after validation, but just in case
+                print(f"\n❌ Error loading inventory: {e}")
+                sys.exit(1)
+
             instance.set_initialized(True)
             device_count = len(instance.get_devices())
             logger.debug("Initialized inventory with %s devices", device_count)

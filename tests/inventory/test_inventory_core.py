@@ -166,18 +166,15 @@ class TestListDevices:
         assert "test-device-2" in device_names
 
     def test_list_devices_from_empty_inventory(self, inventory_paths):
-        """Test listing devices from an empty inventory file."""
+        """Test listing devices from an empty inventory file - should fail validation."""
         # Reset before test
         InventoryManager._instance = None
         InventoryManager._devices = {}
         InventoryManager._initialized = False
 
-        # Initialize with empty inventory
-        InventoryManager.initialize(inventory_paths["empty"])
+        # Initialize with empty inventory should fail validation and exit
+        with pytest.raises(SystemExit) as exc_info:
+            InventoryManager.initialize(inventory_paths["empty"])
 
-        # Get the device list
-        result = InventoryManager.list_devices()
-
-        # Assertions
-        assert isinstance(result, DeviceListResult)
-        assert len(result.devices) == 0
+        # Should exit with code 1 for validation failure
+        assert exc_info.value.code == 1

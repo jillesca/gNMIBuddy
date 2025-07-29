@@ -94,6 +94,14 @@ class CommandRegistry:
                 command=Command.OPS_VALIDATE,
                 group=CommandGroup.OPS,
             ),
+            # Inventory commands
+            CommandInfo(
+                command=Command.INVENTORY_VALIDATE,
+                group=CommandGroup.INVENTORY,
+                supports_batch=False,  # File-level operation
+                supports_detail=False,  # Not applicable
+                requires_device=False,  # No device needed
+            ),
         ]
 
         for cmd in commands:

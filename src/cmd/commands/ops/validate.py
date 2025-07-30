@@ -359,17 +359,13 @@ def ops_validate(
         inventory_path = get_inventory_path()
         logger.debug("Using inventory file: %s", inventory_path)
     except FileNotFoundError as e:
-        # Will use error_utils from Phase 2, but for now use basic error handling
-        click.echo(f"Error: {e}", err=True)
-        click.echo("─" * 50, err=True)
-        click.echo("Command Help:", err=True)
-        click.echo("─" * 50, err=True)
-        click.echo(ctx.get_help(), err=True)
-        click.echo(
-            "\n💡 Set NETWORK_INVENTORY environment variable or use --inventory option",
-            err=True,
+        from src.cmd.commands.error_utils import display_error_with_help
+
+        display_error_with_help(
+            ctx,
+            str(e),
+            "Set NETWORK_INVENTORY environment variable or use --inventory option",
         )
-        raise click.Abort()
 
     # Include data by default, unless summary-only is requested
     include_data = not summary_only

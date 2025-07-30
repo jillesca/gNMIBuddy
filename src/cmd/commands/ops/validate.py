@@ -49,6 +49,15 @@ def ops_validate_examples() -> ExampleSet:
         alias_examples=True,
     )
 
+    # Add inventory setup examples for better user guidance
+    examples.add_basic(
+        command=f"export NETWORK_INVENTORY=inventory.json && uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1",
+        description="Set inventory via environment variable",
+    ).add_basic(
+        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1 --inventory /path/to/inventory.json",
+        description="Specify inventory file directly",
+    )
+
     # Add development-specific examples
     examples.add_advanced(
         command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1 --test-query full",
@@ -59,6 +68,9 @@ def ops_validate_examples() -> ExampleSet:
     ).add_advanced(
         command=f"uv run gnmibuddy.py o {Command.OPS_VALIDATE.command_name} --device R1 --output yaml",
         description="Development validation with YAML output for easier reading",
+    ).add_advanced(
+        command=f"NETWORK_INVENTORY=./inventory.json uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --devices R1,R2,R3 --summary-only",
+        description="Batch validation with environment variable and summary output",
     )
 
     return examples

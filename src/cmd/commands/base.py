@@ -136,6 +136,67 @@ def handle_inventory_error_in_command(error_msg: str):
     click.echo("  • xrd_sandbox.json (in project root)", err=True)
 
 
+def _validate_all_devices_exist(device_names: List[str]):
+    """
+    Validate that all specified devices exist in the inventory.
+
+    This function implements the all-or-nothing validation approach where
+    if ANY device cannot be resolved due to inventory issues, the entire
+    operation fails before starting any batch execution.
+
+    Args:
+        device_names: List of device names to validate
+
+    Raises:
+        FileNotFoundError: If inventory is not accessible or any device not found
+    """
+    try:
+        # First check if inventory is accessible
+        from src.inventory.file_handler import get_inventory_path
+
+        inventory_path = get_inventory_path()
+        logger.debug(
+            "Validating devices against inventory: %s", inventory_path
+        )
+
+        # Then validate all devices exist
+        manager = InventoryManager.get_instance()
+        if not manager.is_initialized():
+            InventoryManager.initialize()
+
+        devices = manager.get_devices()
+
+        # Check if any devices are missing from inventory
+        missing_devices = []
+        for device_name in device_names:
+            if device_name not in devices:
+                missing_devices.append(device_name)
+
+        if missing_devices:
+            # Create a user-friendly error message about missing devices
+            if len(missing_devices) == 1:
+                raise FileNotFoundError(
+                    f"Device '{missing_devices[0]}' not found in inventory. "
+                    f"Available devices: {', '.join(sorted(devices.keys()))}"
+                )
+            else:
+                raise FileNotFoundError(
+                    f"Devices not found in inventory: {', '.join(missing_devices)}. "
+                    f"Available devices: {', '.join(sorted(devices.keys()))}"
+                )
+
+    except FileNotFoundError:
+        # Re-raise FileNotFoundError (inventory or device not found)
+        raise
+    except Exception as e:
+        # Convert other inventory errors to FileNotFoundError for consistent handling
+        error_msg = str(e).lower()
+        if "inventory" in error_msg or "no inventory file" in error_msg:
+            raise FileNotFoundError(str(e)) from e
+        # For other errors, let them bubble up
+        raise
+
+
 def execute_device_command(
     ctx,
     device,
@@ -197,6 +258,23 @@ def execute_device_command(
         batch_devices = DeviceListParser.parse_device_file(device_file)
 
     if batch_devices:
+        # All-or-nothing device validation - validate ALL devices exist before starting operations
+        if (
+            operation_name == "validate"
+        ):  # Only apply enhanced validation to ops validate command
+            try:
+                _validate_all_devices_exist(batch_devices)
+            except FileNotFoundError as e:
+                from src.cmd.commands.error_utils import (
+                    display_error_with_help,
+                )
+
+                display_error_with_help(
+                    ctx,
+                    str(e),
+                    "Set NETWORK_INVENTORY environment variable or use --inventory option",
+                )
+
         return execute_batch_operation(
             ctx, batch_devices, operation_func, output, **kwargs
         )

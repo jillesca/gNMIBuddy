@@ -2,6 +2,7 @@
 """Ops validate command implementation"""
 import time
 import concurrent.futures
+import sys
 from typing import Dict, Any
 
 import click
@@ -350,6 +351,25 @@ def ops_validate(
     - Use --per-device-workers 1 for strict sequential testing per device
     - Use --max-workers 1 --per-device-workers 2 for moderate concurrency
     """
+
+    # Early inventory validation - FAIL FAST
+    try:
+        from src.inventory.file_handler import get_inventory_path
+
+        inventory_path = get_inventory_path()
+        logger.debug("Using inventory file: %s", inventory_path)
+    except FileNotFoundError as e:
+        # Will use error_utils from Phase 2, but for now use basic error handling
+        click.echo(f"Error: {e}", err=True)
+        click.echo("─" * 50, err=True)
+        click.echo("Command Help:", err=True)
+        click.echo("─" * 50, err=True)
+        click.echo(ctx.get_help(), err=True)
+        click.echo(
+            "\n💡 Set NETWORK_INVENTORY environment variable or use --inventory option",
+            err=True,
+        )
+        raise click.Abort()
 
     # Include data by default, unless summary-only is requested
     include_data = not summary_only

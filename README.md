@@ -255,11 +255,27 @@ Copy the configuration file contents and **update the paths** to point to your l
 Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/), follow the instructions to bring up a MPLS network with docker, then configure gNMI with the included Ansible playbook:
 
 ```bash
+# If you cloned the repo
 # Enable gRPC on the DevNet XRd Sandbox
 ANSIBLE_HOST_KEY_CHECKING=False \
-uv run --with "paramiko,ansible" \
+uvx --from ansible-core --with "paramiko,ansible" \
 ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
 ```
+
+<details>
+<summary><strong>If you didn't clone the repo use this command</strong></summary>
+
+```bash
+# Self-contained command that downloads files automatically
+ANSIBLE_HOST_KEY_CHECKING=False \
+bash -c 'TMPDIR=$(mktemp -d) \
+&& trap "rm -rf $TMPDIR" EXIT \
+&& curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/xrd_apply_config.yaml > "$TMPDIR/playbook.yaml" \
+&& curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/hosts > "$TMPDIR/hosts" \
+&& uvx --from ansible-core --with "paramiko,ansible" ansible-playbook "$TMPDIR/playbook.yaml" -i "$TMPDIR/hosts"'
+```
+
+</details>
 
 Test with the `xrd_sandbox.json` inventory file part of the repository.
 

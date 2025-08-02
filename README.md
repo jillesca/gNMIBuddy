@@ -56,7 +56,8 @@ The inventory must be a **JSON list** of `Device` objects with these required fi
 
 - `name`: Device hostname
 - `ip_address`: IP for gNMI connections
-- `nos`: Network OS identifier (e.g., "iosxr")
+- `nos`: Network OS identifier
+  - `iosxr` only for now, use it even if you have other NOS. More will be added later.
 
 Authentication (choose one method):
 

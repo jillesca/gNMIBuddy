@@ -4,8 +4,10 @@ This directory contains ready-to-use configuration files for integrating gNMIBud
 
 ## File Naming Convention
 
-- `{client}-uvx.json`: No installation required, runs directly from GitHub
-- `{client}-dev.json`: For development setup with cloned repository
+- `vscode-*.json`: VSCode-specific configuration (uses custom format)
+- `mcp-standard-*.json`: Standard MCP specification format (works with Cursor, Claude Desktop, and other MCP-compliant clients)
+- `*-uvx.json`: No installation required, runs directly from GitHub
+- `*-dev.json`: For development setup with cloned repository
 
 ## Setup Instructions
 
@@ -18,8 +20,7 @@ This directory contains ready-to-use configuration files for integrating gNMIBud
 ### 2. Copy Configuration
 
 **VSCode**: Copy contents to `.vscode/mcp.json` in your project
-**Cursor**: Copy contents to `.cursor/mcp.json` in your project  
-**Claude Desktop**: Add contents to your Claude configuration file
+**Other MCP Clients**: Use the `mcp-standard-*.json` files for any client following the MCP specification
 
 ### 3. Update Paths
 
@@ -29,37 +30,18 @@ Replace `path/to/your_inventory.json` with the actual path to your network inven
 
 All configurations **must** use the `NETWORK_INVENTORY` environment variable to specifying the inventory path in the configuration file.
 
-## Configuration Locations
-
-### VSCode
-
-```
-your-project/
-├── .vscode/
-│   └── mcp.json
-```
-
-### Cursor
-
-```
-your-project/
-├── .cursor/
-│   └── mcp.json
-```
-
-### Claude Desktop
-
-See Claude Docs.
-
 ## Testing
 
 Use the MCP inspector to test your configuration:
 
 ```bash
-# For uvx setup
-NETWORK_INVENTORY=your_inventory.json \
-npx @modelcontextprotocol/inspector \
-uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp
+# uvx setup
+# Replace `your_inventory.json` with your actual inventory file
+echo '#!/usr/bin/env bash' > /tmp/gnmibuddy-mcp-wrapper \
+&& echo 'exec uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp "$@"' >> /tmp/gnmibuddy-mcp-wrapper \
+&& chmod +x /tmp/gnmibuddy-mcp-wrapper \
+&& NETWORK_INVENTORY=your_inventory.json npx @modelcontextprotocol/inspector /tmp/gnmibuddy-mcp-wrapper
+EOF
 
 # For development setup
 NETWORK_INVENTORY=your_inventory.json \

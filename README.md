@@ -20,7 +20,7 @@ See the [API definition](/api.py) for all available APIs and options.
 ## ⚡ Prerequisites
 
 - Python `3.13+`
-- `uv` To install, see the [docs](https://docs.astral.sh/uv/#installation).
+- `uv` to install, see the [docs](https://docs.astral.sh/uv/#installation).
   - `brew` is recommended for macOS users
 - Network devices with gNMI _enabled_.
 
@@ -29,6 +29,7 @@ See the [API definition](/api.py) for all available APIs and options.
 ### Device Compatibility
 
 Devices **must** support gNMI and OpenConfig models listed below:
+
 **OpenConfig Models dependencies**
 
 - `openconfig-system >= 0.17.1`
@@ -40,7 +41,7 @@ Devices **must** support gNMI and OpenConfig models listed below:
 - Cisco XRd Control Plane (`24.4.1.26I`)
 
 > [!NOTE]
-> The function to get logs from devices, only works on IOS-XR.
+> The `get_logs()` function only works on IOS-XR.
 
 ### Device Inventory
 
@@ -48,7 +49,7 @@ gNMIBuddy identifies devices by hostname and looks up their corresponding IP add
 
 Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
 
-> [!WARNING]
+> [!CAUTION]
 > Without a device inventory, gNMIBuddy cannot operate.
 
 The inventory must be a **JSON list** of `Device` objects with these required fields:
@@ -62,7 +63,7 @@ The inventory must be a **JSON list** of `Device` objects with these required fi
 - **Username/Password**: Both `username` and `password` fields
 - **Certificate-based**: Both `path_cert` and `path_key` fields
 
-**Schema:** [`src/schemas/models.py`](src/schemas/models.py) | **Example:** [`xrd_sandbox.json`](xrd_sandbox.json)
+**Schema:** [`src/schemas/models.py`](src/schemas/models.py#L48) | **Example:** [`xrd_sandbox.json`](xrd_sandbox.json)
 
 ```json
 [
@@ -116,7 +117,7 @@ EOF
 
 The "Standard MCP Clients" config works with any MCP client following the MCP specification (Cursor, Claude Desktop, etc.). VSCode uses a different format.
 
-Copy the configuration file contents and update the `NETWORK_INVENTORY` path to your inventory file.
+Copy the configuration file contents and **update** the `NETWORK_INVENTORY` path to your inventory file.
 
 </details>
 
@@ -228,7 +229,7 @@ Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 
 ## 🤖 Development
 
-You can use the MCP Inspector to test gNMIBuddy without needing to set up a full MCP client. This is ideal for quick testing and development.
+You can use the MCP Inspector to test gNMIBuddy quickly.
 
 ```bash
 NETWORK_INVENTORY=your_inventory.json \
@@ -237,7 +238,7 @@ uv run --with "mcp[cli],pygnmi,networkx,pyyaml" \
 mcp run mcp_server.py
 ```
 
-Or if you have a local MCP client, you can use the provided configurations to test gNMIBuddy with your MCP client.
+If you have a local MCP client, you can use these configurations to test gNMIBuddy with your MCP client.
 
 | **MCP Client**           | **Configuration**                                    |
 | ------------------------ | ---------------------------------------------------- |
@@ -246,7 +247,7 @@ Or if you have a local MCP client, you can use the provided configurations to te
 
 Standard MCP Clients" config works with Cursor, Claude Desktop, and any other client following the MCP specification. VSCode requires specific format.
 
-Copy the configuration file contents and update the paths to point to your local repository.
+Copy the configuration file contents and **update the paths** to point to your local repository.
 
 ## 🧪 Testing with DevNet Sandbox
 
@@ -264,7 +265,7 @@ Test with the `xrd_sandbox.json` inventory file part of the repository.
 <details>
 <summary><strong>If you have problems with Ansible</strong></summary>
 
-Enable manually gNMI. Apply this configuration on all XRd devices:
+Enable manually gNMI. Apply this configuration to all XRd devices:
 
 ```bash
 grpc
@@ -272,7 +273,7 @@ grpc
  no-tls
 ```
 
-Don't forget to commit your changes to the XRd device.
+Don't forget to `commit` your changes to XRd.
 
 </details>
 

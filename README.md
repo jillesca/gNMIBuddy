@@ -20,27 +20,27 @@ See the [API definition](/api.py) for all available APIs and options.
 ## ⚡ Prerequisites
 
 - Python `3.13+`
-- Network devices with gNMI _enabled_
+- `uv` To install, see the [docs](https://docs.astral.sh/uv/#installation).
+  - `brew` is recommended for macOS users
+- Network devices with gNMI _enabled_.
 
-> [!NOTE]
-> Windows users: The instructions require a Unix-like environment. Use [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install).
+**Windows users**: The repo require a Unix-like environment. Use [WSL](https://docs.microsoft.com/en-us/windows/wsl/install).
 
 ### Device Compatibility
 
-> [!IMPORTANT]
-> gNMIBuddy requires devices to support specific `OpenConfig` models depending on the functionality used.
+Devices **must** support gNMI and OpenConfig models listed below:
+**OpenConfig Models dependencies**
 
-- **OpenConfig Models dependencies**
+- `openconfig-system >= 0.17.1`
+- `openconfig-interfaces >= 4.0.0`
+- `openconfig-network-instance >= 1.3.0`
 
-  - `openconfig-system >= 0.17.1`
-  - `openconfig-interfaces >= 4.0.0`
-  - `openconfig-network-instance >= 1.3.0`
+**Tested on:**
 
-- **Tested on:**
-  - Cisco XRd Control Plane (`24.4.1.26I`)
+- Cisco XRd Control Plane (`24.4.1.26I`)
 
 > [!NOTE]
-> The function to get logs from devices, only works on XR systems.
+> The function to get logs from devices, only works on IOS-XR.
 
 ### Device Inventory
 
@@ -48,7 +48,7 @@ gNMIBuddy identifies devices by hostname and looks up their corresponding IP add
 
 Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
 
-> [!IMPORTANT]
+> [!WARNING]
 > Without a device inventory, gNMIBuddy cannot operate.
 
 The inventory must be a **JSON list** of `Device` objects with these required fields:
@@ -86,22 +86,11 @@ The inventory must be a **JSON list** of `Device` objects with these required fi
 > [!TIP]
 > Validate your inventory: Use `gnmibuddy inventory validate` to check your inventory file for proper format, valid IP addresses, required fields, and authentication configuration before running network commands.
 
-### Install uv
-
-This project relies heavily on `uv`. It is highly recommended to install `uv` if you don't have it. See the [docs](https://docs.astral.sh/uv/#installation) for how to install it.
-
-```bash
-# On macOS this is how it worked for me
-brew install uv
-```
-
 ## 🚀 Quick Start
-
-Choose your preferred method based on your needs:
 
 ### 🎯 Instant Testing with MCP Inspector
 
-**Fastest way to try gNMIBuddy** for testing:
+**Fastest way to try gNMIBuddy**:
 
 ```bash
 # Replace `xrd_sandbox.json` with your actual inventory file
@@ -120,13 +109,12 @@ EOF
 
 **No installation required** - runs directly from GitHub using `uvx`:
 
-| **MCP Client**             | **Configuration**                                    |
-| -------------------------- | ---------------------------------------------------- |
-| **VSCode**                 | [📋 Copy config](examples/mcp/vscode-uvx.json)       |
-| **Cursor/Claude/Standard** | [📋 Copy config](examples/mcp/mcp-standard-uvx.json) |
+| **MCP Client**           | **Configuration**                                    |
+| ------------------------ | ---------------------------------------------------- |
+| **VSCode**               | [📋 Copy config](examples/mcp/vscode-uvx.json)       |
+| **Standard MCP Clients** | [📋 Copy config](examples/mcp/mcp-standard-uvx.json) |
 
-> [!NOTE]
-> The "Standard" config works with any MCP client following the MCP specification (Cursor, Claude Desktop, etc.). VSCode uses a different format.
+The "Standard MCP Clients" config works with any MCP client following the MCP specification (Cursor, Claude Desktop, etc.). VSCode uses a different format.
 
 Copy the configuration file contents and update the `NETWORK_INVENTORY` path to your inventory file.
 
@@ -256,8 +244,7 @@ Or if you have a local MCP client, you can use the provided configurations to te
 | **VSCode**               | [📋 Copy config](examples/mcp/vscode-dev.json)       |
 | **Standard MCP Clients** | [📋 Copy config](examples/mcp/mcp-standard-dev.json) |
 
-> [!NOTE]
-> "Standard MCP Clients" config works with Cursor, Claude Desktop, and any other client following the MCP specification. VSCode requires specific format.
+Standard MCP Clients" config works with Cursor, Claude Desktop, and any other client following the MCP specification. VSCode requires specific format.
 
 Copy the configuration file contents and update the paths to point to your local repository.
 
@@ -272,9 +259,12 @@ uv run --with "paramiko,ansible" \
 ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
 ```
 
-Then test with the provided `xrd_sandbox.json` inventory file.
+Test with the `xrd_sandbox.json` inventory file part of the repository.
 
-If you have problems with the Ansible playbook, you can manually enable gNMI on XRd:
+<details>
+<summary><strong>If you have problems with Ansible</strong></summary>
+
+Enable manually gNMI. Apply this configuration on all XRd devices:
 
 ```bash
 grpc
@@ -283,6 +273,8 @@ grpc
 ```
 
 Don't forget to commit your changes to the XRd device.
+
+</details>
 
 ### Testing with AI Agents
 

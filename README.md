@@ -20,7 +20,9 @@ See the [API definition](/api.py) for all available APIs and options.
 ## ⚡ Prerequisites
 
 - Python `3.13+`
-- Network devices with gNMI _enabled_.
+- Network devices with gNMI _enabled_
+
+> [!NOTE] > **Windows users**: The instructions require a Unix-like environment. Use [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install).
 
 ### Device Compatibility
 
@@ -92,9 +94,46 @@ This project relies heavily on `uv`. It is highly recommended to install `uv` if
 brew install uv
 ```
 
-## 🚀 Quick Start (Tool Usage)
+## 🚀 Quick Start
 
-**Don't want to clone the repo?** Use gNMIBuddy as a tool directly from GitHub:
+Choose your preferred method based on your needs:
+
+### 🎯 Instant Testing with MCP Inspector
+
+**Fastest way to try gNMIBuddy** for testing:
+
+```bash
+# Replace `xrd_sandbox.json` with your actual inventory file
+echo '#!/usr/bin/env bash' > /tmp/gnmibuddy-mcp-wrapper \
+&& echo 'exec uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp "$@"' >> /tmp/gnmibuddy-mcp-wrapper \
+&& chmod +x /tmp/gnmibuddy-mcp-wrapper \
+&& NETWORK_INVENTORY=xrd_sandbox.json npx @modelcontextprotocol/inspector /tmp/gnmibuddy-mcp-wrapper
+EOF
+```
+
+> [!TIP]
+> No repo cloning, no MCP client setup required! See [Testing with DevNet Sandbox](#testing-with-devnet-sandbox) for a complete testing environment with MCP Inspector's web interface.
+
+<details>
+<summary><strong>🔌 Have an MCP Client? (VSCode, Cursor, Claude Desktop)</strong></summary>
+
+**No installation required** - runs directly from GitHub using `uvx`:
+
+| **MCP Client**     | **Configuration**                                      | **Location**       |
+| ------------------ | ------------------------------------------------------ | ------------------ |
+| **VSCode**         | [📋 Copy config](examples/mcp/vscode-uvx.json)         | `.vscode/mcp.json` |
+| **Cursor**         | [📋 Copy config](examples/mcp/cursor-uvx.json)         | `.cursor/mcp.json` |
+| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-uvx.json) | See Claude Docs    |
+
+> [!TIP]
+> Copy the configuration file contents and update the `NETWORK_INVENTORY` path to your inventory file.
+
+</details>
+
+<details>
+<summary><strong>🛠️ CLI Usage (Direct Tool Usage)</strong></summary>
+
+**For CLI users** who want to use gNMIBuddy as a command-line tool:
 
 ### One-time execution
 
@@ -105,9 +144,6 @@ uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --help
 # Example with commands
 uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --inventory your_inventory.json device list
 ```
-
-> [!TIP]
-> Don't want to always type the inventory? use the `NETWORK_INVENTORY` env var.
 
 ### Install as a persistent tool
 
@@ -129,15 +165,23 @@ uv tool upgrade gnmibuddy
 > [!TIP]
 > The `uvx` method automatically builds and runs the tool in an isolated environment without affecting your system.
 
-## CLI Reference
+</details>
 
-If you don't want to use `uvx`, clone this repo and do.
+## 📖 CLI Reference
+
+> [!TIP]
+> Don't want to always type the inventory? Use the `NETWORK_INVENTORY` environment variable.
+
+<details>
+<summary><strong>📋 Full CLI Help & Commands</strong></summary>
+
+For development or when you need the complete command reference:
 
 ```bash
+# Clone and setup (one-time only)
+git clone https://github.com/jillesca/gNMIBuddy.git && cd gNMIBuddy
 uv sync --frozen --no-dev
 ```
-
-This is needed only the first time you install the project.
 
 ```bash
 ❯ uv run gnmibuddy.py --help
@@ -200,36 +244,14 @@ Examples:
 Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 ```
 
-## 🤖 LLM Integration (MCP)
+</details>
 
-gNMIBuddy integrates with LLMs through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction), providing network telemetry tools for AI agents.
-
-### 🚀 Quick Start (Recommended)
-
-**No installation required** - runs directly from GitHub using `uvx`:
-
-| **MCP Client**     | **Configuration**                                      | **Location**       |
-| ------------------ | ------------------------------------------------------ | ------------------ |
-| **VSCode**         | [📋 Copy config](examples/mcp/vscode-uvx.json)         | `.vscode/mcp.json` |
-| **Cursor**         | [📋 Copy config](examples/mcp/cursor-uvx.json)         | `.cursor/mcp.json` |
-| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-uvx.json) | See Claude Docs    |
-
-> [!TIP]
-> Copy the configuration file contents and update the paths.
-
-### 🧪 Testing Your Setup
-
-```bash
-# Test the MCP integration
-NETWORK_INVENTORY=your_inventory.json \
-npx @modelcontextprotocol/inspector \
-uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp
-```
+## 🤖 Development & Local Testing
 
 <details>
-<summary><strong>🔧 Development Setup</strong></summary>
+<summary><strong>🧪 Testing with MCP Inspector (Local Development)</strong></summary>
 
-If you're developing or want full control over the installation:
+**For developers** who want to test local changes without an MCP client:
 
 1. **Clone the repository**:
 
@@ -238,15 +260,7 @@ If you're developing or want full control over the installation:
    cd gNMIBuddy
    ```
 
-2. **Choose your configuration**:
-
-| **MCP Client**     | **Configuration**                                      |
-| ------------------ | ------------------------------------------------------ |
-| **VSCode**         | [📋 Copy config](examples/mcp/vscode-dev.json)         |
-| **Cursor**         | [📋 Copy config](examples/mcp/cursor-dev.json)         |
-| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-dev.json) |
-
-3. **Test the development setup**:
+2. **Test your local changes**:
 
    ```bash
    NETWORK_INVENTORY=your_inventory.json \
@@ -257,8 +271,21 @@ If you're developing or want full control over the installation:
 
 </details>
 
-> [!IMPORTANT]
-> Set the `NETWORK_INVENTORY` environment variable to your inventory file.
+<details>
+<summary><strong>� Local MCP Client Integration (Development)</strong></summary>
+
+**For developers** who want to test local changes with their MCP client:
+
+| **MCP Client**     | **Configuration**                                      |
+| ------------------ | ------------------------------------------------------ |
+| **VSCode**         | [📋 Copy config](examples/mcp/vscode-dev.json)         |
+| **Cursor**         | [📋 Copy config](examples/mcp/cursor-dev.json)         |
+| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-dev.json) |
+
+> [!TIP]
+> Copy the configuration file contents and update the paths to point to your local repository.
+
+</details>
 
 ## 🧪 Testing with DevNet Sandbox
 
@@ -272,6 +299,16 @@ ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
 ```
 
 Then test with the provided `xrd_sandbox.json` inventory file.
+
+If you have problem with the Ansible playbook, you can manually enable gNMI on XRd:
+
+```bash
+grpc
+ port 57777
+ no-tls
+```
+
+Don't forget to commit your changes to the XRd device.
 
 ### Testing with AI Agents
 

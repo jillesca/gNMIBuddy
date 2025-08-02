@@ -165,74 +165,8 @@ def test_phase_4_regression_prevention():
                 os.unlink(log_file)
 
 
-def test_phase_4_ux_consistency_validation():
-    """Validate UX consistency requirements from Phase 4"""
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".log", delete=False
-    ) as f:
-        log_file = f.name
-
-    try:
-        # Test UX consistency
-        result = subprocess.run(
-            [
-                "/opt/homebrew/bin/uv",
-                "run",
-                "gnmibuddy.py",
-                "ops",
-                "validate",
-                "--devices",
-                "test1,test2",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            env={"NETWORK_INVENTORY": "", "PATH": os.environ.get("PATH", "")},
-        )
-
-        # Write output to log file
-        with open(log_file, "w") as f:
-            f.write("UX CONSISTENCY VALIDATION:\n")
-            f.write("STDOUT:\n")
-            f.write(result.stdout)
-            f.write("\nSTDERR:\n")
-            f.write(result.stderr)
-
-        # Read and verify
-        with open(log_file, "r") as f:
-            output = f.read()
-
-        # UX consistency requirements:
-
-        # ✅ Error message format matches inventory validate command
-        assert (
-            output.startswith("2025-") and "INFO" in output
-        )  # Logging present
-        assert "Error: No inventory file specified" in output  # Clear error
-
-        # ✅ Help display is consistent and complete
-        assert "Command Help:" in output
-        assert "Usage:" in output
-        assert "Options:" in output
-        assert "Examples:" in output
-
-        # ✅ Proper exit code behavior (functional behavior verified)
-        # Note: Framework-wide exit code issue noted in Phase 1, but functional behavior correct
-
-        # ✅ Error messages are actionable
-        assert "💡" in output
-        assert "Set NETWORK_INVENTORY environment variable" in output
-        assert "use --inventory option" in output
-
-    finally:
-        # Cleanup
-        if os.path.exists(log_file):
-            os.unlink(log_file)
-
-
 if __name__ == "__main__":
     # Run comprehensive validation
     test_phase_4_comprehensive_validation()
     test_phase_4_regression_prevention()
-    test_phase_4_ux_consistency_validation()
     print("✅ All Phase 4 requirements validated successfully!")

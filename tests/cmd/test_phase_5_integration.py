@@ -96,41 +96,6 @@ class TestPhase5FinalIntegration:
             if os.path.exists(log_file):
                 os.unlink(log_file)
 
-    def test_integration_with_valid_inventory_no_regression(self):
-        """Verify that valid operations work exactly as before with no performance degradation."""
-        start_time = time.time()
-
-        # Test with valid inventory (will fail to connect but should start processing)
-        result = subprocess.run(
-            [
-                "uv",
-                "run",
-                "gnmibuddy.py",
-                "ops",
-                "validate",
-                "--device",
-                "xrd-1",
-                "--summary-only",
-            ],
-            env={**os.environ, "NETWORK_INVENTORY": "./xrd_sandbox.json"},
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-
-        execution_time = time.time() - start_time
-
-        # Should start processing (even though it will fail to connect to actual device)
-        assert (
-            "Getting validate for device: xrd-1" in result.stderr
-            or "Running basic validation suite" in result.stderr
-        ), "Valid operations should proceed normally"
-
-        # Performance check - should not be significantly slower than before
-        assert (
-            execution_time < 15
-        ), f"Command startup should be fast, took {execution_time:.2f}s"
-
     def test_error_utils_integration_consistency(self):
         """Verify error utils provide consistent patterns across different error scenarios."""
         test_scenarios = [

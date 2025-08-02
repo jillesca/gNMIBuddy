@@ -151,18 +151,7 @@ def _validate_all_devices_exist(device_names: List[str]):
         FileNotFoundError: If inventory is not accessible or any device not found
     """
     try:
-        # First check if inventory is accessible
-        from src.inventory.file_handler import get_inventory_path
-
-        inventory_path = get_inventory_path()
-        logger.debug(
-            "Validating devices against inventory: %s", inventory_path
-        )
-
-        # Then validate all devices exist
         manager = InventoryManager.get_instance()
-        if not manager.is_initialized():
-            InventoryManager.initialize()
 
         devices = manager.get_devices()
 

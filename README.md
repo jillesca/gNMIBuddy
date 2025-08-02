@@ -20,7 +20,7 @@ See the [API definition](/api.py) for all available APIs and options.
 ## ⚡ Prerequisites
 
 - Python `3.13+`
-- `uv` to install, see the [docs](https://docs.astral.sh/uv/#installation).
+- `uv`, see the [docs](https://docs.astral.sh/uv/#installation) to install it.
   - `brew` is recommended for macOS users
 - Network devices with gNMI _enabled_.
 
@@ -43,14 +43,14 @@ Devices **must** support gNMI and OpenConfig models listed below:
 > [!NOTE]
 > The `get_logs()` function only works on IOS-XR.
 
-### Device Inventory
+### Device Inventory file
 
-gNMIBuddy identifies devices by hostname and looks up their corresponding IP addresses and credentials from the inventory.
+gNMIBuddy identifies devices by hostname and looks up their corresponding IP addresses and credentials from the inventory file.
 
 Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
 
 > [!CAUTION]
-> Without a device inventory, gNMIBuddy cannot operate.
+> Without a device inventory file, gNMIBuddy cannot operate.
 
 The inventory must be a **JSON list** of `Device` objects with these required fields:
 
@@ -58,10 +58,10 @@ The inventory must be a **JSON list** of `Device` objects with these required fi
 - `ip_address`: IP for gNMI connections
 - `nos`: Network OS identifier (e.g., "iosxr")
 
-**Authentication (choose one method):**
+Authentication (choose one method):
 
-- **Username/Password**: Both `username` and `password` fields
-- **Certificate-based**: Both `path_cert` and `path_key` fields
+- Username/Password: Requires both `username` and `password` fields
+- Certificate-based: Requires both `path_cert` and `path_key` fields
 
 **Schema:** [`src/schemas/models.py`](src/schemas/models.py#L48) | **Example:** [`xrd_sandbox.json`](xrd_sandbox.json)
 

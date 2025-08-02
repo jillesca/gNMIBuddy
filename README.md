@@ -20,46 +20,51 @@ See the [API definition](/api.py) for all available APIs and options.
 ## ⚡ Prerequisites
 
 - Python `3.13+`
+- `uv`, see the [docs](https://docs.astral.sh/uv/#installation) to install it.
+  - `brew` is recommended for macOS users
 - Network devices with gNMI _enabled_.
+
+**Windows users**: The repo require a Unix-like environment. Use [WSL](https://docs.microsoft.com/en-us/windows/wsl/install).
 
 ### Device Compatibility
 
-> [!IMPORTANT]
-> gNMIBuddy requires devices to support specific `OpenConfig` models depending on the functionality used.
+Devices **must** support gNMI and OpenConfig models listed below:
 
-- **OpenConfig Models dependencies**
+**OpenConfig Models dependencies**
 
-  - `openconfig-system >= 0.17.1`
-  - `openconfig-interfaces >= 4.0.0`
-  - `openconfig-network-instance >= 1.3.0`
+- `openconfig-system >= 0.17.1`
+- `openconfig-interfaces >= 4.0.0`
+- `openconfig-network-instance >= 1.3.0`
 
-- **Tested on:**
-  - Cisco XRd Control Plane (`24.4.1.26I`)
+**Tested on:**
+
+- Cisco XRd Control Plane (`24.4.1.26I`)
 
 > [!NOTE]
-> The function to get logs from devices, only works on XR systems.
+> The `get_logs()` function only works on IOS-XR.
 
-### Device Inventory
+### Device Inventory file
 
-gNMIBuddy identifies devices by hostname and looks up their corresponding IP addresses and credentials from the inventory.
+gNMIBuddy identifies devices by hostname and looks up their corresponding IP addresses and credentials from the inventory file.
 
 Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
 
-> [!IMPORTANT]
-> Without a device inventory, gNMIBuddy cannot operate.
+> [!CAUTION]
+> Without a device inventory file, gNMIBuddy cannot operate.
 
 The inventory must be a **JSON list** of `Device` objects with these required fields:
 
 - `name`: Device hostname
 - `ip_address`: IP for gNMI connections
-- `nos`: Network OS identifier (e.g., "iosxr")
+- `nos`: Network OS identifier
+  - `iosxr` only for now, use it even if you have other NOS. More will be added later.
 
-**Authentication (choose one method):**
+Authentication (choose one method):
 
-- **Username/Password**: Both `username` and `password` fields
-- **Certificate-based**: Both `path_cert` and `path_key` fields
+- Username/Password: Requires both `username` and `password` fields
+- Certificate-based: Requires both `path_cert` and `path_key` fields
 
-**Schema:** [`src/schemas/models.py`](src/schemas/models.py) | **Example:** [`xrd_sandbox.json`](xrd_sandbox.json)
+**Schema:** [`src/schemas/models.py`](src/schemas/models.py#L48) | **Example:** [`xrd_sandbox.json`](xrd_sandbox.json)
 
 ```json
 [
@@ -83,18 +88,44 @@ The inventory must be a **JSON list** of `Device` objects with these required fi
 > [!TIP]
 > Validate your inventory: Use `gnmibuddy inventory validate` to check your inventory file for proper format, valid IP addresses, required fields, and authentication configuration before running network commands.
 
-### Install uv
+## 🚀 Quick Start
 
-This project relies heavily on `uv`. It is highly recommended to install `uv` if you don't have it. See the [docs](https://docs.astral.sh/uv/#installation) for how to install it.
+### 🎯 Instant Testing with MCP Inspector
+
+**Fastest way to try gNMIBuddy**:
 
 ```bash
-# On macOS this is how it worked for me
-brew install uv
+# Replace `xrd_sandbox.json` with your actual inventory file
+echo '#!/usr/bin/env bash' > /tmp/gnmibuddy-mcp-wrapper \
+&& echo 'exec uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp "$@"' >> /tmp/gnmibuddy-mcp-wrapper \
+&& chmod +x /tmp/gnmibuddy-mcp-wrapper \
+&& NETWORK_INVENTORY=xrd_sandbox.json npx @modelcontextprotocol/inspector /tmp/gnmibuddy-mcp-wrapper
+EOF
 ```
 
-## 🚀 Quick Start (Tool Usage)
+> [!TIP]
+> No repo cloning, no MCP client setup required! If you don't have XRd, see [Testing with DevNet Sandbox](#testing-with-devnet-sandbox).
 
-**Don't want to clone the repo?** Use gNMIBuddy as a tool directly from GitHub:
+<details>
+<summary><strong>🔌 Have an MCP Client? (VSCode, Cursor, Claude Desktop)</strong></summary>
+
+**No installation required** - runs directly from GitHub using `uvx`:
+
+| **MCP Client**           | **Configuration**                                    |
+| ------------------------ | ---------------------------------------------------- |
+| **VSCode**               | [📋 Copy config](examples/mcp/vscode-uvx.json)       |
+| **Standard MCP Clients** | [📋 Copy config](examples/mcp/mcp-standard-uvx.json) |
+
+The "Standard MCP Clients" config works with any MCP client following the MCP specification (Cursor, Claude Desktop, etc.). VSCode uses a different format.
+
+Copy the configuration file contents and **update** the `NETWORK_INVENTORY` path to your inventory file.
+
+</details>
+
+<details>
+<summary><strong>🛠️ CLI Usage (Direct Tool Usage)</strong></summary>
+
+**For CLI users** who want to use gNMIBuddy as a command-line tool:
 
 ### One-time execution
 
@@ -105,9 +136,6 @@ uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --help
 # Example with commands
 uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy --inventory your_inventory.json device list
 ```
-
-> [!TIP]
-> Don't want to always type the inventory? use the `NETWORK_INVENTORY` env var.
 
 ### Install as a persistent tool
 
@@ -126,18 +154,18 @@ uv tool uninstall gnmibuddy
 uv tool upgrade gnmibuddy
 ```
 
-> [!TIP]
-> The `uvx` method automatically builds and runs the tool in an isolated environment without affecting your system.
+The `uvx` method automatically builds and runs the tool in an isolated environment without affecting your system.
 
-## CLI Reference
+</details>
 
-If you don't want to use `uvx`, clone this repo and do.
+## 📖 CLI Reference
 
 ```bash
+# Clone and setup (one-time only)
+git clone https://github.com/jillesca/gNMIBuddy.git && cd gNMIBuddy
+# Install dependencies
 uv sync --frozen --no-dev
 ```
-
-This is needed only the first time you install the project.
 
 ```bash
 ❯ uv run gnmibuddy.py --help
@@ -200,78 +228,71 @@ Examples:
 Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 ```
 
-## 🤖 LLM Integration (MCP)
+## 🤖 Development
 
-gNMIBuddy integrates with LLMs through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction), providing network telemetry tools for AI agents.
-
-### 🚀 Quick Start (Recommended)
-
-**No installation required** - runs directly from GitHub using `uvx`:
-
-| **MCP Client**     | **Configuration**                                      | **Location**       |
-| ------------------ | ------------------------------------------------------ | ------------------ |
-| **VSCode**         | [📋 Copy config](examples/mcp/vscode-uvx.json)         | `.vscode/mcp.json` |
-| **Cursor**         | [📋 Copy config](examples/mcp/cursor-uvx.json)         | `.cursor/mcp.json` |
-| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-uvx.json) | See Claude Docs    |
-
-> [!TIP]
-> Copy the configuration file contents and update the paths.
-
-### 🧪 Testing Your Setup
+You can use the MCP Inspector to test gNMIBuddy quickly.
 
 ```bash
-# Test the MCP integration
 NETWORK_INVENTORY=your_inventory.json \
 npx @modelcontextprotocol/inspector \
-uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp
+uv run --with "mcp[cli],pygnmi,networkx,pyyaml" \
+mcp run mcp_server.py
 ```
 
-<details>
-<summary><strong>🔧 Development Setup</strong></summary>
+If you have a local MCP client, you can use these configurations to test gNMIBuddy with your MCP client.
 
-If you're developing or want full control over the installation:
+| **MCP Client**           | **Configuration**                                    |
+| ------------------------ | ---------------------------------------------------- |
+| **VSCode**               | [📋 Copy config](examples/mcp/vscode-dev.json)       |
+| **Standard MCP Clients** | [📋 Copy config](examples/mcp/mcp-standard-dev.json) |
 
-1. **Clone the repository**:
+Standard MCP Clients" config works with Cursor, Claude Desktop, and any other client following the MCP specification. VSCode requires specific format.
 
-   ```bash
-   git clone https://github.com/jillesca/gNMIBuddy.git
-   cd gNMIBuddy
-   ```
-
-2. **Choose your configuration**:
-
-| **MCP Client**     | **Configuration**                                      |
-| ------------------ | ------------------------------------------------------ |
-| **VSCode**         | [📋 Copy config](examples/mcp/vscode-dev.json)         |
-| **Cursor**         | [📋 Copy config](examples/mcp/cursor-dev.json)         |
-| **Claude Desktop** | [📋 Copy config](examples/mcp/claude-desktop-dev.json) |
-
-3. **Test the development setup**:
-
-   ```bash
-   NETWORK_INVENTORY=your_inventory.json \
-   npx @modelcontextprotocol/inspector \
-   uv run --with "mcp[cli],pygnmi,networkx,pyyaml" \
-   mcp run mcp_server.py
-   ```
-
-</details>
-
-> [!IMPORTANT]
-> Set the `NETWORK_INVENTORY` environment variable to your inventory file.
+Copy the configuration file contents and **update the paths** to point to your local repository.
 
 ## 🧪 Testing with DevNet Sandbox
 
 Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/), follow the instructions to bring up a MPLS network with docker, then configure gNMI with the included Ansible playbook:
 
 ```bash
+# If you cloned the repo
 # Enable gRPC on the DevNet XRd Sandbox
 ANSIBLE_HOST_KEY_CHECKING=False \
-uv run --with "paramiko,ansible" \
+uvx --from ansible-core --with "paramiko,ansible" \
 ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
 ```
 
-Then test with the provided `xrd_sandbox.json` inventory file.
+<details>
+<summary><strong>If you didn't clone the repo use this command</strong></summary>
+
+```bash
+# Self-contained command that downloads files automatically
+ANSIBLE_HOST_KEY_CHECKING=False \
+bash -c 'TMPDIR=$(mktemp -d) \
+&& trap "rm -rf $TMPDIR" EXIT \
+&& curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/xrd_apply_config.yaml > "$TMPDIR/playbook.yaml" \
+&& curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/hosts > "$TMPDIR/hosts" \
+&& uvx --from ansible-core --with "paramiko,ansible" ansible-playbook "$TMPDIR/playbook.yaml" -i "$TMPDIR/hosts"'
+```
+
+</details>
+
+Test with the `xrd_sandbox.json` inventory file part of the repository.
+
+<details>
+<summary><strong>If you have problems with Ansible</strong></summary>
+
+Enable manually gNMI. Apply this configuration to all XRd devices:
+
+```bash
+grpc
+ port 57777
+ no-tls
+```
+
+Don't forget to `commit` your changes to XRd.
+
+</details>
 
 ### Testing with AI Agents
 

@@ -2,6 +2,7 @@
 """Ops validate command implementation"""
 import time
 import concurrent.futures
+import sys
 from typing import Dict, Any
 
 import click
@@ -48,6 +49,15 @@ def ops_validate_examples() -> ExampleSet:
         alias_examples=True,
     )
 
+    # Add inventory setup examples for better user guidance
+    examples.add_basic(
+        command=f"export NETWORK_INVENTORY=inventory.json && uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1",
+        description="Set inventory via environment variable",
+    ).add_basic(
+        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1 --inventory /path/to/inventory.json",
+        description="Specify inventory file directly",
+    )
+
     # Add development-specific examples
     examples.add_advanced(
         command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1 --test-query full",
@@ -58,6 +68,9 @@ def ops_validate_examples() -> ExampleSet:
     ).add_advanced(
         command=f"uv run gnmibuddy.py o {Command.OPS_VALIDATE.command_name} --device R1 --output yaml",
         description="Development validation with YAML output for easier reading",
+    ).add_advanced(
+        command=f"NETWORK_INVENTORY=./inventory.json uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --devices R1,R2,R3 --summary-only",
+        description="Batch validation with environment variable and summary output",
     )
 
     return examples
@@ -350,6 +363,21 @@ def ops_validate(
     - Use --per-device-workers 1 for strict sequential testing per device
     - Use --max-workers 1 --per-device-workers 2 for moderate concurrency
     """
+
+    # Early inventory validation - FAIL FAST
+    try:
+        from src.inventory.file_handler import get_inventory_path
+
+        inventory_path = get_inventory_path()
+        logger.debug("Using inventory file: %s", inventory_path)
+    except FileNotFoundError as e:
+        from src.cmd.commands.error_utils import display_error_with_help
+
+        display_error_with_help(
+            ctx,
+            str(e),
+            "Set NETWORK_INVENTORY environment variable or use --inventory option",
+        )
 
     # Include data by default, unless summary-only is requested
     include_data = not summary_only

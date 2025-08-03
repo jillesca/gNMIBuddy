@@ -266,7 +266,7 @@ uv run gnmibuddy.py --inventory different.json device info --device R1 2>&1 | te
 - All components should be integrated
 
 **When Complete:**
-Add a comprehensive summary comment to issue #25 with:
+Add a comprehensive summary as a new comment to issue #25 with:
 
 - All testing completed successfully
 - Confirmation that success criteria are met

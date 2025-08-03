@@ -36,7 +36,6 @@ logger = get_mcp_logger(__name__)
 
 logger.std_logger.info("Started MCP server for gNMIBuddy")
 
-# Use centralized environment management for network inventory logging
 settings = get_settings()
 network_inventory = settings.get_network_inventory()
 logger.std_logger.info("Network Inventory: %s", network_inventory)

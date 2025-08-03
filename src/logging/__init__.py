@@ -35,6 +35,7 @@ from .core import (
     EnvironmentVariable,
     LoggingConfiguration,
     ModuleLevelConfiguration,
+    EnvironmentConfiguration,
     LoggerNames,
     OTelFormatter,
 )
@@ -77,6 +78,7 @@ __all__ = [
     "EnvironmentVariable",
     "LoggingConfiguration",
     "ModuleLevelConfiguration",
+    "EnvironmentConfiguration",
     "LoggerNames",
     "OTelFormatter",
     # Configuration

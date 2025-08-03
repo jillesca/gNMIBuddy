@@ -7,7 +7,11 @@ used throughout the logging system.
 """
 
 from .enums import LogLevel, SuppressionMode, EnvironmentVariable
-from .models import LoggingConfiguration, ModuleLevelConfiguration
+from .models import (
+    LoggingConfiguration,
+    ModuleLevelConfiguration,
+    EnvironmentConfiguration,
+)
 from .logger_names import LoggerNames
 from .formatter import OTelFormatter
 
@@ -17,6 +21,7 @@ __all__ = [
     "EnvironmentVariable",
     "LoggingConfiguration",
     "ModuleLevelConfiguration",
+    "EnvironmentConfiguration",
     "LoggerNames",
     "OTelFormatter",
 ]

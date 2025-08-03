@@ -64,7 +64,6 @@ class LoggingConfigurator:
         # Read environment configuration
         env_config = EnvironmentConfigReader.read_configuration()
 
-        # Create complete configuration object
         try:
             config = LoggingConfiguration.from_environment_and_params(
                 env_config=env_config,

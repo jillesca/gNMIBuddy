@@ -9,6 +9,7 @@ from environment variables using the centralized GNMIBuddySettings class.
 from typing import Dict, Any, Optional
 
 from ..core.enums import LogLevel, SuppressionMode
+from ..core.models import EnvironmentConfiguration
 
 
 class EnvironmentConfigReader:
@@ -20,48 +21,38 @@ class EnvironmentConfigReader:
     """
 
     @classmethod
-    def read_configuration(cls) -> Dict[str, Any]:
+    def read_configuration(cls) -> EnvironmentConfiguration:
         """
         Read complete logging configuration from environment variables using centralized settings.
 
         Returns:
-            Dictionary with parsed environment variable values
+            EnvironmentConfiguration object with parsed environment variable values
         """
         # Import here to avoid circular dependency
         from ...config.environment import get_settings
 
         settings = get_settings()
-        config = {}
 
-        # Read global log level
-        if global_level := cls._validate_log_level(
-            settings.gnmibuddy_log_level
-        ):
-            config["global_level"] = global_level
-
-        # Read module-specific levels
-        if module_levels := cls._parse_module_levels(
+        # Read and validate all configuration values
+        global_level = cls._validate_log_level(settings.gnmibuddy_log_level)
+        module_levels = cls._parse_module_levels(
             settings.gnmibuddy_module_levels
-        ):
-            config["module_levels"] = module_levels
-
-        # Read structured logging flag
-        if structured_flag := cls._parse_structured_logging(
+        )
+        structured_flag = cls._parse_structured_logging(
             settings.gnmibuddy_structured_logging
-        ):
-            config["enable_structured"] = structured_flag
-
-        # Read custom log file
-        if log_file := cls._parse_log_file(settings.gnmibuddy_log_file):
-            config["log_file"] = log_file
-
-        # Read suppression mode
-        if suppression_mode := cls._validate_suppression_mode(
+        )
+        log_file = cls._parse_log_file(settings.gnmibuddy_log_file)
+        suppression_mode = cls._validate_suppression_mode(
             settings.gnmibuddy_external_suppression_mode
-        ):
-            config["external_suppression_mode"] = suppression_mode
+        )
 
-        return config
+        return EnvironmentConfiguration(
+            global_level=global_level,
+            module_levels=module_levels,
+            enable_structured=structured_flag,
+            log_file=log_file,
+            external_suppression_mode=suppression_mode,
+        )
 
     @classmethod
     def _validate_log_level(cls, level_str: Optional[str]) -> Optional[str]:

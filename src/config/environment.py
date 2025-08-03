@@ -18,8 +18,13 @@ configuration system in src/logging/config/environment.py.
 
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src.logging import get_logger
+
+# Setup module logger
+logger = get_logger(__name__)
 
 
 class GNMIBuddySettings(BaseSettings):
@@ -76,20 +81,36 @@ class GNMIBuddySettings(BaseSettings):
             settings = GNMIBuddySettings.from_env_file(Path('config/prod.env'))
         """
         if env_file is None:
-            return cls()
+            logger.debug("Loading settings with default .env file")
+            try:
+                return cls()
+            except Exception as e:
+                logger.error("Failed to load default settings: %s", e)
+                raise
 
         # Convert to string if Path object
         env_file_str = (
             str(env_file) if isinstance(env_file, Path) else env_file
         )
 
+        logger.debug(
+            "Loading settings from environment file: %s", env_file_str
+        )
+
         # Check if file exists and handle gracefully
         if not os.path.exists(env_file_str):
             # Log warning but don't crash - container-friendly design
-            print(
-                f"Warning: Environment file '{env_file_str}' not found, using defaults and OS environment variables"
+            logger.warning(
+                "Environment file '%s' not found, using defaults and OS environment variables",
+                env_file_str,
             )
-            return cls()
+            try:
+                return cls()
+            except Exception as e:
+                logger.error(
+                    "Failed to load default settings after missing file: %s", e
+                )
+                raise
 
         # Create new instance with custom env file
         custom_config = SettingsConfigDict(
@@ -103,7 +124,17 @@ class GNMIBuddySettings(BaseSettings):
         class CustomSettings(cls):
             model_config = custom_config
 
-        return CustomSettings()
+        try:
+            logger.info(
+                "Successfully loaded settings from environment file: %s",
+                env_file_str,
+            )
+            return CustomSettings()
+        except Exception as e:
+            logger.error(
+                "Failed to load settings from file '%s': %s", env_file_str, e
+            )
+            raise
 
     def get_network_inventory(self) -> Optional[str]:
         """
@@ -112,6 +143,9 @@ class GNMIBuddySettings(BaseSettings):
         Returns:
             Path to network inventory file or None if not configured
         """
+        logger.debug(
+            "Retrieving network inventory path: %s", self.network_inventory
+        )
         return self.network_inventory
 
     def get_mcp_tool_debug(self) -> bool:
@@ -121,7 +155,9 @@ class GNMIBuddySettings(BaseSettings):
         Returns:
             True if MCP tool debug mode is enabled, False otherwise
         """
-        return self.gnmibuddy_mcp_tool_debug or False
+        debug_enabled = self.gnmibuddy_mcp_tool_debug or False
+        logger.debug("MCP tool debug mode: %s", debug_enabled)
+        return debug_enabled
 
 
 # Global instance for application-wide use
@@ -157,10 +193,25 @@ def get_settings(
     """
     global _settings_instance
 
-    if _settings_instance is None or force_reload or env_file is not None:
-        _settings_instance = GNMIBuddySettings.from_env_file(env_file)
+    try:
+        if _settings_instance is None:
+            logger.info("Initializing global settings instance")
+            _settings_instance = GNMIBuddySettings.from_env_file(env_file)
+        elif force_reload:
+            logger.info("Force reloading global settings instance")
+            _settings_instance = GNMIBuddySettings.from_env_file(env_file)
+        elif env_file is not None:
+            logger.info(
+                "Loading settings with custom environment file: %s", env_file
+            )
+            _settings_instance = GNMIBuddySettings.from_env_file(env_file)
+        else:
+            logger.debug("Using cached global settings instance")
 
-    return _settings_instance
+        return _settings_instance
+    except Exception as e:
+        logger.error("Failed to get settings instance: %s", e)
+        raise
 
 
 def reset_settings() -> None:
@@ -170,4 +221,5 @@ def reset_settings() -> None:
     This is primarily used for testing to ensure clean state between tests.
     """
     global _settings_instance
+    logger.debug("Resetting global settings instance")
     _settings_instance = None

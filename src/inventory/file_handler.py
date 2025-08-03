@@ -46,7 +46,6 @@ def get_inventory_path(cli_path: Optional[str] = None) -> str:
         )
         return abs_path
 
-    # Use centralized environment management instead of direct os.environ.get()
     settings = get_settings()
     env_path = settings.get_network_inventory()
     if env_path:

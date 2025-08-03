@@ -15,6 +15,22 @@ from .enums import LogLevel, SuppressionMode
 
 
 @dataclass(frozen=True)
+class EnvironmentConfiguration:
+    """
+    Configuration from environment variables.
+
+    Encapsulates logging configuration read from environment variables,
+    replacing dictionary-based data exchange with proper type-safe objects.
+    """
+
+    global_level: Optional[str] = None
+    module_levels: Optional[Dict[str, str]] = None
+    enable_structured: Optional[bool] = None
+    log_file: Optional[str] = None
+    external_suppression_mode: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class ModuleLevelConfiguration:
     """
     Configuration for module-specific log levels.
@@ -112,7 +128,7 @@ class LoggingConfiguration:
     @classmethod
     def from_environment_and_params(
         cls,
-        env_config: Dict[str, Any],
+        env_config: EnvironmentConfiguration,
         global_level: Optional[str] = None,
         module_levels: Optional[Dict[str, str]] = None,
         enable_structured: bool = False,
@@ -122,11 +138,17 @@ class LoggingConfiguration:
         external_suppression_mode: str = "cli",
     ) -> "LoggingConfiguration":
         """
-        Create configuration from environment variables and parameters.
+        Create configuration from environment configuration object and parameters.
 
         Args:
-            env_config: Environment configuration dictionary
-            **kwargs: Explicit parameters that override environment
+            env_config: EnvironmentConfiguration object with environment variable values
+            global_level: Global log level (overrides environment)
+            module_levels: Module-specific log levels (merged with environment)
+            enable_structured: Enable structured JSON logging (overrides environment)
+            enable_file_output: Enable file output
+            log_file: Log file path (overrides environment)
+            enable_external_suppression: Enable external library suppression
+            external_suppression_mode: Suppression mode (overrides environment)
 
         Returns:
             Complete logging configuration
@@ -135,20 +157,21 @@ class LoggingConfiguration:
             ValueError: If any configuration value is invalid
         """
         # Use environment as defaults, explicit params override
-        resolved_global_level = global_level or env_config.get(
-            "global_level", "info"
+        resolved_global_level = (
+            global_level or env_config.global_level or "info"
         )
-        resolved_enable_structured = enable_structured or env_config.get(
-            "enable_structured", False
+        resolved_enable_structured = (
+            enable_structured or env_config.enable_structured or False
         )
-        resolved_log_file = log_file or env_config.get("log_file")
+        resolved_log_file = log_file or env_config.log_file
         resolved_suppression_mode = (
             external_suppression_mode
-            or env_config.get("external_suppression_mode", "cli")
+            or env_config.external_suppression_mode
+            or "cli"
         )
 
         # Merge module levels: environment first, then explicit
-        env_module_levels = env_config.get("module_levels", {})
+        env_module_levels = env_config.module_levels or {}
         merged_module_levels = env_module_levels.copy()
         if module_levels:
             merged_module_levels.update(module_levels)

@@ -12,6 +12,7 @@ from pathlib import Path
 
 from src.schemas.models import Device, NetworkOS
 from src.logging import get_logger
+from src.config.environment import get_settings
 
 # Type alias for device inventory data from JSON
 DeviceData = Dict[str, Any]
@@ -25,7 +26,7 @@ def get_inventory_path(cli_path: Optional[str] = None) -> str:
     """
     Get inventory file path with the following precedence:
     1. Command-line argument (if provided)
-    2. Environment variable NETWORK_INVENTORY
+    2. Environment variable NETWORK_INVENTORY (via centralized settings)
     3. Raise FileNotFoundError if no inventory path is specified
 
     Args:
@@ -45,7 +46,9 @@ def get_inventory_path(cli_path: Optional[str] = None) -> str:
         )
         return abs_path
 
-    env_path = os.environ.get("NETWORK_INVENTORY")
+    # Use centralized environment management instead of direct os.environ.get()
+    settings = get_settings()
+    env_path = settings.get_network_inventory()
     if env_path:
         # Get absolute path for clarity in error messages
         abs_path = os.path.abspath(env_path)

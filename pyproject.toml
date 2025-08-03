@@ -20,6 +20,7 @@ dependencies = [
     "click>=8.1.8",
     "mcp[cli]>=1.6.0",
     "networkx>=3.4.2",
+    "pydantic-settings>=2.9.1",
     "pygnmi>=0.8.15",
     "pyyaml>=6.0.1",
 ]

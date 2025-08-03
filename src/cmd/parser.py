@@ -32,7 +32,7 @@ Usage:
   gnmibuddy.py [OPTIONS] COMMAND [ARGS]...
 
 📋 Inventory Requirement:
-  Provide device inventory via --inventory PATH or set NETWORK_INVENTORY env var
+  Provide device inventory via --inventory PATH, set NETWORK_INVENTORY env var, or use .env file (configurable with --env-file PATH)
 
 Options:
 {options_section}

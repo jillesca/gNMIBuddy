@@ -47,10 +47,13 @@ Devices **must** support gNMI and OpenConfig models listed below:
 
 gNMIBuddy identifies devices by hostname and looks up their corresponding IP addresses and credentials from the inventory file.
 
-Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
-
 > [!CAUTION]
 > Without a device inventory file, gNMIBuddy cannot operate.
+
+Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
+
+> [!TIP]
+> Store environment variables in a `.env` file.
 
 The inventory must be a **JSON list** of `Device` objects with these required fields:
 
@@ -185,7 +188,7 @@ Usage:
   gnmibuddy.py [OPTIONS] COMMAND [ARGS]...
 
 📋 Inventory Requirement:
-  Provide device inventory via --inventory PATH or set NETWORK_INVENTORY env var
+  Provide device inventory via --inventory PATH, set NETWORK_INVENTORY env var, or use .env file (configurable with --env-file PATH)
 
 Options:
   -h, --help            Show this message and exit
@@ -194,6 +197,7 @@ Options:
   --module-log-help     Show detailed module logging help
   --all-devices         Run on all devices concurrently
   --inventory PATH      Path to inventory JSON file
+  -e, --env-file PATH   Path to .env file for configuration (default: .env in project root)
   --max-workers NUMBER  Maximum number of concurrent workers for batch operations (--all-devices, --devices, --device-file)
 
 Commands:
@@ -224,6 +228,8 @@ Examples:
   gnmibuddy.py network routing --device R1
   gnmibuddy.py --all-devices device list
   gnmibuddy.py inventory validate --inventory inventory.json
+  gnmibuddy.py --env-file production.env device list
+  gnmibuddy.py --env-file dev.env --log-level debug device info --device R1
 
 Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 ```
@@ -370,7 +376,43 @@ Raw gNMI Data → Collector → Processor → Schema → Response
 
 ## ⚙️ Environment Variables
 
-gNMIBuddy supports environment variables for configuration, which work for both CLI and MCP server usage.
+gNMIBuddy supports environment variables for configuration, which work for both CLI and MCP server usage. Environment variables can be loaded from:
+
+1. **Command line arguments** (highest priority)
+2. **Operating system environment variables**
+3. **`.env` files** (default: `.env` in project root)
+4. **Default values** (lowest priority)
+
+### .env File Support
+
+gNMIBuddy automatically loads environment variables from a `.env` file in the project root. You can specify a custom `.env` file using the `--env-file` option:
+
+```bash
+# Use default .env file
+gnmibuddy device list
+
+# Use custom environment file
+gnmibuddy --env-file production.env device list
+```
+
+Example:
+
+```bash
+# .env file
+
+# Network configuration
+NETWORK_INVENTORY=/path/to/inventory.json
+
+# Logging configuration
+GNMIBUDDY_LOG_LEVEL=debug
+GNMIBUDDY_MODULE_LEVELS=src.cmd=warning,src.inventory=debug
+GNMIBUDDY_STRUCTURED_LOGGING=true
+GNMIBUDDY_LOG_FILE=/custom/log/path.log
+GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE=development
+
+# MCP debugging
+GNMIBUDDY_MCP_TOOL_DEBUG=true
+```
 
 ### Global Configuration
 
@@ -382,11 +424,14 @@ gNMIBuddy supports environment variables for configuration, which work for both 
 | `GNMIBUDDY_LOG_FILE`                  | Custom log file path (overrides sequential) | File path                           | `logs/gnmibuddy_XXX.log` |
 | `GNMIBUDDY_STRUCTURED_LOGGING`        | Enable JSON logging                         | `true`, `false`                     | `false`                  |
 | `GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE` | External library suppression                | `cli`, `mcp`, `development`         | `cli`                    |
+| `GNMIBUDDY_MCP_TOOL_DEBUG`            | Enable MCP tool debugging                   | `true`, `false`                     | `false`                  |
 
 **Sequential Log Files**: gNMIBuddy automatically creates numbered log files (`gnmibuddy_001.log`, `gnmibuddy_002.log`, etc.) for each execution in the `logs/` directory. The highest number is always the most recent run.
 
 > [!NOTE]
 > Environment variables serve as defaults and can be overridden by CLI arguments like `--log-level` and `--module-log-levels`.
+
+For detailed environment configuration options and advanced usage, see [Environment Configuration Guide](src/config/README.md)
 
 For complete logging environment variable documentation, see [Logging README](src/logging/README.md)
 

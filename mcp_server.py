@@ -25,6 +25,7 @@ from src.logging import (
     get_mcp_logger,
     read_mcp_environment_config,
 )
+from src.config.environment import get_settings
 
 
 mcp_env_config = read_mcp_environment_config()
@@ -34,9 +35,10 @@ mcp = FastMCP("gNMIBuddy")
 logger = get_mcp_logger(__name__)
 
 logger.std_logger.info("Started MCP server for gNMIBuddy")
-logger.std_logger.info(
-    "Network Inventory: %s", os.environ.get("NETWORK_INVENTORY")
-)
+
+settings = get_settings()
+network_inventory = settings.get_network_inventory()
+logger.std_logger.info("Network Inventory: %s", network_inventory)
 
 gnmibuddy_version = load_gnmibuddy_version()
 python_version = get_python_version()

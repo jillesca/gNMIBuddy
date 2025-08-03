@@ -3,66 +3,60 @@
 Environment variable configuration reader.
 
 This module is responsible for reading and parsing logging configuration
-from environment variables, following the Single Responsibility Principle.
+from environment variables using the centralized GNMIBuddySettings class.
 """
 
-import os
 from typing import Dict, Any, Optional
 
 from ..core.enums import LogLevel, SuppressionMode
+from ..core.models import EnvironmentConfiguration
 
 
 class EnvironmentConfigReader:
     """
-    Reads logging configuration from environment variables.
+    Reads logging configuration from environment variables using centralized settings.
 
-    Encapsulates all environment variable reading logic in one place,
-    providing validation and type conversion for environment values.
+    This class now uses the GNMIBuddySettings class to access environment variables
+    consistently across the codebase, eliminating direct os.environ.get() calls.
     """
 
-    # Environment variable names
-    LOG_LEVEL_VAR = "GNMIBUDDY_LOG_LEVEL"
-    MODULE_LEVELS_VAR = "GNMIBUDDY_MODULE_LEVELS"
-    STRUCTURED_LOGGING_VAR = "GNMIBUDDY_STRUCTURED_LOGGING"
-    LOG_FILE_VAR = "GNMIBUDDY_LOG_FILE"
-    EXTERNAL_SUPPRESSION_MODE_VAR = "GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE"
-
     @classmethod
-    def read_configuration(cls) -> Dict[str, Any]:
+    def read_configuration(cls) -> EnvironmentConfiguration:
         """
-        Read complete logging configuration from environment variables.
+        Read complete logging configuration from environment variables using centralized settings.
 
         Returns:
-            Dictionary with parsed environment variable values
+            EnvironmentConfiguration object with parsed environment variable values
         """
-        config = {}
+        # Import here to avoid circular dependency
+        from ...config.environment import get_settings
 
-        # Read global log level
-        if global_level := cls._read_log_level():
-            config["global_level"] = global_level
+        settings = get_settings()
 
-        # Read module-specific levels
-        if module_levels := cls._read_module_levels():
-            config["module_levels"] = module_levels
+        # Read and validate all configuration values
+        global_level = cls._validate_log_level(settings.gnmibuddy_log_level)
+        module_levels = cls._parse_module_levels(
+            settings.gnmibuddy_module_levels
+        )
+        structured_flag = cls._parse_structured_logging(
+            settings.gnmibuddy_structured_logging
+        )
+        log_file = cls._parse_log_file(settings.gnmibuddy_log_file)
+        suppression_mode = cls._validate_suppression_mode(
+            settings.gnmibuddy_external_suppression_mode
+        )
 
-        # Read structured logging flag
-        if structured_flag := cls._read_structured_logging():
-            config["enable_structured"] = structured_flag
-
-        # Read custom log file
-        if log_file := cls._read_log_file():
-            config["log_file"] = log_file
-
-        # Read suppression mode
-        if suppression_mode := cls._read_suppression_mode():
-            config["external_suppression_mode"] = suppression_mode
-
-        return config
+        return EnvironmentConfiguration(
+            global_level=global_level,
+            module_levels=module_levels,
+            enable_structured=structured_flag,
+            log_file=log_file,
+            external_suppression_mode=suppression_mode,
+        )
 
     @classmethod
-    def _read_log_level(cls) -> Optional[str]:
-        """Read and validate global log level."""
-        level_str = os.getenv(cls.LOG_LEVEL_VAR)
+    def _validate_log_level(cls, level_str: Optional[str]) -> Optional[str]:
+        """Validate log level from settings."""
         if not level_str:
             return None
 
@@ -75,9 +69,10 @@ class EnvironmentConfigReader:
             return None
 
     @classmethod
-    def _read_module_levels(cls) -> Optional[Dict[str, str]]:
-        """Read and parse module-specific log levels."""
-        module_levels_str = os.getenv(cls.MODULE_LEVELS_VAR)
+    def _parse_module_levels(
+        cls, module_levels_str: Optional[str]
+    ) -> Optional[Dict[str, str]]:
+        """Parse module-specific log levels from settings."""
         if not module_levels_str:
             return None
 
@@ -106,24 +101,22 @@ class EnvironmentConfigReader:
         return module_levels if module_levels else None
 
     @classmethod
-    def _read_structured_logging(cls) -> Optional[bool]:
-        """Read structured logging flag."""
-        structured_str = os.getenv(cls.STRUCTURED_LOGGING_VAR)
-        if not structured_str:
-            return None
-
-        return structured_str.lower().strip() in ["true", "1", "yes", "on"]
+    def _parse_structured_logging(
+        cls, structured_value: Optional[bool]
+    ) -> Optional[bool]:
+        """Parse structured logging flag from settings."""
+        return structured_value
 
     @classmethod
-    def _read_log_file(cls) -> Optional[str]:
-        """Read custom log file path."""
-        log_file = os.getenv(cls.LOG_FILE_VAR)
+    def _parse_log_file(cls, log_file: Optional[str]) -> Optional[str]:
+        """Parse log file path from settings."""
         return log_file.strip() if log_file else None
 
     @classmethod
-    def _read_suppression_mode(cls) -> Optional[str]:
-        """Read and validate suppression mode."""
-        mode_str = os.getenv(cls.EXTERNAL_SUPPRESSION_MODE_VAR)
+    def _validate_suppression_mode(
+        cls, mode_str: Optional[str]
+    ) -> Optional[str]:
+        """Validate suppression mode from settings."""
         if not mode_str:
             return None
 
@@ -134,19 +127,3 @@ class EnvironmentConfigReader:
         except ValueError:
             # Invalid mode, ignore silently
             return None
-
-    @classmethod
-    def get_supported_variables(cls) -> Dict[str, str]:
-        """
-        Get documentation for supported environment variables.
-
-        Returns:
-            Dictionary mapping variable names to descriptions
-        """
-        return {
-            cls.LOG_LEVEL_VAR: "Global log level (debug, info, warning, error)",
-            cls.MODULE_LEVELS_VAR: "Module-specific levels (format: module1=debug,module2=warning)",
-            cls.STRUCTURED_LOGGING_VAR: "Enable structured JSON logging (true/false)",
-            cls.LOG_FILE_VAR: "Custom log file path",
-            cls.EXTERNAL_SUPPRESSION_MODE_VAR: "External library suppression mode (cli, mcp, development)",
-        }

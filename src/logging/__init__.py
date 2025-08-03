@@ -32,8 +32,10 @@ Usage:
 from .core import (
     LogLevel,
     SuppressionMode,
+    EnvironmentVariable,
     LoggingConfiguration,
     ModuleLevelConfiguration,
+    EnvironmentConfiguration,
     LoggerNames,
     OTelFormatter,
 )
@@ -73,8 +75,10 @@ __all__ = [
     # Core components
     "LogLevel",
     "SuppressionMode",
+    "EnvironmentVariable",
     "LoggingConfiguration",
     "ModuleLevelConfiguration",
+    "EnvironmentConfiguration",
     "LoggerNames",
     "OTelFormatter",
     # Configuration

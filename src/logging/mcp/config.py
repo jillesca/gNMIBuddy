@@ -99,14 +99,23 @@ def read_mcp_environment_config() -> Dict[str, Any]:
     """
     config = {}
 
-    # Check for tool debug mode
-    if os.getenv("GNMIBUDDY_MCP_TOOL_DEBUG", "").lower() in [
-        "true",
-        "1",
-        "yes",
-        "on",
-    ]:
-        config["tool_debug_mode"] = True
+    # Check for tool debug mode using centralized environment management
+    # Note: We use lazy import to avoid circular dependency issues
+    try:
+        from ...config.environment import get_settings
+
+        settings = get_settings()
+        if settings.get_mcp_tool_debug():
+            config["tool_debug_mode"] = True
+    except ImportError:
+        # Fallback to direct environment variable access if import fails
+        if os.getenv("GNMIBUDDY_MCP_TOOL_DEBUG", "").lower() in [
+            "true",
+            "1",
+            "yes",
+            "on",
+        ]:
+            config["tool_debug_mode"] = True
 
     return config
 

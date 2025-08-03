@@ -26,13 +26,20 @@ class TestInventoryFileNotFound:
 
     def test_get_inventory_path_nonexistent(self):
         """Test that get_inventory_path raises FileNotFoundError when no inventory path is specified."""
-        # Ensure NETWORK_INVENTORY environment variable is not set
+        # Ensure NETWORK_INVENTORY environment variable is not set and mock settings
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(FileNotFoundError) as excinfo:
-                get_inventory_path()
+            # Mock the centralized settings to return None for network_inventory
+            with patch(
+                "src.inventory.file_handler.get_settings"
+            ) as mock_get_settings:
+                mock_settings = mock_get_settings.return_value
+                mock_settings.get_network_inventory.return_value = None
 
-            # Check that the error message is informative
-            assert "No inventory file specified" in str(excinfo.value)
+                with pytest.raises(FileNotFoundError) as excinfo:
+                    get_inventory_path()
+
+                # Check that the error message is informative
+                assert "No inventory file specified" in str(excinfo.value)
 
     def test_parse_json_file_nonexistent(self):
         """Test that parse_json_file raises FileNotFoundError for a non-existent file."""

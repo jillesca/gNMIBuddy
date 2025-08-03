@@ -20,6 +20,8 @@ class CLIContext:
     all_devices: bool = False
     max_workers: int = 5
     inventory: Optional[str] = None
+    env_file: Optional[str] = None
+    settings: Optional[Any] = None  # Will hold GNMIBuddySettings instance
 
     # Internal state
     _initialized: bool = False

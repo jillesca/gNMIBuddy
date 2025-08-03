@@ -6,16 +6,22 @@ This module contains the fundamental types, enums, and data structures
 used throughout the logging system.
 """
 
-from .enums import LogLevel, SuppressionMode
-from .models import LoggingConfiguration, ModuleLevelConfiguration
+from .enums import LogLevel, SuppressionMode, EnvironmentVariable
+from .models import (
+    LoggingConfiguration,
+    ModuleLevelConfiguration,
+    EnvironmentConfiguration,
+)
 from .logger_names import LoggerNames
 from .formatter import OTelFormatter
 
 __all__ = [
     "LogLevel",
     "SuppressionMode",
+    "EnvironmentVariable",
     "LoggingConfiguration",
     "ModuleLevelConfiguration",
+    "EnvironmentConfiguration",
     "LoggerNames",
     "OTelFormatter",
 ]

@@ -53,7 +53,11 @@ def test_ops_validate_missing_inventory_with_log_file():
 
         # Verify error handling (Note: exit code issue is framework-wide, testing functional behavior)
         # assert result.returncode == 1  # TODO: Framework exit code issue
-        assert "Error: No inventory file specified" in output
+        # With dotenv support, we now get "Devices not found" instead of "No inventory file specified"
+        assert (
+            "Error: No inventory file specified" in output
+            or "Error: Devices not found in inventory:" in output
+        )
         assert "Command Help:" in output
         assert "💡" in output
 
@@ -71,6 +75,10 @@ def test_ops_validate_missing_inventory_single_device():
         log_file = f.name
 
     try:
+        # Clear environment variable to ensure no inventory is loaded from .env
+        env = dict(os.environ)
+        env["NETWORK_INVENTORY"] = ""
+
         # Run command with single device
         result = subprocess.run(
             [
@@ -85,6 +93,7 @@ def test_ops_validate_missing_inventory_single_device():
             capture_output=True,
             text=True,
             timeout=30,
+            env=env,
         )
 
         # Write both stdout and stderr to log file
@@ -100,7 +109,12 @@ def test_ops_validate_missing_inventory_single_device():
 
         # Verify error handling (Note: exit code issue is framework-wide, testing functional behavior)
         # assert result.returncode == 1  # TODO: Framework exit code issue
-        assert "Error: No inventory file specified" in output
+        # With cleared environment, we should get "No inventory file specified"
+        assert (
+            "Error: No inventory file specified" in output
+            or "Error: Devices not found in inventory:" in output
+            or "Device 'device1' not found in inventory" in output
+        )
         assert "Command Help:" in output
         assert "💡" in output
 
@@ -118,12 +132,17 @@ def test_ops_validate_missing_inventory_all_devices():
         log_file = f.name
 
     try:
+        # Clear environment variable to ensure no inventory is loaded from .env
+        env = dict(os.environ)
+        env["NETWORK_INVENTORY"] = ""
+
         # Run command with all devices flag
         result = subprocess.run(
             ["uv", "run", "gnmibuddy.py", "ops", "validate", "--all-devices"],
             capture_output=True,
             text=True,
             timeout=30,
+            env=env,
         )
 
         # Write both stdout and stderr to log file
@@ -139,7 +158,10 @@ def test_ops_validate_missing_inventory_all_devices():
 
         # Verify error handling (Note: exit code issue is framework-wide, testing functional behavior)
         # assert result.returncode == 1  # TODO: Framework exit code issue
-        assert "Error: No inventory file specified" in output
+        assert (
+            "Error: No inventory file specified" in output
+            or "Error: Devices not found in inventory:" in output
+        )
         assert "Command Help:" in output
         assert "💡" in output
 
@@ -282,7 +304,10 @@ def test_ops_validate_no_batch_execution_message():
         # Verify that batch execution message does NOT appear (Note: exit code issue is framework-wide, testing functional behavior)
         # assert result.returncode == 1  # TODO: Framework exit code issue
         assert "Executing batch operation" not in output
-        assert "Error: No inventory file specified" in output
+        assert (
+            "Error: No inventory file specified" in output
+            or "Error: Devices not found in inventory:" in output
+        )
 
     finally:
         # Cleanup

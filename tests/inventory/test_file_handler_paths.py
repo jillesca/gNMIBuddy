@@ -151,16 +151,40 @@ class TestFileHandlerPaths:
 
             assert result == absolute_path
 
-    def test_get_inventory_path_env_relative(self, temp_inventory_file):
+    def test_get_inventory_path_env_relative(self, sample_inventory_data):
         """Test get_inventory_path with relative path from environment variable."""
-        relative_path = os.path.relpath(temp_inventory_file)
+        # Create a temporary file that we control
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as f:
+            json.dump(sample_inventory_data, f, indent=2)
+            temp_file_path = f.name
 
-        with patch.dict(os.environ, {"NETWORK_INVENTORY": relative_path}):
-            result = get_inventory_path()
+        try:
+            # Create relative path from the same temp file
+            relative_path = os.path.relpath(temp_file_path)
 
-            # Should convert to absolute path
-            expected_absolute = os.path.abspath(relative_path)
-            assert result == expected_absolute
+            # Mock the settings to return our relative path
+            with patch(
+                "src.inventory.file_handler.get_settings"
+            ) as mock_get_settings:
+                mock_settings = mock_get_settings.return_value
+                mock_settings.get_network_inventory.return_value = (
+                    relative_path
+                )
+
+                result = get_inventory_path()
+
+                # Should convert to absolute path - verify it's the same resolved path
+                expected_absolute = os.path.abspath(relative_path)
+                assert result == expected_absolute
+
+                # Also verify the result points to the same file as the original
+                assert os.path.samefile(result, temp_file_path)
+        finally:
+            # Cleanup
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
 
     def test_load_inventory_absolute_path(self, temp_inventory_file):
         """Test load_inventory with absolute path."""

@@ -67,6 +67,9 @@ Run 'gnmibuddy.py COMMAND --help' for more information on a command.
         "  --inventory PATH                Path to inventory JSON file"
     )
     options_lines.append(
+        "  -e, --env-file PATH             Path to .env file for configuration"
+    )
+    options_lines.append(
         "  --max-workers NUMBER            Maximum number of concurrent workers for batch operations (--all-devices, --devices, --device-file)"
     )
     options_section = "\n".join(options_lines)
@@ -162,6 +165,7 @@ def show_detailed_version_callback(ctx, param, value):
         ["debug", "info", "warning", "error"], case_sensitive=False
     ),
     default="info",
+    envvar="GNMIBUDDY_LOG_LEVEL",
     help="Set the global logging level",
 )
 @click.option(
@@ -180,7 +184,10 @@ def show_detailed_version_callback(ctx, param, value):
     help="Show detailed help for module-specific logging options and exit.",
 )
 @click.option(
-    "--structured-logging", is_flag=True, help="Enable structured JSON logging"
+    "--structured-logging",
+    is_flag=True,
+    envvar="GNMIBUDDY_STRUCTURED_LOGGING",
+    help="Enable structured JSON logging",
 )
 @click.option(
     "--quiet-external",
@@ -199,7 +206,18 @@ def show_detailed_version_callback(ctx, param, value):
     default=5,
     help="Maximum number of concurrent workers for batch operations (--all-devices, --devices, --device-file)",
 )
-@click.option("--inventory", type=str, help="Path to inventory JSON file")
+@click.option(
+    "--inventory",
+    type=str,
+    envvar="NETWORK_INVENTORY",
+    help="Path to inventory JSON file",
+)
+@click.option(
+    "-e",
+    "--env-file",
+    type=str,
+    help="Path to .env file for configuration (default: .env in project root)",
+)
 @click.pass_context
 def cli(
     ctx,
@@ -210,6 +228,7 @@ def cli(
     all_devices,
     max_workers,
     inventory,
+    env_file,
 ):
     """placeholder"""
     # Create and configure context
@@ -222,6 +241,7 @@ def cli(
         all_devices=all_devices,
         max_workers=max_workers,
         inventory=inventory,
+        env_file=env_file,
     )
 
     # Configure logging system using CLI options
@@ -232,9 +252,23 @@ def cli(
         quiet_external=quiet_external,
     )
 
-    # Set environment variable for inventory if provided
-    if inventory:
-        os.environ["NETWORK_INVENTORY"] = inventory
+    # Initialize centralized environment settings with custom env file if provided
+    try:
+        from src.config.environment import GNMIBuddySettings
+
+        if env_file:
+            # Load settings from custom env file
+            settings = GNMIBuddySettings.from_env_file(env_file)
+        else:
+            # Load settings from default .env file (if it exists)
+            settings = GNMIBuddySettings()
+
+        # Store settings in context for potential use by other commands
+        ctx.obj.settings = settings
+
+    except Exception as e:
+        # Log the error but continue - this shouldn't block CLI operation
+        logger.warning(f"Failed to load environment settings: {e}")
 
     # If no command provided, show help
     if ctx.invoked_subcommand is None:

@@ -32,6 +32,7 @@ Usage:
 from .core import (
     LogLevel,
     SuppressionMode,
+    EnvironmentVariable,
     LoggingConfiguration,
     ModuleLevelConfiguration,
     LoggerNames,
@@ -73,6 +74,7 @@ __all__ = [
     # Core components
     "LogLevel",
     "SuppressionMode",
+    "EnvironmentVariable",
     "LoggingConfiguration",
     "ModuleLevelConfiguration",
     "LoggerNames",

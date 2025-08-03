@@ -9,6 +9,7 @@ the logging system, following the Zen of Python principle of
 
 import logging
 from enum import Enum, IntEnum
+from typing import Dict
 
 
 class LogLevel(IntEnum):
@@ -103,3 +104,49 @@ class SuppressionMode(Enum):
     def to_string(self) -> str:
         """Convert SuppressionMode to string representation."""
         return self.value
+
+
+class EnvironmentVariable(Enum):
+    """
+    Environment variables used by gNMIBuddy for centralized reference.
+
+    This enum provides a single place to define all environment variable names,
+    following DRY principles and preventing typos throughout the codebase.
+    """
+
+    # Network configuration
+    NETWORK_INVENTORY = "NETWORK_INVENTORY"
+
+    # Logging configuration
+    LOG_LEVEL = "GNMIBUDDY_LOG_LEVEL"
+    MODULE_LEVELS = "GNMIBUDDY_MODULE_LEVELS"
+    STRUCTURED_LOGGING = "GNMIBUDDY_STRUCTURED_LOGGING"
+    LOG_FILE = "GNMIBUDDY_LOG_FILE"
+    EXTERNAL_SUPPRESSION_MODE = "GNMIBUDDY_EXTERNAL_SUPPRESSION_MODE"
+
+    # MCP configuration
+    MCP_TOOL_DEBUG = "GNMIBUDDY_MCP_TOOL_DEBUG"
+
+    def __str__(self) -> str:
+        """Return the environment variable name as string."""
+        return self.value
+
+    @classmethod
+    def get_all_variables(cls) -> Dict[str, str]:
+        """
+        Get all environment variables with their descriptions.
+
+        Returns:
+            Dictionary mapping variable names to descriptions
+        """
+        descriptions = {
+            cls.NETWORK_INVENTORY: "Path to network device inventory JSON file",
+            cls.LOG_LEVEL: "Global log level (debug, info, warning, error)",
+            cls.MODULE_LEVELS: "Module-specific levels (format: module1=debug,module2=warning)",
+            cls.STRUCTURED_LOGGING: "Enable structured JSON logging (true/false)",
+            cls.LOG_FILE: "Custom log file path",
+            cls.EXTERNAL_SUPPRESSION_MODE: "External library suppression mode (cli, mcp, development)",
+            cls.MCP_TOOL_DEBUG: "Enable debug logging for MCP tools (true/false)",
+        }
+
+        return {var.value: descriptions[var] for var in cls}

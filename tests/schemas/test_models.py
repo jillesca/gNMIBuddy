@@ -93,7 +93,7 @@ class TestDeviceModel:
         assert device.insecure is True
 
     def test_device_to_device_info_method(self):
-        """Test the to_device_info method."""
+        """Test that to_device_info method has been removed."""
         device = Device(
             name="test-device",
             ip_address="192.168.1.1",
@@ -103,23 +103,14 @@ class TestDeviceModel:
             password="secret123",
         )
 
-        device_info = device.to_device_info()
+        # Verify the method no longer exists
+        assert not hasattr(device, "to_device_info")
 
-        # Should only include non-sensitive information
-        expected_info = {
-            "name": "test-device",
-            "ip_address": "192.168.1.1",
-            "port": 57400,
-            "nos": "iosxr",
-        }
-
-        assert device_info == expected_info
-
-        # Ensure sensitive information is not included
-        assert "username" not in device_info
-        assert "password" not in device_info
-        assert "path_cert" not in device_info
-        assert "path_key" not in device_info
+        # Verify the device still works for basic functionality
+        assert device.name == "test-device"
+        assert device.ip_address == "192.168.1.1"
+        assert device.port == 57400
+        assert device.nos == NetworkOS.IOSXR
 
     def test_device_model_dataclass_fields(self):
         """Test that Device has all expected fields."""
@@ -287,51 +278,30 @@ class TestDeviceModelIntegration:
         assert device.skip_verify is True
         assert device.gnmi_timeout == 30
 
-    def test_device_info_serialization(self):
-        """Test that device info can be serialized/deserialized."""
+
+class TestDeviceSanitizationMethods:
+    """Test suite for Device model cleanup verification."""
+
+    def test_device_model_maintains_clean_interface(self):
+        """Test that Device model maintains a clean interface without deprecated methods."""
         device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            port=57400,
             nos=NetworkOS.IOSXR,
+            username="admin",
+            password="secret123",
+            path_cert="/path/to/cert.pem",
+            path_key="/path/to/key.pem",
         )
 
-        device_info = device.to_device_info()
+        # Verify that deprecated methods have been removed
+        assert not hasattr(device, "to_device_info")
+        assert not hasattr(device, "to_device_info_safe")
+        assert not hasattr(device, "to_device_info_with_auth")
 
-        # Should be JSON serializable
-        import json
-
-        json_str = json.dumps(device_info)
-        deserialized = json.loads(json_str)
-
-        assert deserialized == device_info
-        assert deserialized["name"] == "test-device"
-        assert deserialized["ip_address"] == "192.168.1.1"
-        assert deserialized["port"] == 57400
-        assert deserialized["nos"] == "iosxr"
-
-    def test_device_model_extensibility(self):
-        """Test that Device model can be extended if needed."""
-        # Create a subclass to test extensibility
-        from dataclasses import dataclass
-
-        @dataclass
-        class ExtendedDevice(Device):
-            region: str = ""
-            datacenter: str = ""
-
-        extended_device = ExtendedDevice(
-            name="test-device",
-            ip_address="192.168.1.1",
-            nos=NetworkOS.IOSXR,
-            region="us-east",
-            datacenter="dc1",
-        )
-
-        assert extended_device.name == "test-device"
-        assert extended_device.region == "us-east"
-        assert extended_device.datacenter == "dc1"
-
-        # Should still have base Device functionality
-        device_info = extended_device.to_device_info()
-        assert device_info["name"] == "test-device"
+        # Verify the device still works as expected for actual use cases
+        assert device.name == "test-device"
+        assert device.ip_address == "192.168.1.1"
+        assert (
+            device.password == "secret123"
+        )  # Full data preserved in Device object

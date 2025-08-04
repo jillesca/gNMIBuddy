@@ -88,22 +88,3 @@ class Device:
     grpc_options: Optional[list] = None
     show_diff: Optional[str] = None
     insecure: bool = True
-
-    def to_device_info(self) -> Dict[str, Any]:
-        """
-        Convert Device to device info dictionary, excluding sensitive information.
-
-        Returns:
-            Dictionary with non-sensitive device information
-        """
-        # Handle both enum and string values for backward compatibility
-        nos_value = (
-            self.nos.value if isinstance(self.nos, NetworkOS) else self.nos
-        )
-
-        return {
-            "name": self.name,
-            "ip_address": self.ip_address,
-            "port": self.port,
-            "nos": nos_value,
-        }

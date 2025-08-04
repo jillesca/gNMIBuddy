@@ -47,3 +47,13 @@ def list_available_devices() -> DeviceListResult:
         Dictionary with device names and their details
     """
     return InventoryManager.list_devices()
+
+
+def list_available_devices_safe() -> DeviceListResult:
+    """
+    List all available devices in the inventory with sensitive data redacted.
+
+    Returns:
+        Dictionary with device names and their details (passwords and certificate paths redacted)
+    """
+    return InventoryManager.list_devices_safe()

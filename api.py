@@ -6,7 +6,7 @@ that can be used by both MCP and CLI interfaces.
 from typing import Optional, Union
 
 from src.services.commands import run
-from src.inventory import list_available_devices
+from src.inventory import list_available_devices, list_available_devices_safe
 from src.collectors.vpn import get_vpn_info as collect_vpn_info
 from src.collectors.mpls import get_mpls_info as collect_mpls_info
 from src.collectors.routing import get_routing_info as collect_routing_info
@@ -179,8 +179,9 @@ def get_devices() -> DeviceListResult:
 
     Returns:
         A dictionary containing a list of all devices with their name, IP address, and network OS
+        (sensitive authentication data is redacted for security)
     """
-    return list_available_devices()
+    return list_available_devices_safe()
 
 
 def get_topology_neighbors(

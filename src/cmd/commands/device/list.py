@@ -73,7 +73,12 @@ def device_list(ctx, detail, output):
 
     # Use the list_devices method instead of direct access to get_devices
     try:
-        device_list_result = InventoryManager.list_devices()
+        if detail:
+            # Use sanitized data for detailed output to avoid exposing sensitive information
+            device_list_result = InventoryManager.list_devices_safe()
+        else:
+            # Use regular data for basic output (only device names are shown)
+            device_list_result = InventoryManager.list_devices()
     except FileNotFoundError as e:
         # Handle inventory not found error gracefully
         from src.cmd.commands.base import handle_inventory_error_in_command

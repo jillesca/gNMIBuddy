@@ -107,3 +107,61 @@ class Device:
             "port": self.port,
             "nos": nos_value,
         }
+
+    def to_device_info_safe(self) -> "Device":
+        """
+        Convert Device to a sanitized Device object with sensitive fields redacted.
+
+        This method creates a new Device instance with sensitive authentication
+        information redacted for safe exposure to external consumers.
+
+        Returns:
+            Device object with sensitive fields redacted using "***"
+        """
+        redaction_marker = "***"
+
+        return Device(
+            name=self.name,
+            ip_address=self.ip_address,
+            port=self.port,
+            nos=self.nos,
+            username=self.username,  # Keep username for identification
+            password=redaction_marker if self.password else self.password,
+            path_cert=redaction_marker if self.path_cert else self.path_cert,
+            path_key=redaction_marker if self.path_key else self.path_key,
+            path_root=self.path_root,  # Not sensitive (public CA)
+            override=self.override,
+            skip_verify=self.skip_verify,
+            gnmi_timeout=self.gnmi_timeout,
+            grpc_options=self.grpc_options,
+            show_diff=self.show_diff,
+            insecure=self.insecure,
+        )
+
+    def to_device_info_with_auth(self) -> "Device":
+        """
+        Convert Device to a complete Device object including sensitive authentication fields.
+
+        This method returns a copy of the device with all authentication information
+        intact for internal use where sensitive data access is required.
+
+        Returns:
+            Device object with all fields including sensitive authentication data
+        """
+        return Device(
+            name=self.name,
+            ip_address=self.ip_address,
+            port=self.port,
+            nos=self.nos,
+            username=self.username,
+            password=self.password,
+            path_cert=self.path_cert,
+            path_key=self.path_key,
+            path_root=self.path_root,
+            override=self.override,
+            skip_verify=self.skip_verify,
+            gnmi_timeout=self.gnmi_timeout,
+            grpc_options=self.grpc_options,
+            show_diff=self.show_diff,
+            insecure=self.insecure,
+        )

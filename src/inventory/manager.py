@@ -207,6 +207,41 @@ class InventoryManager:
         # logger.info("Listed %s devices from inventory", len(device_list))
         return DeviceListResult(devices=device_list)
 
+    @classmethod
+    def list_devices_safe(cls) -> DeviceListResult:
+        """
+        List all available devices in the inventory with sensitive data redacted.
+
+        This method returns device information with sensitive authentication
+        fields (passwords, certificate paths) redacted for safe exposure to
+        external consumers such as CLI commands and MCP servers.
+
+        Returns:
+            DeviceListResult containing sanitized Device objects with sensitive fields redacted
+        """
+        logger.debug("Listing all devices in inventory with sanitization")
+
+        # Get the full device list first
+        device_list_result = cls.list_devices()
+
+        if not device_list_result.devices:
+            logger.warning("No devices found in inventory for sanitization")
+            return DeviceListResult(devices=[])
+
+        # Import sanitizer here to avoid circular imports
+        from .sanitizer import DeviceDataSanitizer
+
+        sanitizer = DeviceDataSanitizer()
+        sanitized_result = sanitizer.sanitize_device_list_result(
+            device_list_result
+        )
+
+        logger.debug(
+            "Listed %s sanitized devices from inventory",
+            len(sanitized_result.devices),
+        )
+        return sanitized_result
+
     def is_initialized(self) -> bool:
         """Check if the inventory is initialized."""
         return self._initialized

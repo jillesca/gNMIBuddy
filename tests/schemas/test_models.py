@@ -335,3 +335,223 @@ class TestDeviceModelIntegration:
         # Should still have base Device functionality
         device_info = extended_device.to_device_info()
         assert device_info["name"] == "test-device"
+
+
+class TestDeviceSanitizationMethods:
+    """Test suite for Device sanitization methods added in Phase 1."""
+
+    def test_device_to_device_info_safe_method(self):
+        """Test the to_device_info_safe method redacts sensitive data."""
+        device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            port=57777,
+            nos=NetworkOS.IOSXR,
+            username="admin",
+            password="secret123",
+            path_cert="/path/to/cert.pem",
+            path_key="/path/to/private.key",
+            path_root="/path/to/root.ca",
+            override="override.example.com",
+            skip_verify=False,
+            gnmi_timeout=10,
+            grpc_options=["grpc.keepalive_time_ms=30000"],
+            show_diff="unified",
+            insecure=False,
+        )
+
+        safe_device = device.to_device_info_safe()
+
+        # Verify it returns a Device class instance
+        assert isinstance(safe_device, Device)
+
+        # Verify sensitive data is redacted
+        assert safe_device.password == "***"
+        assert safe_device.path_cert == "***"
+        assert safe_device.path_key == "***"
+
+        # Verify non-sensitive data is preserved
+        assert safe_device.name == "test-device"
+        assert safe_device.ip_address == "192.168.1.1"
+        assert safe_device.port == 57777
+        assert safe_device.nos == NetworkOS.IOSXR
+        assert safe_device.username == "admin"
+        assert safe_device.path_root == "/path/to/root.ca"  # Not sensitive
+        assert safe_device.override == "override.example.com"
+        assert safe_device.skip_verify is False
+        assert safe_device.gnmi_timeout == 10
+        assert safe_device.grpc_options == ["grpc.keepalive_time_ms=30000"]
+        assert safe_device.show_diff == "unified"
+        assert safe_device.insecure is False
+
+        # Verify original device is unchanged
+        assert device.password == "secret123"
+        assert device.path_cert == "/path/to/cert.pem"
+        assert device.path_key == "/path/to/private.key"
+
+    def test_device_to_device_info_with_auth_method(self):
+        """Test the to_device_info_with_auth method preserves all data."""
+        device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            port=57777,
+            nos=NetworkOS.IOSXR,
+            username="admin",
+            password="secret123",
+            path_cert="/path/to/cert.pem",
+            path_key="/path/to/private.key",
+            path_root="/path/to/root.ca",
+            override="override.example.com",
+            skip_verify=True,
+            gnmi_timeout=15,
+            grpc_options=None,
+            show_diff=None,
+            insecure=True,
+        )
+
+        auth_device = device.to_device_info_with_auth()
+
+        # Verify it returns a Device class instance
+        assert isinstance(auth_device, Device)
+
+        # Verify all data is preserved (including sensitive)
+        assert auth_device.name == "test-device"
+        assert auth_device.ip_address == "192.168.1.1"
+        assert auth_device.port == 57777
+        assert auth_device.nos == NetworkOS.IOSXR
+        assert auth_device.username == "admin"
+        assert auth_device.password == "secret123"  # Not redacted
+        assert auth_device.path_cert == "/path/to/cert.pem"  # Not redacted
+        assert auth_device.path_key == "/path/to/private.key"  # Not redacted
+        assert auth_device.path_root == "/path/to/root.ca"
+        assert auth_device.override == "override.example.com"
+        assert auth_device.skip_verify is True
+        assert auth_device.gnmi_timeout == 15
+        assert auth_device.grpc_options is None
+        assert auth_device.show_diff is None
+        assert auth_device.insecure is True
+
+    def test_device_sanitization_methods_with_none_values(self):
+        """Test sanitization methods handle None values correctly."""
+        device = Device(
+            name="minimal-device",
+            ip_address="10.1.1.1",
+            nos=NetworkOS.IOSXR,
+            username="user",
+            password=None,
+            path_cert=None,
+            path_key=None,
+        )
+
+        # Test safe method with None values
+        safe_device = device.to_device_info_safe()
+        assert safe_device.password is None
+        assert safe_device.path_cert is None
+        assert safe_device.path_key is None
+
+        # Test auth method with None values
+        auth_device = device.to_device_info_with_auth()
+        assert auth_device.password is None
+        assert auth_device.path_cert is None
+        assert auth_device.path_key is None
+
+    def test_device_sanitization_methods_class_based_structures(self):
+        """Test that sanitization methods return class-based structures, not dictionaries."""
+        device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            nos=NetworkOS.IOSXR,
+            password="secret123",
+        )
+
+        # Test safe method returns class, not dict
+        safe_device = device.to_device_info_safe()
+        assert isinstance(safe_device, Device)
+        assert not isinstance(safe_device, dict)
+
+        # Test auth method returns class, not dict
+        auth_device = device.to_device_info_with_auth()
+        assert isinstance(auth_device, Device)
+        assert not isinstance(auth_device, dict)
+
+    def test_device_sanitization_backward_compatibility(self):
+        """Test that existing to_device_info method is unchanged."""
+        device = Device(
+            name="test-device",
+            ip_address="192.168.1.1",
+            port=57777,
+            nos=NetworkOS.IOSXR,
+            username="admin",
+            password="secret123",
+        )
+
+        device_info = device.to_device_info()
+
+        # Should return a dictionary (original behavior)
+        assert isinstance(device_info, dict)
+        assert not isinstance(device_info, Device)
+
+        # Should only include non-sensitive information (original behavior)
+        expected_info = {
+            "name": "test-device",
+            "ip_address": "192.168.1.1",
+            "port": 57777,
+            "nos": "iosxr",
+        }
+
+        assert device_info == expected_info
+
+        # Ensure sensitive information is not included (original behavior)
+        assert "username" not in device_info
+        assert "password" not in device_info
+        assert "path_cert" not in device_info
+        assert "path_key" not in device_info
+
+    def test_device_sanitization_edge_cases(self):
+        """Test sanitization methods with edge case values."""
+        device = Device(
+            name="edge-case-device",
+            ip_address="192.168.1.1",
+            nos=NetworkOS.IOSXR,
+            password="",  # Empty string
+            path_cert="   ",  # Whitespace only
+            path_key="actual_key",  # Normal value
+        )
+
+        safe_device = device.to_device_info_safe()
+
+        # Empty string should remain (truthy check in sanitizer)
+        assert safe_device.password == ""
+        # Whitespace should be redacted (truthy)
+        assert safe_device.path_cert == "***"
+        # Normal value should be redacted
+        assert safe_device.path_key == "***"
+
+    def test_device_sanitization_immutability(self):
+        """Test that sanitization methods don't modify the original device."""
+        original_password = "original_secret"
+        original_cert = "/original/cert.pem"
+
+        device = Device(
+            name="immutable-test",
+            ip_address="192.168.1.1",
+            nos=NetworkOS.IOSXR,
+            password=original_password,
+            path_cert=original_cert,
+        )
+
+        # Call both sanitization methods
+        safe_device = device.to_device_info_safe()
+        auth_device = device.to_device_info_with_auth()
+
+        # Original device should be unchanged
+        assert device.password == original_password
+        assert device.path_cert == original_cert
+
+        # Safe device should have redacted data
+        assert safe_device.password == "***"
+        assert safe_device.path_cert == "***"
+
+        # Auth device should have original data
+        assert auth_device.password == original_password
+        assert auth_device.path_cert == original_cert

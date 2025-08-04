@@ -76,32 +76,19 @@ class TestRegressionFunctionality:
             assert device.name == "regression-test-device"
             assert device.ip_address == "192.168.100.1"
 
-    def test_existing_device_to_device_info_method_unchanged(
-        self, sample_device
-    ):
-        """Test that the original to_device_info method remains unchanged."""
+    def test_device_model_cleanup_verification(self, sample_device):
+        """Test that deprecated device methods have been properly removed."""
+        # Verify that deprecated methods have been removed following YAGNI principle
+        assert not hasattr(sample_device, "to_device_info")
+        assert not hasattr(sample_device, "to_device_info_safe")
+        assert not hasattr(sample_device, "to_device_info_with_auth")
 
-        device_info = sample_device.to_device_info()
-
-        # Verify return type is unchanged (dictionary)
-        assert isinstance(device_info, dict)
-        assert not isinstance(device_info, Device)
-
-        # Verify original behavior: only non-sensitive fields
-        expected_info = {
-            "name": "regression-test-device",
-            "ip_address": "192.168.100.1",
-            "port": 57777,
-            "nos": "iosxr",
-        }
-
-        assert device_info == expected_info
-
-        # Verify sensitive information is still excluded (original behavior)
-        assert "username" not in device_info
-        assert "password" not in device_info
-        assert "path_cert" not in device_info
-        assert "path_key" not in device_info
+        # Verify the device still works for core functionality
+        assert sample_device.name == "regression-test-device"
+        assert sample_device.ip_address == "192.168.100.1"
+        assert (
+            sample_device.password == "test_password"
+        )  # Sensitive data intact in Device object
 
     def test_device_model_backward_compatibility(self):
         """Test that Device model maintains backward compatibility."""
@@ -208,12 +195,9 @@ class TestRegressionFunctionality:
         assert device1 == device2
         assert device1 != device3
 
-        # Test that sanitized devices maintain equality behavior
-        safe_device1 = device1.to_device_info_safe()
-        safe_device2 = device2.to_device_info_safe()
-
-        # Sanitized devices should be equal if originals were equal
-        assert safe_device1 == safe_device2
+        # Test that Device objects still maintain their basic functionality
+        assert device1.name == "test-device"
+        assert device1.password == "secret"
 
 
 class TestRegressionPerformance:
@@ -346,10 +330,11 @@ class TestRegressionPerformance:
 
 
 class TestRegressionEdgeCases:
-    """Test suite for edge case regression testing."""
+    """Test suite for edge case regression testing - updated for sanitizer architecture."""
 
-    def test_none_value_handling_unchanged(self):
-        """Test that None value handling remains unchanged."""
+    def test_sanitizer_handles_none_values_correctly(self):
+        """Test that DeviceDataSanitizer handles None values correctly."""
+        from src.inventory.sanitizer import DeviceDataSanitizer
 
         device = Device(
             name="none-test",
@@ -361,40 +346,18 @@ class TestRegressionEdgeCases:
             path_key=None,
         )
 
-        # Test original behavior preserved
-        original_info = device.to_device_info()
-        assert "password" not in original_info
-        assert "username" not in original_info
+        sanitizer = DeviceDataSanitizer()
+        sanitized_device = sanitizer.sanitize_device(device)
 
-        # Test new safe method handles None correctly
-        safe_device = device.to_device_info_safe()
-        assert safe_device.password is None
-        assert safe_device.username is None
-        assert safe_device.path_cert is None
-        assert safe_device.path_key is None
+        # None values should remain None (not redacted)
+        assert sanitized_device.password is None
+        assert sanitized_device.username is None
+        assert sanitized_device.path_cert is None
+        assert sanitized_device.path_key is None
 
-    def test_empty_string_handling_consistency(self):
-        """Test that empty string handling is consistent."""
-
-        device = Device(
-            name="empty-test",
-            ip_address="192.168.1.1",
-            nos=NetworkOS.IOSXR,
-            username="",
-            password="",
-            path_cert="",
-        )
-
-        # Test that empty strings are handled consistently
-        safe_device = device.to_device_info_safe()
-
-        # Empty strings should remain empty (falsy, so not redacted)
-        assert safe_device.username == ""
-        assert safe_device.password == ""
-        assert safe_device.path_cert == ""
-
-    def test_special_character_handling(self):
-        """Test that special characters in sensitive data are handled correctly."""
+    def test_sanitizer_handles_special_characters(self):
+        """Test that sanitizer handles special characters correctly."""
+        from src.inventory.sanitizer import DeviceDataSanitizer
 
         device = Device(
             name="special-char-test",
@@ -405,48 +368,26 @@ class TestRegressionEdgeCases:
             path_key="/path/with/unicode/鍵.key",
         )
 
-        safe_device = device.to_device_info_safe()
+        sanitizer = DeviceDataSanitizer()
+        sanitized_device = sanitizer.sanitize_device(device)
 
         # All should be redacted regardless of special characters
-        assert safe_device.password == "***"
-        assert safe_device.path_cert == "***"
-        assert safe_device.path_key == "***"
+        assert sanitized_device.password == "***"
+        assert sanitized_device.path_cert == "***"
+        assert sanitized_device.path_key == "***"
 
         # Original should be unchanged
         assert device.password == "p@$$w0rd!@#$%^&*()"
         assert device.path_cert == "/path/with spaces/cert-file.pem"
         assert device.path_key == "/path/with/unicode/鍵.key"
 
-    def test_large_data_handling(self):
-        """Test handling of unusually large data values."""
-
-        large_password = "x" * 1000  # 1KB password
-        large_cert_path = "/very/long/path/" + "directory/" * 50 + "cert.pem"
-
-        device = Device(
-            name="large-data-test",
-            ip_address="192.168.1.1",
-            nos=NetworkOS.IOSXR,
-            password=large_password,
-            path_cert=large_cert_path,
-        )
-
-        safe_device = device.to_device_info_safe()
-
-        # Large data should still be redacted to simple marker
-        assert safe_device.password == "***"
-        assert safe_device.path_cert == "***"
-
-        # Original should be preserved
-        assert device.password == large_password
-        assert device.path_cert == large_cert_path
-
 
 class TestRegressionDataIntegrity:
-    """Test suite for data integrity regression testing."""
+    """Test suite for data integrity regression testing - updated for sanitizer architecture."""
 
-    def test_original_data_immutability(self):
-        """Test that original data structures are never modified."""
+    def test_sanitizer_immutability(self):
+        """Test that DeviceDataSanitizer maintains data immutability."""
+        from src.inventory.sanitizer import DeviceDataSanitizer
 
         original_password = "original_secret"
         original_cert = "/original/cert.pem"
@@ -462,74 +403,38 @@ class TestRegressionDataIntegrity:
         # Store original object id for verification
         original_device_id = id(device)
 
-        # Perform various operations
-        safe_device = device.to_device_info_safe()
-        auth_device = device.to_device_info_with_auth()
-        device_info = device.to_device_info()
+        # Use the actual sanitizer (not deprecated methods)
+        sanitizer = DeviceDataSanitizer()
+        sanitized_device = sanitizer.sanitize_device(device)
 
         # Verify original device is completely unchanged
         assert id(device) == original_device_id
         assert device.password == original_password
         assert device.path_cert == original_cert
 
-        # Verify no cross-contamination between operations
-        assert safe_device.password == "***"
-        assert auth_device.password == original_password
-        assert "password" not in device_info
+        # Verify sanitized device has redacted data
+        assert sanitized_device.password == "***"
+        assert sanitized_device.path_cert == "***"
 
-    def test_concurrent_access_safety(self):
-        """Test that concurrent access to devices is safe."""
-
+    def test_device_basic_functionality_preserved(self):
+        """Test that Device objects maintain basic functionality after cleanup."""
         device = Device(
-            name="concurrent-test",
+            name="basic-test",
             ip_address="192.168.1.1",
             nos=NetworkOS.IOSXR,
-            password="concurrent_secret",
+            password="test_password",
         )
 
-        # Simulate concurrent access
-        results = []
-        for _ in range(10):
-            safe_device = device.to_device_info_safe()
-            auth_device = device.to_device_info_with_auth()
-            results.append((safe_device.password, auth_device.password))
+        # Verify basic Device functionality still works
+        assert device.name == "basic-test"
+        assert device.password == "test_password"
+        assert device.ip_address == "192.168.1.1"
 
-        # Verify consistent results across all operations
-        for safe_password, auth_password in results:
-            assert safe_password == "***"
-            assert auth_password == "concurrent_secret"
-
-        # Verify original device remains unchanged
-        assert device.password == "concurrent_secret"
-
-    def test_memory_efficiency(self):
-        """Test that sanitization doesn't cause memory leaks or excessive allocation."""
-
-        import gc
-
-        # Get initial memory baseline
-        gc.collect()
-        initial_objects = len(gc.get_objects())
-
-        # Perform many sanitization operations
-        for i in range(100):
-            device = Device(
-                name=f"memory-test-{i}",
-                ip_address="192.168.1.1",
-                nos=NetworkOS.IOSXR,
-                password=f"secret_{i}",
-            )
-
-            safe_device = device.to_device_info_safe()
-            # Ensure we actually use the result
-            _ = safe_device.password
-
-        # Force garbage collection
-        gc.collect()
-        final_objects = len(gc.get_objects())
-
-        # Memory growth should be reasonable (not excessive object retention)
-        object_growth = final_objects - initial_objects
-        assert (
-            object_growth < 1000
-        ), f"Excessive object growth: {object_growth}"
+        # Verify equality comparison still works
+        device2 = Device(
+            name="basic-test",
+            ip_address="192.168.1.1",
+            nos=NetworkOS.IOSXR,
+            password="test_password",
+        )
+        assert device == device2

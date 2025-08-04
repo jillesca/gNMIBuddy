@@ -4,15 +4,13 @@
       "command": "uv",
       "args": [
         "run",
-        "--with",
-        "mcp[cli],pygnmi,networkx,pyyaml",
-        "mcp",
-        "run",
-        "path/to/mcp_server.py"
+        "--frozen",
+        "gnmibuddy-mcp"
       ],
       "env": {
         "NETWORK_INVENTORY": "path/to/your_inventory.json"
-      }
+      },
+      "cwd": "path/to/your/gNMIBuddy/project"
     }
   }
 }

@@ -112,16 +112,26 @@ EOF
 <details>
 <summary><strong>🔌 Have an MCP Client? (VSCode, Cursor, Claude Desktop)</strong></summary>
 
-**No installation required** - runs directly from GitHub using `uvx`:
+**Recommended: No installation required** - runs directly from GitHub using `uvx`:
 
 | **MCP Client**           | **Configuration**                                    |
 | ------------------------ | ---------------------------------------------------- |
 | **VSCode**               | [📋 Copy config](examples/mcp/vscode-uvx.json)       |
 | **Standard MCP Clients** | [📋 Copy config](examples/mcp/mcp-standard-uvx.json) |
 
+**For Development** - when you need to test local changes:
+
+| **MCP Client**           | **Configuration**                                    |
+| ------------------------ | ---------------------------------------------------- |
+| **VSCode**               | [📋 Copy config](examples/mcp/vscode-dev.json)       |
+| **Standard MCP Clients** | [📋 Copy config](examples/mcp/mcp-standard-dev.json) |
+
 The "Standard MCP Clients" config works with any MCP client following the MCP specification (Cursor, Claude Desktop, etc.). VSCode uses a different format.
 
-Copy the configuration file contents and **update** the `NETWORK_INVENTORY` path to your inventory file.
+**Setup:**
+
+- **uvx configs**: Update the `NETWORK_INVENTORY` path to your inventory file
+- **dev configs**: Update the `NETWORK_INVENTORY` path and `cwd` to your local project directory
 
 </details>
 
@@ -236,25 +246,44 @@ Run 'gnmibuddy.py COMMAND --help' for more information on a command.
 
 ## 🤖 Development
 
-You can use the MCP Inspector to test gNMIBuddy quickly.
+### Quick Testing with MCP Inspector
+
+**Recommended: Use uvx (no repository clone needed)**:
 
 ```bash
-NETWORK_INVENTORY=your_inventory.json \
-npx @modelcontextprotocol/inspector \
-uv run --with "mcp[cli],pygnmi,networkx,pyyaml" \
-mcp run mcp_server.py
+# Replace `xrd_sandbox.json` with your actual inventory file
+echo '#!/usr/bin/env bash' > /tmp/gnmibuddy-mcp-wrapper \
+&& echo 'exec uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp "$@"' >> /tmp/gnmibuddy-mcp-wrapper \
+&& chmod +x /tmp/gnmibuddy-mcp-wrapper \
+&& NETWORK_INVENTORY=xrd_sandbox.json npx @modelcontextprotocol/inspector /tmp/gnmibuddy-mcp-wrapper
+EOF
 ```
 
-If you have a local MCP client, you can use these configurations to test gNMIBuddy with your MCP client.
+**For local development (testing uncommitted changes)**:
 
-| **MCP Client**           | **Configuration**                                    |
-| ------------------------ | ---------------------------------------------------- |
-| **VSCode**               | [📋 Copy config](examples/mcp/vscode-dev.json)       |
-| **Standard MCP Clients** | [📋 Copy config](examples/mcp/mcp-standard-dev.json) |
+```bash
+# Run from your gNMIBuddy project directory (where pyproject.toml is located)
+cd /path/to/your/gNMIBuddy && \
+NETWORK_INVENTORY=your_inventory.json \
+npx @modelcontextprotocol/inspector \
+uv run --frozen gnmibuddy-mcp
+```
 
-Standard MCP Clients" config works with Cursor, Claude Desktop, and any other client following the MCP specification. VSCode requires specific format.
+### MCP Client Configuration
 
-Copy the configuration file contents and **update the paths** to point to your local repository.
+Choose the approach that fits your needs:
+
+| **Use Case**           | **VSCode**                                     | **Standard MCP Clients**                             |
+| ---------------------- | ---------------------------------------------- | ---------------------------------------------------- |
+| **Production/Testing** | [📋 Copy config](examples/mcp/vscode-uvx.json) | [📋 Copy config](examples/mcp/mcp-standard-uvx.json) |
+| **Local Development**  | [📋 Copy config](examples/mcp/vscode-dev.json) | [📋 Copy config](examples/mcp/mcp-standard-dev.json) |
+
+**Standard MCP Clients** config works with Cursor, Claude Desktop, and any other client following the MCP specification. VSCode requires a specific format.
+
+**Configuration requirements:**
+
+- **uvx configs**: Only update `NETWORK_INVENTORY` path to your inventory file
+- **dev configs**: Update both `NETWORK_INVENTORY` path and `cwd` to your local project directory
 
 ## 🧪 Testing with DevNet Sandbox
 

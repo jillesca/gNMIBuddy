@@ -31,6 +31,10 @@ class Command(Enum):
         "network",
         "Get complete network topology information. Queries all devices in inventory.",
     )
+    TOPOLOGY_ADJACENCY = (
+        "adjacency",
+        "Get complete topology adjacency information. Network-wide operation.",
+    )
 
     # Operations commands
     OPS_LOGS = ("logs", "Retrieve and filter device logs")

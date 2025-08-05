@@ -39,3 +39,16 @@ class TopologyNeighborsMetadata:
     device_in_topology: bool
     neighbor_count: Optional[int] = None
     isolation_reason: Optional[str] = None
+
+
+@dataclass
+class TopologyAdjacencyMetadata:
+    """
+    Metadata for topology adjacency operations.
+
+    Encapsulates contextual information about network-wide topology adjacency analysis.
+    """
+
+    scope: str
+    message: str
+    total_connections: Optional[int] = None

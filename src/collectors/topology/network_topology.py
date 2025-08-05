@@ -24,10 +24,32 @@ def get_network_topology() -> NetworkOperationResult:
         logger.debug(
             "Building complete IP topology graph for all devices in inventory"
         )
-        topology_graph = _build_graph_ip_only()
+        topology_result = _build_graph_ip_only()
         logger.debug(
-            "Topology graph build result: %s", type(topology_graph).__name__
+            "Topology graph build result: %s", type(topology_result).__name__
         )
+
+        # Check if ErrorResponse was encountered during topology building
+        if topology_result.has_errors and topology_result.error_response:
+            logger.error(
+                "Failed to build network topology due to gNMI errors: %s",
+                topology_result.error_response.message,
+            )
+            return NetworkOperationResult(
+                device_name="ALL_DEVICES",
+                ip_address="0.0.0.0",
+                nos="N/A",
+                operation_type="network_topology",
+                status=OperationStatus.FAILED,
+                data={},
+                error_response=topology_result.error_response,
+                metadata={
+                    "scope": "network-wide",
+                    "message": "Failed to build topology due to gNMI errors",
+                },
+            )
+
+        topology_graph = topology_result.graph
 
         if topology_graph is None:
             logger.warning("Topology graph is None")
@@ -37,7 +59,7 @@ def get_network_topology() -> NetworkOperationResult:
                 nos="N/A",
                 operation_type="network_topology",
                 status=OperationStatus.FAILED,
-                data={"direct_connections": []},
+                data={},
                 metadata={
                     "total_connections": 0,
                     "message": "Failed to build topology graph",
@@ -115,6 +137,7 @@ def get_network_topology() -> NetworkOperationResult:
             nos="N/A",
             operation_type="network_topology",
             status=OperationStatus.FAILED,
+            data={},
             error_response=error_response,
             metadata={
                 "scope": "network-wide",

@@ -25,3 +25,17 @@ class VpnInfoMetadata:
     vrf_filter: Optional[str] = None
     include_details: Optional[bool] = None
     excluded_internal_vrfs: Optional[List[str]] = None
+
+
+@dataclass
+class TopologyNeighborsMetadata:
+    """
+    Metadata for topology neighbors operations.
+
+    Encapsulates contextual information about device topology and neighbor discovery.
+    """
+
+    message: str
+    device_in_topology: bool
+    neighbor_count: Optional[int] = None
+    isolation_reason: Optional[str] = None

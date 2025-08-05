@@ -4,6 +4,7 @@ from src.schemas.responses import (
     OperationStatus,
     NetworkOperationResult,
 )
+from src.schemas.metadata import TopologyNeighborsMetadata
 from .utils import _build_graph_ip_only
 from src.logging import get_logger
 
@@ -23,13 +24,39 @@ def neighbors(device: Device) -> NetworkOperationResult:
     logger.debug("Getting neighbors for device %s", device.name)
 
     try:
-        topology_graph = _build_graph_ip_only()
+        topology_result = _build_graph_ip_only()
         logger.debug(
             "Topology graph built with %d nodes",
-            topology_graph.number_of_nodes() if topology_graph else 0,
+            (
+                topology_result.graph.number_of_nodes()
+                if topology_result.graph
+                else 0
+            ),
         )
 
         device_name = device.name
+
+        # Check if ErrorResponse was encountered during topology building
+        if topology_result.has_errors and topology_result.error_response:
+            logger.error(
+                "Failed to build topology due to gNMI errors: %s",
+                topology_result.error_response.message,
+            )
+            return NetworkOperationResult(
+                device_name=device.name,
+                ip_address=device.ip_address,
+                nos=device.nos.value,
+                operation_type="topology_neighbors",
+                status=OperationStatus.FAILED,
+                data={},
+                error_response=topology_result.error_response,
+                metadata=TopologyNeighborsMetadata(
+                    message="Failed to build topology due to gNMI errors",
+                    device_in_topology=False,
+                ).__dict__,
+            )
+
+        topology_graph = topology_result.graph
         neighbor_list = []
 
         if device_name not in topology_graph:
@@ -40,14 +67,15 @@ def neighbors(device: Device) -> NetworkOperationResult:
             return NetworkOperationResult(
                 device_name=device.name,
                 ip_address=device.ip_address,
-                nos=device.nos,
+                nos=device.nos.value,
                 operation_type="topology_neighbors",
                 status=OperationStatus.SUCCESS,
-                data={"neighbors": []},
-                metadata={
-                    "message": f"No neighbors found for device {device_name}",
-                    "device_in_topology": False,
-                },
+                data={},
+                metadata=TopologyNeighborsMetadata(
+                    message=f"No neighbors found for device {device_name}",
+                    device_in_topology=False,
+                    isolation_reason="legitimate",
+                ).__dict__,
             )
 
         logger.debug(
@@ -76,14 +104,15 @@ def neighbors(device: Device) -> NetworkOperationResult:
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos,
+            nos=device.nos.value,
             operation_type="topology_neighbors",
             status=OperationStatus.SUCCESS,
-            data={"neighbors": neighbor_list},
-            metadata={
-                "neighbor_count": len(neighbor_list),
-                "device_in_topology": True,
-            },
+            data={},
+            metadata=TopologyNeighborsMetadata(
+                message=f"Found {len(neighbor_list)} neighbors for device {device_name}",
+                device_in_topology=True,
+                neighbor_count=len(neighbor_list),
+            ).__dict__,
         )
 
     except (KeyError, ValueError, TypeError) as e:
@@ -98,8 +127,13 @@ def neighbors(device: Device) -> NetworkOperationResult:
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos,
+            nos=device.nos.value,
             operation_type="topology_neighbors",
             status=OperationStatus.FAILED,
+            data={},
             error_response=error_response,
+            metadata=TopologyNeighborsMetadata(
+                message="Error occurred during neighbor discovery",
+                device_in_topology=False,
+            ).__dict__,
         )

@@ -1,8 +1,9 @@
 from collections import defaultdict
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Tuple, Optional
 import networkx as nx
+from dataclasses import dataclass
 from src.schemas.models import Device, DeviceErrorResult
-from src.schemas.responses import OperationStatus
+from src.schemas.responses import OperationStatus, ErrorResponse
 from src.inventory.manager import InventoryManager
 from src.processors.topology_processor import extract_interface_subnets
 from src.collectors.routing import get_routing_info
@@ -14,6 +15,26 @@ logger = get_logger(__name__)
 
 # In-memory cache for the topology graph
 _cached_graph = None
+
+
+@dataclass
+class TopologyBuildResult:
+    """
+    Result of topology building operation containing both the graph and error information.
+
+    Attributes:
+        graph: NetworkX graph representing the topology
+        has_errors: Whether errors occurred during interface collection
+        error_devices: List of device names that encountered errors
+        total_devices: Total number of devices processed
+        error_response: First ErrorResponse encountered, if any
+    """
+
+    graph: nx.Graph
+    has_errors: bool
+    error_devices: List[str]
+    total_devices: int
+    error_response: Optional[ErrorResponse] = None
 
 
 def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
@@ -148,7 +169,7 @@ def build_ip_only_graph_from_interface_results(interface_results) -> nx.Graph:
     return topology_graph
 
 
-def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
+def _build_graph_ip_only(max_workers: int = 10) -> TopologyBuildResult:
 
     logger.debug("Getting device list from inventory")
     device_list_result = InventoryManager.list_devices()
@@ -167,13 +188,32 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
         for device_name, result in zip(device_names, raw_interface_results)
     ]
 
-    # Log some details about the results
+    # Track errors and devices that encountered them
     success_count = 0
     error_count = 0
+    error_devices = []
+    first_error_response = None
+
     for i, result in enumerate(interface_results):
+        device_name = device_names[i]
         if isinstance(result, dict):
-            if "error" in result or "feature_not_found" in result:
+            if "error" in result:
                 error_count += 1
+                error_devices.append(device_name)
+                # Capture the first error response for fail-fast behavior
+                if first_error_response is None:
+                    error_message = result.get("error", "Unknown error")
+                    first_error_response = ErrorResponse(
+                        type="gNMIException", message=error_message
+                    )
+                    logger.debug(
+                        "Captured first ErrorResponse from device %s: %s",
+                        device_name,
+                        error_message,
+                    )
+            elif "feature_not_found" in result:
+                # Feature not found is not considered an error for topology building
+                pass
             else:
                 success_count += 1
         logger.debug(
@@ -193,8 +233,10 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
         error_count,
     )
 
-    # Warn if significant portion of interface collection failed
+    # Determine if we have significant errors that should cause fail-fast
     total_devices = success_count + error_count
+    has_errors = error_count > 0
+
     if total_devices > 0 and error_count > 0:
         error_percentage = (error_count / total_devices) * 100
         if error_percentage >= 25:  # Warn if 25% or more failed
@@ -213,7 +255,13 @@ def _build_graph_ip_only(max_workers: int = 10) -> nx.Graph:
         graph.number_of_edges(),
     )
 
-    return graph
+    return TopologyBuildResult(
+        graph=graph,
+        has_errors=has_errors,
+        error_devices=error_devices,
+        total_devices=total_devices,
+        error_response=first_error_response,
+    )
 
 
 def _get_interface(device: str) -> dict:

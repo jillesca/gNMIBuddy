@@ -271,3 +271,88 @@ def get_network_topology_api() -> NetworkOperationResult:
     """
 
     return run(None, get_network_topology)
+
+
+def get_topology_adjacency_api(device_name: str) -> NetworkOperationResult:
+    """
+    Get network-wide IP adjacency analysis for complete topology understanding.
+
+    This function performs a comprehensive network-wide topology adjacency analysis,
+    providing insight into all IP connections across the entire network infrastructure.
+    It uses robust error handling to distinguish between gNMI errors and legitimate
+    empty topology scenarios.
+
+    The function implements fail-fast behavior - if gNMI errors are encountered during
+    topology building (such as authentication failures or connectivity issues), it
+    immediately returns an error status rather than potentially misleading empty results.
+
+    Key Features:
+    - Network-wide scope (not limited to single device)
+    - Robust ErrorResponse detection and fail-fast behavior
+    - Uniform data structure for both errors and legitimate empty results
+    - Clear status differentiation between failures and successful empty topologies
+    - Structured metadata providing context about the operation
+
+    Args:
+        device_name: Name of the device in inventory (used for interface compliance,
+                    operation is network-wide)
+
+    Returns:
+        NetworkOperationResult containing:
+        - status: "failed" for gNMI errors, "success" for legitimate empty/populated
+        - data: {} (empty dict for both error and success cases as per v0.1.0+ standard)
+        - error_response: Present only when gNMI errors occurred
+        - metadata: Context about operation scope, connection count, and result details
+
+    Example Error Response (Authentication Failure):
+        {
+            "status": "failed",
+            "data": {},
+            "error_response": {
+                "type": "gNMIException",
+                "message": "GRPC ERROR Host: 10.10.20.101:57777, Error: authentication failed"
+            },
+            "metadata": {
+                "scope": "network-wide",
+                "message": "Failed to build topology adjacency due to gNMI errors"
+            }
+        }
+
+    Example Success Response (Empty Network):
+        {
+            "status": "success",
+            "data": {},
+            "metadata": {
+                "total_connections": 0,
+                "scope": "network-wide",
+                "message": "No topology connections discovered"
+            }
+        }
+    """
+    from src.cmd.commands.topology.adjacency import ip_adjacency_dump_cmd
+    from src.inventory import get_device
+    from src.schemas.models import DeviceErrorResult
+
+    device_result = get_device(device_name)
+    if isinstance(device_result, DeviceErrorResult):
+        # Return error if device not found
+        from src.schemas.responses import (
+            NetworkOperationResult,
+            OperationStatus,
+        )
+        from src.schemas.metadata import TopologyAdjacencyMetadata
+
+        return NetworkOperationResult(
+            device_name=device_name,
+            ip_address="0.0.0.0",
+            nos="unknown",
+            operation_type="topology_adjacency",
+            status=OperationStatus.FAILED,
+            data={},
+            metadata=TopologyAdjacencyMetadata(
+                scope="network-wide",
+                message=f"Device '{device_name}' not found in inventory",
+            ).__dict__,
+        )
+
+    return ip_adjacency_dump_cmd(device_result)

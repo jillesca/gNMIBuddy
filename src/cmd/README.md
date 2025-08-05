@@ -616,6 +616,23 @@ class MyCommandErrorProvider(CommandErrorProvider):
 
 ## Error Handling System
 
+gNMIBuddy v0.1.0+ implements comprehensive error handling that distinguishes between genuine gNMI errors and legitimate empty data scenarios.
+
+### Key Error Handling Features
+
+- **ErrorResponse Detection**: Direct `isinstance(response, ErrorResponse)` checks from gNMI client
+- **Fail-Fast Behavior**: Immediate error return when gNMI connectivity/authentication fails
+- **Uniform Data Structures**: Both errors and legitimate empty results return `data: {}`
+- **Status Differentiation**: Clear distinction between `"failed"` and `"success"` statuses
+- **Class-Based Metadata**: Structured metadata using dedicated dataclass objects
+
+### Error Types
+
+**ErrorResponse**: gNMI-level errors (authentication, connectivity, gRPC server issues)
+**FeatureNotFoundResponse**: Protocol/feature not supported on device
+
+### CLI Error Handling
+
 ### Error Types Handled
 
 1. **Click Exceptions**: Command line parsing errors

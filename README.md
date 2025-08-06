@@ -17,20 +17,6 @@ Retrieve structured network data in JSON format:
 
 See the [API definition](/api.py) for all available APIs and options.
 
-## 🔧 Error Handling
-
-gNMIBuddy v0.1.0+ implements comprehensive error handling that distinguishes between genuine gNMI errors and legitimate empty data scenarios. The system uses fail-fast behavior and uniform data structures for reliable network operations.
-
-**Key Features:**
-
-- ✅ Direct `ErrorResponse` detection from gNMI client
-- ✅ Fail-fast behavior on authentication/connectivity errors
-- ✅ Uniform `data: {}` structure for both errors and empty results
-- ✅ Class-based metadata encapsulation for context
-- ✅ Clear status differentiation (`failed` vs `success`)
-
-For detailed information, see the [Error Handling Guide](docs/ERROR_HANDLING.md).
-
 ## ⚡ Prerequisites
 
 - Python `3.13+`

@@ -4,7 +4,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco1234566",
+    "password": "C1sco12345",
     "name": "xrd-1"
   },
   {
@@ -12,7 +12,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco123456",
+    "password": "C1sco12345",
     "name": "xrd-2"
   },
   {
@@ -20,7 +20,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco123456",
+    "password": "C1sco12345",
     "name": "xrd-3"
   },
   {
@@ -28,7 +28,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco123456",
+    "password": "C1sco12345",
     "name": "xrd-4"
   },
   {
@@ -36,7 +36,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco123456",
+    "password": "C1sco12345",
     "name": "xrd-5"
   },
   {
@@ -44,7 +44,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco123456",
+    "password": "C1sco12345",
     "name": "xrd-6"
   },
   {
@@ -52,7 +52,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco123456",
+    "password": "C1sco12345",
     "name": "xrd-7"
   },
   {
@@ -60,7 +60,7 @@
     "nos": "iosxr",
     "port": 57777,
     "username": "cisco",
-    "password": "C1sco123456",
+    "password": "C1sco12345",
     "name": "xrd-8"
   }
 ]

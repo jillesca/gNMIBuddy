@@ -11,12 +11,7 @@ from src.cmd.registries.command_registry import (
     register_error_provider,
 )
 from src.logging import get_logger
-from src.collectors.topology.network_topology import get_network_topology
-from src.schemas.responses import (
-    NetworkOperationResult,
-    ErrorResponse,
-    OperationStatus,
-)
+from src.schemas.responses import NetworkOperationResult
 
 
 from src.cmd.examples.example_builder import (
@@ -42,100 +37,9 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
         NetworkOperationResult: Response object containing all IP adjacencies in the network
                               with proper ErrorResponse detection and fail-fast behavior
     """
-    logger.debug("Starting topology adjacency dump for network-wide analysis")
+    from src.collectors.topology.adjacency import get_topology_adjacency
 
-    try:
-        # Get network topology with built-in ErrorResponse detection
-        topology_result = get_network_topology()
-
-        # Check if the topology building encountered ErrorResponse
-        if isinstance(topology_result.error_response, ErrorResponse):
-            logger.error(
-                "Failed to build topology adjacency due to gNMI errors: %s",
-                topology_result.error_response.message,
-            )
-            # Fail fast when ErrorResponse detected
-            return NetworkOperationResult(
-                device_name=device.name if device else "ALL_DEVICES",
-                ip_address=device.ip_address if device else "0.0.0.0",
-                nos=device.nos if device else "N/A",
-                operation_type="topology_adjacency",
-                status=OperationStatus.FAILED,
-                data={},  # Empty dict as required
-                error_response=topology_result.error_response,
-                metadata={
-                    "scope": "network-wide",
-                    "message": "Failed to build topology adjacency due to gNMI errors",
-                },
-            )
-
-        # If topology was successful, check if we have connections
-        if topology_result.status == OperationStatus.SUCCESS:
-            connections = topology_result.data.get("direct_connections", [])
-            total_connections = len(connections)
-
-            logger.info(
-                "Topology adjacency completed: %d connections found",
-                total_connections,
-            )
-
-            return NetworkOperationResult(
-                device_name=device.name if device else "ALL_DEVICES",
-                ip_address=device.ip_address if device else "0.0.0.0",
-                nos=device.nos if device else "N/A",
-                operation_type="topology_adjacency",
-                status=OperationStatus.SUCCESS,
-                data={},  # Empty dict for both error and legitimate empty as required
-                metadata={
-                    "total_connections": total_connections,
-                    "scope": "network-wide",
-                    "message": (
-                        "No topology connections discovered"
-                        if total_connections == 0
-                        else f"Topology adjacency analysis complete with {total_connections} connections"
-                    ),
-                },
-            )
-        else:
-            # Handle other failure cases from get_network_topology
-            logger.error(
-                "Network topology building failed with status: %s",
-                topology_result.status,
-            )
-            return NetworkOperationResult(
-                device_name=device.name if device else "ALL_DEVICES",
-                ip_address=device.ip_address if device else "0.0.0.0",
-                nos=device.nos if device else "N/A",
-                operation_type="topology_adjacency",
-                status=OperationStatus.FAILED,
-                data={},  # Empty dict as required
-                error_response=topology_result.error_response,
-                metadata={
-                    "scope": "network-wide",
-                    "message": "Failed to build topology adjacency due to network topology errors",
-                },
-            )
-
-    except Exception as e:
-        logger.error("Unexpected error in topology adjacency: %s", str(e))
-        logger.debug("Exception details: %s", str(e), exc_info=True)
-        error_response = ErrorResponse(
-            type="TOPOLOGY_ADJACENCY_ERROR",
-            message=f"Error building topology adjacency: {str(e)}",
-        )
-        return NetworkOperationResult(
-            device_name=device.name if device else "ALL_DEVICES",
-            ip_address=device.ip_address if device else "0.0.0.0",
-            nos=device.nos if device else "N/A",
-            operation_type="topology_adjacency",
-            status=OperationStatus.FAILED,
-            data={},  # Empty dict as required
-            error_response=error_response,
-            metadata={
-                "scope": "network-wide",
-                "message": "Unexpected error during topology adjacency analysis",
-            },
-        )
+    return get_topology_adjacency(device.name)
 
 
 def topology_adjacency_examples() -> ExampleSet:

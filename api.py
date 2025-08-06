@@ -5,19 +5,20 @@ that can be used by both MCP and CLI interfaces.
 """
 from typing import Optional, Union
 
+from src.schemas.models import DeviceListResult
+from src.schemas.responses import NetworkOperationResult
 from src.services.commands import run
-from src.inventory import list_available_devices, list_available_devices_safe
+from src.inventory import list_available_devices_safe
+from src.collectors.logs import get_logs as collect_logs
 from src.collectors.vpn import get_vpn_info as collect_vpn_info
 from src.collectors.mpls import get_mpls_info as collect_mpls_info
 from src.collectors.routing import get_routing_info as collect_routing_info
-from src.collectors.interfaces import get_interfaces as collect_interfaces
-from src.collectors.logs import get_logs as collect_logs
 from src.collectors.system import get_system_info as collect_system_info
+from src.collectors.interfaces import get_interfaces as collect_interfaces
 from src.collectors.profile import get_device_profile as collect_device_profile
 from src.collectors.topology.neighbors import neighbors
+from src.collectors.topology.adjacency import get_topology_adjacency
 from src.collectors.topology.network_topology import get_network_topology
-from src.schemas.responses import NetworkOperationResult
-from src.schemas.models import DeviceListResult
 
 
 def get_device_profile_api(device_name: str) -> NetworkOperationResult:
@@ -329,29 +330,5 @@ def get_topology_adjacency_api(device_name: str) -> NetworkOperationResult:
             }
         }
     """
-    from src.cmd.commands.topology.adjacency import ip_adjacency_dump_cmd
-    from src.inventory import get_device
-    from src.schemas.models import DeviceErrorResult
 
-    device_result = get_device(device_name)
-    if isinstance(device_result, DeviceErrorResult):
-        # Return error if device not found
-        from src.schemas.responses import (
-            NetworkOperationResult,
-            OperationStatus,
-        )
-
-        return NetworkOperationResult(
-            device_name=device_name,
-            ip_address="0.0.0.0",
-            nos="unknown",
-            operation_type="topology_adjacency",
-            status=OperationStatus.FAILED,
-            data={},
-            metadata={
-                "scope": "network-wide",
-                "message": f"Device '{device_name}' not found in inventory",
-            },
-        )
-
-    return ip_adjacency_dump_cmd(device_result)
+    return get_topology_adjacency(device_name)

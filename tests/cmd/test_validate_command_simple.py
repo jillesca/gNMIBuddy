@@ -6,8 +6,8 @@ Tests that the validate command includes topology_adjacency function properly.
 """
 
 from src.schemas.models import Device, NetworkOS
-from src.inventory.manager import InventoryManager
 from src.cmd.commands.ops.validate import _run_collector_tests
+from src.inventory.manager import InventoryManager
 
 
 class TestValidateCommandIntegration:
@@ -46,20 +46,3 @@ class TestValidateCommandIntegration:
         source = inspect.getsource(_run_collector_tests)
         assert "topology_adjacency" in source
         assert "ip_adjacency_dump_cmd" in source
-
-    def test_validate_command_function_import(self):
-        """Test that validate command properly imports the adjacency function."""
-        # Simple test to verify the function is imported and available
-        from src.cmd.commands.ops.validate import ip_adjacency_dump_cmd
-
-        # Verify the function is callable
-        assert callable(ip_adjacency_dump_cmd)
-
-        # Verify it appears in the _run_collector_tests function
-        import inspect
-
-        source = inspect.getsource(_run_collector_tests)
-        assert "topology_adjacency" in source
-        assert "ip_adjacency_dump_cmd" in source
-
-        # This verifies the integration without making gNMI calls

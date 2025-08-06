@@ -19,6 +19,7 @@ from src.inventory.file_handler import (
     load_inventory,
     parse_json_file,
 )
+from src.config.environment import reset_settings
 
 
 class TestInventoryFileNotFound:
@@ -68,6 +69,9 @@ class TestInventoryFileNotFound:
         """Test that load_inventory raises FileNotFoundError when a non-existent environment variable path is used."""
         # Set a non-existent file path in the environment variable
         nonexistent_file = "nonexistent_env_inventory.json"
+
+        # Reset global settings to ensure clean state
+        reset_settings()
 
         with patch.dict(os.environ, {"NETWORK_INVENTORY": nonexistent_file}):
             # Verify that FileNotFoundError is raised

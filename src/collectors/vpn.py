@@ -13,7 +13,7 @@ from src.schemas.responses import (
     FeatureNotFoundResponse,
 )
 from src.schemas.models import Device
-from src.schemas.metadata import VpnInfoMetadata
+
 from src.processors.protocols.vrf import (
     process_vrf_data,
     generate_individual_vrf_summary,
@@ -69,9 +69,7 @@ def get_vpn_info(
             status=OperationStatus.FAILED,
             data={},
             error_response=vrf_names_result,
-            metadata=VpnInfoMetadata(
-                message="Failed to discover VRFs due to gNMI error"
-            ).__dict__,
+            metadata={"message": "Failed to discover VRFs due to gNMI error"},
         )
 
     # Check if VRF feature is not found/supported
@@ -89,15 +87,15 @@ def get_vpn_info(
             status=OperationStatus.FEATURE_NOT_AVAILABLE,
             data={},
             feature_not_found_response=vrf_names_result,
-            metadata=VpnInfoMetadata(
-                message="VRF feature not available on device",
-                total_vrfs_on_device=0,
-                vrfs_returned=0,
-                vrf_filter_applied=vrf_name is not None,
-                vrf_filter=vrf_name,
-                include_details=include_details,
-                excluded_internal_vrfs=DEFAULT_INTERNAL_VRFS,
-            ).__dict__,
+            metadata={
+                "message": "VRF feature not available on device",
+                "total_vrfs_on_device": 0,
+                "vrfs_returned": 0,
+                "vrf_filter_applied": vrf_name is not None,
+                "vrf_filter": vrf_name,
+                "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
+            },
         )
 
     # At this point, vrf_names_result must be a List[str]
@@ -110,15 +108,15 @@ def get_vpn_info(
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
             data={},
-            metadata=VpnInfoMetadata(
-                message="No VRFs found",
-                total_vrfs_on_device=0,
-                vrfs_returned=0,
-                vrf_filter_applied=vrf_name is not None,
-                vrf_filter=vrf_name,
-                include_details=include_details,
-                excluded_internal_vrfs=DEFAULT_INTERNAL_VRFS,
-            ).__dict__,
+            metadata={
+                "message": "No VRFs found",
+                "total_vrfs_on_device": 0,
+                "vrfs_returned": 0,
+                "vrf_filter_applied": vrf_name is not None,
+                "vrf_filter": vrf_name,
+                "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
+            },
         )
 
     total_vrfs_found = len(vrf_names_result)
@@ -181,19 +179,19 @@ def _get_vrf_details(
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
             data={},
-            metadata=VpnInfoMetadata(
-                message=(
+            metadata={
+                "message": (
                     "No VRFs found matching filter"
                     if vrf_name_filter
                     else "No VRFs found"
                 ),
-                total_vrfs_on_device=total_vrfs_found,
-                vrfs_returned=0,
-                vrf_filter_applied=vrf_name_filter is not None,
-                vrf_filter=vrf_name_filter,
-                include_details=include_details,
-                excluded_internal_vrfs=DEFAULT_INTERNAL_VRFS,
-            ).__dict__,
+                "total_vrfs_on_device": total_vrfs_found,
+                "vrfs_returned": 0,
+                "vrf_filter_applied": vrf_name_filter is not None,
+                "vrf_filter": vrf_name_filter,
+                "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
+            },
         )
 
     # Build path queries for each VRF
@@ -233,9 +231,9 @@ def _get_vrf_details(
             status=OperationStatus.FAILED,
             data={},
             error_response=response,
-            metadata=VpnInfoMetadata(
-                message="Failed to retrieve VRF details due to gNMI error"
-            ).__dict__,
+            metadata={
+                "message": "Failed to retrieve VRF details due to gNMI error"
+            },
         )
 
     try:
@@ -292,15 +290,15 @@ def _get_vrf_details(
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
             data={"vrfs": result_data},
-            metadata=VpnInfoMetadata(
-                message="VRF information retrieved",
-                total_vrfs_on_device=total_vrfs_found,
-                vrfs_returned=len(result_data),
-                vrf_filter_applied=vrf_name_filter is not None,
-                vrf_filter=vrf_name_filter,
-                include_details=include_details,
-                excluded_internal_vrfs=DEFAULT_INTERNAL_VRFS,
-            ).__dict__,
+            metadata={
+                "message": "VRF information retrieved",
+                "total_vrfs_on_device": total_vrfs_found,
+                "vrfs_returned": len(result_data),
+                "vrf_filter_applied": vrf_name_filter is not None,
+                "vrf_filter": vrf_name_filter,
+                "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
+            },
         )
 
         logger.info(
@@ -333,7 +331,5 @@ def _get_vrf_details(
             status=OperationStatus.FAILED,
             data={},
             error_response=error_response,
-            metadata=VpnInfoMetadata(
-                message="Error processing VRF data"
-            ).__dict__,
+            metadata={"message": "Error processing VRF data"},
         )

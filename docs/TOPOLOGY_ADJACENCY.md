@@ -117,7 +117,7 @@ The command analyzes the complete network topology, not just connections from a 
 
 ### 4. Structured Metadata
 
-The `metadata` field uses the `TopologyAdjacencyMetadata` class to provide structured context:
+The `metadata` field uses a plain dictionary to provide structured context:
 
 - `scope`: Always "network-wide" for this command
 - `message`: Human-readable description of the result
@@ -180,7 +180,7 @@ The validate command now includes 8 total tests (increased from 7) with topology
 ### For Developers
 
 1. **Always check `isinstance(response, ErrorResponse)`** for error detection
-2. **Use `TopologyAdjacencyMetadata` class** for structured metadata
+2. **Use plain dictionary metadata** for structured metadata
 3. **Return `data: {}`** for both errors and legitimate empty results
 4. **Provide clear, actionable error messages** in metadata
 

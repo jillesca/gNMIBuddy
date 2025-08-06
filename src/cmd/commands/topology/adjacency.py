@@ -17,7 +17,7 @@ from src.schemas.responses import (
     ErrorResponse,
     OperationStatus,
 )
-from src.schemas.metadata import TopologyAdjacencyMetadata
+
 
 from src.cmd.examples.example_builder import (
     ExampleBuilder,
@@ -63,10 +63,10 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
                 status=OperationStatus.FAILED,
                 data={},  # Empty dict as required
                 error_response=topology_result.error_response,
-                metadata=TopologyAdjacencyMetadata(
-                    scope="network-wide",
-                    message="Failed to build topology adjacency due to gNMI errors",
-                ),
+                metadata={
+                    "scope": "network-wide",
+                    "message": "Failed to build topology adjacency due to gNMI errors",
+                },
             )
 
         # If topology was successful, check if we have connections
@@ -86,15 +86,15 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
                 operation_type="topology_adjacency",
                 status=OperationStatus.SUCCESS,
                 data={},  # Empty dict for both error and legitimate empty as required
-                metadata=TopologyAdjacencyMetadata(
-                    total_connections=total_connections,
-                    scope="network-wide",
-                    message=(
+                metadata={
+                    "total_connections": total_connections,
+                    "scope": "network-wide",
+                    "message": (
                         "No topology connections discovered"
                         if total_connections == 0
                         else f"Topology adjacency analysis complete with {total_connections} connections"
                     ),
-                ),
+                },
             )
         else:
             # Handle other failure cases from get_network_topology
@@ -110,10 +110,10 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
                 status=OperationStatus.FAILED,
                 data={},  # Empty dict as required
                 error_response=topology_result.error_response,
-                metadata=TopologyAdjacencyMetadata(
-                    scope="network-wide",
-                    message="Failed to build topology adjacency due to network topology errors",
-                ),
+                metadata={
+                    "scope": "network-wide",
+                    "message": "Failed to build topology adjacency due to network topology errors",
+                },
             )
 
     except Exception as e:
@@ -131,10 +131,10 @@ def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
             status=OperationStatus.FAILED,
             data={},  # Empty dict as required
             error_response=error_response,
-            metadata=TopologyAdjacencyMetadata(
-                scope="network-wide",
-                message="Unexpected error during topology adjacency analysis",
-            ),
+            metadata={
+                "scope": "network-wide",
+                "message": "Unexpected error during topology adjacency analysis",
+            },
         )
 
 

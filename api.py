@@ -340,7 +340,6 @@ def get_topology_adjacency_api(device_name: str) -> NetworkOperationResult:
             NetworkOperationResult,
             OperationStatus,
         )
-        from src.schemas.metadata import TopologyAdjacencyMetadata
 
         return NetworkOperationResult(
             device_name=device_name,
@@ -349,10 +348,10 @@ def get_topology_adjacency_api(device_name: str) -> NetworkOperationResult:
             operation_type="topology_adjacency",
             status=OperationStatus.FAILED,
             data={},
-            metadata=TopologyAdjacencyMetadata(
-                scope="network-wide",
-                message=f"Device '{device_name}' not found in inventory",
-            ).__dict__,
+            metadata={
+                "scope": "network-wide",
+                "message": f"Device '{device_name}' not found in inventory",
+            },
         )
 
     return ip_adjacency_dump_cmd(device_result)

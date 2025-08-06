@@ -22,6 +22,7 @@ from src.inventory.file_handler import (
     parse_json_file,
     resolve_inventory_path,  # Add the new function
 )
+from src.config.environment import reset_settings
 
 
 class TestFileHandlerPaths:
@@ -142,9 +143,21 @@ class TestFileHandlerPaths:
         expected_absolute = os.path.abspath(relative_path)
         assert result == expected_absolute
 
-    def test_get_inventory_path_env_absolute(self, temp_inventory_file):
+    def test_get_inventory_path_env_absolute(self):
         """Test get_inventory_path with absolute path from environment variable."""
-        absolute_path = os.path.abspath(temp_inventory_file)
+        # Use the test_devices.json file from the tests directory
+        test_inventory_file = os.path.join(
+            os.path.dirname(__file__), "test_devices.json"
+        )
+        absolute_path = os.path.abspath(test_inventory_file)
+
+        # Verify the test file exists
+        assert os.path.exists(
+            absolute_path
+        ), f"Test file not found: {absolute_path}"
+
+        # Reset global settings to ensure clean state
+        reset_settings()
 
         with patch.dict(os.environ, {"NETWORK_INVENTORY": absolute_path}):
             result = get_inventory_path()

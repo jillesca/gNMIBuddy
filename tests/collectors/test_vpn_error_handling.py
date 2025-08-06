@@ -22,7 +22,7 @@ from src.schemas.responses import (
     OperationStatus,
     NetworkOperationResult,
 )
-from src.schemas.metadata import VpnInfoMetadata
+
 from src.collectors.vpn import get_vpn_info
 
 
@@ -175,7 +175,7 @@ class TestVpnErrorHandling:
         assert "is_error_response(" not in source
 
     def test_vpn_info_metadata_class_encapsulation(self):
-        """Test that VpnInfoMetadata class is used for data encapsulation."""
+        """Test that dictionary metadata is used for data encapsulation."""
         # Verify that the function uses classes for data encapsulation, not dictionaries
         with patch(
             "src.collectors.vpn.get_non_default_vrf_names"
@@ -185,7 +185,7 @@ class TestVpnErrorHandling:
             result = get_vpn_info(self.device)
 
             # Verify that metadata comes from a class, not direct dictionary construction
-            # The VpnInfoMetadata class should be used for structured data
+            # The dictionary metadata should be used for structured data
             assert isinstance(result.metadata, dict)
             assert "message" in result.metadata
             assert "total_vrfs_on_device" in result.metadata

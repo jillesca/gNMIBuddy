@@ -22,7 +22,7 @@ from src.schemas.responses import (
     OperationStatus,
     NetworkOperationResult,
 )
-from src.schemas.metadata import TopologyAdjacencyMetadata
+
 from src.cmd.commands.topology.adjacency import ip_adjacency_dump_cmd
 
 
@@ -280,7 +280,7 @@ class TestTopologyAdjacencyErrorHandling:
         assert "is_error_response(" not in source
 
     def test_topology_adjacency_metadata_class_encapsulation(self):
-        """Test that TopologyAdjacencyMetadata class is used for data encapsulation."""
+        """Test that dictionary metadata is used for data encapsulation."""
         # Verify that the function uses classes for data encapsulation, not dictionaries
         with patch(
             "src.cmd.commands.topology.adjacency.get_network_topology"
@@ -293,7 +293,7 @@ class TestTopologyAdjacencyErrorHandling:
 
             result = ip_adjacency_dump_cmd(self.device)
 
-            # Verify that metadata comes from TopologyAdjacencyMetadata class
+            # Verify that metadata comes from dictionary structure
             assert result.metadata is not None
             assert (
                 self._get_metadata_value(result.metadata, "scope") is not None

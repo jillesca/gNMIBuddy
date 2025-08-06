@@ -21,7 +21,7 @@ from src.schemas.responses import (
     OperationStatus,
     NetworkOperationResult,
 )
-from src.schemas.metadata import TopologyNeighborsMetadata
+
 from src.collectors.topology.neighbors import neighbors
 
 
@@ -239,7 +239,7 @@ class TestTopologyNeighborsErrorHandling:
         assert "is_error_response(" not in source
 
     def test_topology_neighbors_metadata_class_encapsulation(self):
-        """Test that TopologyNeighborsMetadata class is used for data encapsulation."""
+        """Test that dictionary metadata is used for data encapsulation."""
         # Verify that the function uses classes for data encapsulation, not dictionaries
         with patch(
             "src.collectors.topology.neighbors._build_graph_ip_only"

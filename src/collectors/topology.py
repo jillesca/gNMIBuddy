@@ -9,33 +9,9 @@ from src.schemas.responses import (
     OperationStatus,
 )
 
-# Note: adjacency_dump import is commented out due to missing module
-# from src.collectors.topology.adjacency_dump import adjacency_dump
 from src.collectors.topology.path import path
 from src.collectors.topology.segment import segment
 from src.collectors.topology.neighbors import neighbors
-from src.collectors.topology.network_topology import get_network_topology
-
-
-# Note: adjacency_dump_cmd is commented out due to missing adjacency_dump module
-# def adjacency_dump_cmd(device) -> NetworkOperationResult:
-#     try:
-#         edges = adjacency_dump()
-#         return create_success_result(
-#             device_name=device.name,
-#             operation_type="topology_info",
-#             data={"adjacencies": edges}
-#         )
-#     except (KeyError, ValueError, TypeError) as e:
-#         error_response = ErrorResponse(
-#             type="TOPOLOGY_ERROR",
-#             message=f"Error retrieving adjacencies: {str(e)}",
-#         )
-#         return convert_error_response(
-#             device_name=device.name,
-#             operation_type="topology_info",
-#             error_response=error_response
-#         )
 
 
 def neighbors_cmd(device) -> NetworkOperationResult:
@@ -129,19 +105,3 @@ def segment_cmd(device, network) -> NetworkOperationResult:
             status=OperationStatus.FAILED,
             error_response=error_response,
         )
-
-
-def ip_adjacency_dump_cmd(device) -> NetworkOperationResult:
-    """
-    Get the complete IP adjacency dump for the entire network topology.
-
-    This function returns all direct IP connections in the network, not just for
-    the specified device. The device parameter is used for interface compliance.
-
-    Args:
-        device: Device object (used for interface compliance, but operation is network-wide)
-
-    Returns:
-        NetworkOperationResult: Response object containing all IP adjacencies in the network
-    """
-    return get_network_topology()

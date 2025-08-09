@@ -17,7 +17,6 @@ from src.collectors.system import get_system_info as collect_system_info
 from src.collectors.interfaces import get_interfaces as collect_interfaces
 from src.collectors.profile import get_device_profile as collect_device_profile
 from src.collectors.topology.neighbors import neighbors
-from src.collectors.topology.adjacency import get_topology_adjacency
 from src.collectors.topology.network_topology import get_network_topology
 
 
@@ -209,35 +208,9 @@ def get_topology_neighbors(
     return run(device_name, neighbors)
 
 
-# def get_topology_segment(
-#     device_name: str,
-#     network: str,
-# ) -> Dict[str, Any]:
-#     """
-#     List devices on the specified L3 segment.
-
-#     Args:
-#         device_name: Name of the device in the inventory (used for context)
-#         network: The L3 network segment (e.g., "10.0.0.0/30")
-
-#     Returns:
-#         Dictionary with the device name and the list of devices on the specified segment.
-#         Example:
-#         {
-#             "device": "PE1",
-#             "segment": {
-#                 "network": "10.0.0.0/30",
-#                 "devices": ["PE1", "P1"]
-#             }
-#         }
-#     """
-
-#     return run(device_name, segment, network)
-
-
 def get_network_topology_api() -> NetworkOperationResult:
     """
-    Retrieve the full L3 IP-only direct connection list for all devices in the network (excluding management interfaces).
+    Retrieve the full L3 IP-only direct connection list for all devices in the network inventory (excluding management interfaces).
 
     This function returns a detailed list of all discovered L3 IP direct connections (edges) in the network topology graph. Each connection describes a direct L3 IP connectivity between two devices, including interface names, IP addresses, and the shared network segment. The output is suitable for LLMs and automation tools to reason about network structure, connectivity, and path computation.
 
@@ -272,63 +245,3 @@ def get_network_topology_api() -> NetworkOperationResult:
     """
 
     return run(None, get_network_topology)
-
-
-def get_topology_adjacency_api(device_name: str) -> NetworkOperationResult:
-    """
-    Get network-wide IP adjacency analysis for complete topology understanding.
-
-    This function performs a comprehensive network-wide topology adjacency analysis,
-    providing insight into all IP connections across the entire network infrastructure.
-    It uses robust error handling to distinguish between gNMI errors and legitimate
-    empty topology scenarios.
-
-    The function implements fail-fast behavior - if gNMI errors are encountered during
-    topology building (such as authentication failures or connectivity issues), it
-    immediately returns an error status rather than potentially misleading empty results.
-
-    Key Features:
-    - Network-wide scope (not limited to single device)
-    - Robust ErrorResponse detection and fail-fast behavior
-    - Uniform data structure for both errors and legitimate empty results
-    - Clear status differentiation between failures and successful empty topologies
-    - Structured metadata providing context about the operation
-
-    Args:
-        device_name: Name of the device in inventory (used for interface compliance,
-                    operation is network-wide)
-
-    Returns:
-        NetworkOperationResult containing:
-        - status: "failed" for gNMI errors, "success" for legitimate empty/populated
-        - data: {} (empty dict for both error and success cases as per v0.1.0+ standard)
-        - error_response: Present only when gNMI errors occurred
-        - metadata: Context about operation scope, connection count, and result details
-
-    Example Error Response (Authentication Failure):
-        {
-            "status": "failed",
-            "data": {},
-            "error_response": {
-                "type": "gNMIException",
-                "message": "GRPC ERROR Host: 10.10.20.101:57777, Error: authentication failed"
-            },
-            "metadata": {
-                "scope": "network-wide",
-                "message": "Failed to build topology adjacency due to gNMI errors"
-            }
-        }
-
-    Example Success Response (Empty Network):
-        {
-            "status": "success",
-            "data": {},
-            "metadata": {
-                "total_connections": 0,
-                "scope": "network-wide",
-                "message": "No topology connections discovered"
-            }
-        }
-    """
-
-    return get_topology_adjacency(device_name)

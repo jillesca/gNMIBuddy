@@ -27,7 +27,6 @@ from src.collectors.routing import get_routing_info
 from src.collectors.vpn import get_vpn_info
 from src.collectors.topology.neighbors import neighbors
 from src.collectors.topology.network_topology import get_network_topology
-from src.cmd.commands.topology.adjacency import ip_adjacency_dump_cmd
 
 from src.cmd.examples.example_builder import (
     ExampleBuilder,
@@ -124,7 +123,6 @@ def _run_collector_tests(
             device_obj, include_details=(test_query == "full")
         ),
         "topology_neighbors": lambda: neighbors(device_obj),
-        "topology_adjacency": lambda: ip_adjacency_dump_cmd(device_obj),
     }
 
     # Add additional tests for full mode

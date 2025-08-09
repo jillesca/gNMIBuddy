@@ -107,7 +107,7 @@ def neighbors(device: Device) -> NetworkOperationResult:
             nos=device.nos.value,
             operation_type="topology_neighbors",
             status=OperationStatus.SUCCESS,
-            data={},
+            data={"neighbors": neighbor_list},
             metadata={
                 "message": f"Found {len(neighbor_list)} neighbors for device {device_name}",
                 "device_in_topology": True,

@@ -2,8 +2,7 @@
 """Ops validate command implementation"""
 import time
 import concurrent.futures
-import sys
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import click
 
@@ -101,16 +100,12 @@ def _run_collector_tests(
     include_data: bool = True,
     max_workers: int = 5,
 ) -> Dict[str, Any]:
-    """
-    Run all collector function tests in parallel on a single device.
+    """Run collector tests on a device and return a compact, non-duplicated report.
 
-    Args:
-        device_obj: Device object to test
-        test_query: Type of test ("basic" or "full")
-        include_data: Whether to include the full result data in output
-
-    Returns:
-        Dict containing test results, timing, and summary information
+    The output format places each collector's result_data directly into a list at
+    test_results.collectors, and embeds the per-device summary and metadata under
+    test_results as well. This avoids repeating fields like operation_type or status
+    at multiple levels.
     """
     start_time = time.time()
 
@@ -146,8 +141,7 @@ def _run_collector_tests(
             }
         )
 
-    # Run tests in parallel
-    results = {}
+    collectors: List[Dict[str, Any]] = []
     test_summary = {
         "total_tests": len(test_functions),
         "successful": 0,
@@ -162,133 +156,90 @@ def _run_collector_tests(
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=effective_max_workers
     ) as executor:
-        # Submit all tests
         future_to_test = {
             executor.submit(test_func): test_name
             for test_name, test_func in test_functions.items()
         }
 
-        # Collect results as they complete
         for future in concurrent.futures.as_completed(future_to_test):
             test_name = future_to_test[future]
-            test_start_time = time.time()
 
             try:
-                result = future.result(
-                    timeout=30
-                )  # 30 second timeout per test
-                test_execution_time = time.time() - test_start_time
+                result = future.result()
 
-                # Analyze the result
                 if isinstance(result, NetworkOperationResult):
                     if result.status == OperationStatus.SUCCESS:
-                        status = "SUCCESS"
                         test_summary["successful"] += 1
                     elif (
                         result.status == OperationStatus.FEATURE_NOT_AVAILABLE
                     ):
-                        status = "FEATURE_NOT_AVAILABLE"
                         test_summary["feature_not_available"] += 1
                     else:
-                        status = "FAILED"
                         test_summary["failed"] += 1
 
-                    test_result = {
-                        "status": status,
-                        "execution_time": round(test_execution_time, 3),
+                    payload: Dict[str, Any] = {
+                        "device_name": result.device_name,
+                        "ip_address": result.ip_address,
+                        "nos": result.nos,
                         "operation_type": result.operation_type,
-                        "data_size": (
-                            len(str(result.data)) if result.data else 0
-                        ),
-                        "error_message": (
-                            result.error_response.message
-                            if result.error_response
-                            else None
-                        ),
-                        "feature_message": (
-                            result.feature_not_found_response.message
-                            if result.feature_not_found_response
-                            else None
-                        ),
+                        "status": result.status.value,
+                        "metadata": result.metadata,
                     }
 
-                    # Include the full result data if requested
                     if include_data:
-                        test_result["result_data"] = {
-                            "device_name": result.device_name,
-                            "ip_address": result.ip_address,
-                            "nos": result.nos,
-                            "operation_type": result.operation_type,
-                            "status": result.status.value,
-                            "data": result.data,
-                            "metadata": result.metadata,
+                        payload["data"] = result.data
+
+                    if result.error_response:
+                        payload["error_response"] = {
+                            "type": result.error_response.type,
+                            "message": result.error_response.message,
                         }
-                        if result.error_response:
-                            test_result["result_data"]["error_response"] = {
-                                "type": result.error_response.type,
-                                "message": result.error_response.message,
-                            }
-                        if result.feature_not_found_response:
-                            test_result["result_data"][
-                                "feature_not_found_response"
-                            ] = {
-                                "feature_name": result.feature_not_found_response.feature_name,
-                                "message": result.feature_not_found_response.message,
-                            }
+                    if result.feature_not_found_response:
+                        payload["feature_not_found_response"] = {
+                            "feature_name": result.feature_not_found_response.feature_name,
+                            "message": result.feature_not_found_response.message,
+                        }
 
-                    results[test_name] = test_result
-
+                    collectors.append(payload)
                 else:
-                    # Handle non-NetworkOperationResult responses
-                    status = "SUCCESS"
+                    # Fallback for unexpected return types; don't fail the whole run
                     test_summary["successful"] += 1
-                    test_result = {
-                        "status": status,
-                        "execution_time": round(test_execution_time, 3),
-                        "operation_type": "unknown",
-                        "data_size": len(str(result)) if result else 0,
-                        "error_message": None,
-                        "feature_message": None,
+                    payload: Dict[str, Any] = {
+                        "device_name": device_obj.name,
+                        "ip_address": getattr(device_obj, "ip_address", None),
+                        "nos": getattr(device_obj, "nos", None),
+                        "operation_type": test_name,
+                        "status": OperationStatus.SUCCESS.value,
+                        "metadata": {},
                     }
-
-                    # Include the raw result data if requested
                     if include_data:
-                        test_result["result_data"] = result
+                        payload["data"] = result
+                    collectors.append(payload)
 
-                    results[test_name] = test_result
-
-            except concurrent.futures.TimeoutError:
-                test_summary["failed"] += 1
-                results[test_name] = {
-                    "status": "TIMEOUT",
-                    "execution_time": 30.0,
-                    "operation_type": "timeout",
-                    "data_size": 0,
-                    "error_message": "Test timed out after 30 seconds",
-                    "feature_message": None,
-                }
-                logger.warning(
-                    "Test %s timed out for device %s",
-                    test_name,
-                    device_obj.name,
-                )
-
-            except Exception as e:
-                test_execution_time = time.time() - test_start_time
-                test_summary["failed"] += 1
-                results[test_name] = {
-                    "status": "ERROR",
-                    "execution_time": round(test_execution_time, 3),
-                    "operation_type": "error",
-                    "data_size": 0,
-                    "error_message": str(e),
-                    "feature_message": None,
-                }
+            except (
+                Exception
+            ) as e:  # Keep minimal guard without duplicating logic
                 logger.error(
-                    "Test %s failed for device %s: %s",
+                    "Collector %s failed for device %s: %s",
                     test_name,
                     device_obj.name,
                     str(e),
+                )
+                test_summary["failed"] += 1
+                # Provide a compact error payload
+                collectors.append(
+                    {
+                        "device_name": device_obj.name,
+                        "ip_address": getattr(device_obj, "ip_address", None),
+                        "nos": getattr(device_obj, "nos", None),
+                        "operation_type": test_name,
+                        "status": OperationStatus.FAILED.value,
+                        "metadata": {},
+                        "error_response": {
+                            "type": "CollectorError",
+                            "message": str(e),
+                        },
+                    }
                 )
 
     total_execution_time = time.time() - start_time
@@ -302,16 +253,18 @@ def _run_collector_tests(
     )
 
     return {
-        "test_results": results,
-        "summary": test_summary,
-        "metadata": {
-            "device_name": device_obj.name,
-            "device_ip": device_obj.ip_address,
-            "device_nos": device_obj.nos,
-            "test_timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "test_mode": test_query,
-            "include_data": include_data,
-        },
+        "test_results": {
+            "collectors": collectors,
+            "summary": test_summary,
+            "metadata": {
+                "device_name": device_obj.name,
+                "device_ip": device_obj.ip_address,
+                "device_nos": device_obj.nos,
+                "test_timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "test_mode": test_query,
+                "include_data": include_data,
+            },
+        }
     }
 
 

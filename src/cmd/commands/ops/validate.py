@@ -36,6 +36,31 @@ from src.cmd.examples.example_builder import (
 logger = get_logger(__name__)
 
 
+DESCRIPTION = """\b
+Validate all collector functions on network devices
+
+\b
+This is a development tool that tests all available collector functions
+to verify they work correctly after code changes. It runs comprehensive
+tests on system info, interfaces, routing, MPLS, VPN, topology, and more.
+
+\b
+Use this command to quickly validate that all functionality still works
+after making changes to the codebase.
+
+\b
+CONCURRENCY BEHAVIOR:
+- --max-workers: Controls how many devices to process simultaneously (default: 5)
+- --per-device-workers: Controls how many tests to run per device simultaneously (default: 2)
+- Total concurrent requests = max_workers × per_device_workers
+
+\b
+To avoid rate limiting:
+- Use --per-device-workers 1 for strict sequential testing per device
+- Use --max-workers 1 --per-device-workers 2 for moderate concurrency
+"""
+
+
 def ops_validate_examples() -> ExampleSet:
     """Build ops validate command examples with development focus."""
     examples = ExampleBuilder.standard_command_examples(
@@ -46,15 +71,6 @@ def ops_validate_examples() -> ExampleSet:
         batch_operations=True,
         output_formats=True,
         alias_examples=True,
-    )
-
-    # Add inventory setup examples for better user guidance
-    examples.add_basic(
-        command=f"export NETWORK_INVENTORY=inventory.json && uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1",
-        description="Set inventory via environment variable",
-    ).add_basic(
-        command=f"uv run gnmibuddy.py {CommandGroup.OPS.group_name} {Command.OPS_VALIDATE.command_name} --device R1 --inventory /path/to/inventory.json",
-        description="Specify inventory file directly",
     )
 
     # Add development-specific examples
@@ -82,7 +98,7 @@ def basic_usage() -> str:
 
 def detailed_examples() -> str:
     """Detailed examples"""
-    return ops_validate_examples().for_help()
+    return f"{DESCRIPTION}\n{ops_validate_examples().for_help()}"
 
 
 error_provider = CommandErrorProvider(Command.OPS_VALIDATE)
@@ -298,23 +314,7 @@ def ops_validate(
     device_file,
     all_devices,
 ):
-    """Validate all collector functions on network devices
-
-    This is a development tool that tests all available collector functions
-    to verify they work correctly after code changes. It runs comprehensive
-    tests on system info, interfaces, routing, MPLS, VPN, topology, and more.
-
-    Use this command to quickly validate that all functionality still works
-    after making changes to the codebase.
-
-    CONCURRENCY BEHAVIOR:
-    - --max-workers: Controls how many devices to process simultaneously (default: 5)
-    - --per-device-workers: Controls how many tests to run per device simultaneously (default: 2)
-    - Total concurrent requests = max_workers × per_device_workers
-
-    To avoid rate limiting:
-    - Use --per-device-workers 1 for strict sequential testing per device
-    - Use --max-workers 1 --per-device-workers 2 for moderate concurrency
+    f"""{DESCRIPTION}
     """
 
     # Early inventory validation - FAIL FAST

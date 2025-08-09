@@ -58,6 +58,9 @@ CONCURRENCY BEHAVIOR:
 To avoid rate limiting:
 - Use --per-device-workers 1 for strict sequential testing per device
 - Use --max-workers 1 --per-device-workers 2 for moderate concurrency
+
+\b
+Note: The `network_topology` collector test is only available when running the `test_query full` option.
 """
 
 

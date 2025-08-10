@@ -13,7 +13,7 @@ Retrieve structured network data in JSON format:
 - 🏷️ **MPLS**: Labels, forwarding tables, and segment routing
 - 🔒 **VPN/VRF**: L3VPN configuration and route targets
 - 📝 **Logs**: Filtered device logs with keyword search
-- 🏠 **Topology**: Device neighbors and network-wide adjacency analysis
+- 🏠 **Topology**: Device neighbors and network-wide topology analysis
 
 See the [API definition](/api.py) for all available APIs and options.
 

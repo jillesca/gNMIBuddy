@@ -1,20 +1,19 @@
-from collections import defaultdict
-from typing import Dict, Any, List, Union, Tuple, Optional
-import networkx as nx
 from dataclasses import dataclass
+from collections import defaultdict
+from typing import Dict, Any, List, Union, Optional
+
+import networkx as nx
+
+from src.logging import get_logger
+from src.inventory.manager import InventoryManager
+from src.collectors.routing import get_routing_info
+from src.collectors.interfaces import get_interfaces
 from src.schemas.models import Device, DeviceErrorResult
 from src.schemas.responses import OperationStatus, ErrorResponse
-from src.inventory.manager import InventoryManager
-from src.processors.topology_processor import extract_interface_subnets
-from src.collectors.routing import get_routing_info
 from src.utils.parallel_execution import run_command_on_all_devices
-from src.collectors.interfaces import get_interfaces
-from src.logging import get_logger
+from src.processors.topology_processor import extract_interface_subnets
 
 logger = get_logger(__name__)
-
-# In-memory cache for the topology graph
-_cached_graph = None
 
 
 @dataclass

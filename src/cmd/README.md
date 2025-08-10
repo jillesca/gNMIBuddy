@@ -631,8 +631,6 @@ gNMIBuddy v0.1.0+ implements comprehensive error handling that distinguishes bet
 **ErrorResponse**: gNMI-level errors (authentication, connectivity, gRPC server issues)
 **FeatureNotFoundResponse**: Protocol/feature not supported on device
 
-### CLI Error Handling
-
 ### Error Types Handled
 
 1. **Click Exceptions**: Command line parsing errors

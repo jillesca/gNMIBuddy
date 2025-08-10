@@ -10,6 +10,7 @@ from . import (
     encoding,
     checker,
     errors,
+    constants,
 )  # noqa: F401
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "encoding",
     "checker",
     "errors",
+    "constants",
 ]

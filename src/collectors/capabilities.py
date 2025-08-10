@@ -17,6 +17,7 @@ from src.schemas.responses import (
 from src.gnmi.capabilities.repository import DeviceCapabilitiesRepository
 from src.gnmi.capabilities.service import CapabilityService
 from src.gnmi.capabilities.inspector import RequestInspector
+from src.gnmi.capabilities.constants import REQUIRED_OPENCONFIG_MODELS
 from src.gnmi.capabilities.version import safe_compare
 from src.logging import get_logger
 
@@ -67,11 +68,10 @@ def get_device_capabilities(
             inspector = RequestInspector()
             # Build requirements from known mapping without needing user paths
             required = [
-                # Use MAPPING items to build ModelRequirement list
-                # Ensures CLI validation matches preflight logic
+                # Use centralized REQUIRED_OPENCONFIG_MODELS
                 *(
                     inspector.infer_requirements([f"{name}:/"])
-                    for name in inspector.MAPPING.keys()
+                    for name in REQUIRED_OPENCONFIG_MODELS.keys()
                 )
             ]
             # Flatten the list of lists

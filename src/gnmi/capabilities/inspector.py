@@ -5,16 +5,14 @@ from __future__ import annotations
 from typing import List
 
 from .models import ModelRequirement
+from .constants import REQUIRED_OPENCONFIG_MODELS
 
 
 class RequestInspector:
     """Infers required OpenConfig models from paths."""
 
-    MAPPING = {
-        "openconfig-system": "0.17.1",
-        "openconfig-interfaces": "3.0.0",
-        "openconfig-network-instance": "1.3.0",
-    }
+    # Backwards-compat attribute name used elsewhere; alias to central constant
+    MAPPING = REQUIRED_OPENCONFIG_MODELS
 
     def infer_requirements(self, paths: List[str]) -> List[ModelRequirement]:
         seen = {}

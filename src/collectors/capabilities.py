@@ -99,25 +99,28 @@ def get_device_capabilities(
                     else:
                         status = "ok"
 
+                # Build a clear, user-facing message for each status
+                if status == "ok":
+                    msg = (
+                        "Model present and meets the required minimum version"
+                    )
+                elif status == "older":
+                    msg = (
+                        f"Model present but older than required (device has {device_ver or 'unknown'} < {req.minimum_version}); "
+                        "some collectors may not work correctly. Consider updating the device's OpenConfig model/version."
+                    )
+                elif status == "not_supported":
+                    msg = "Model not supported on device"
+                else:
+                    msg = "Model version comparison unknown"
+
                 focused.append(
                     {
                         "name": req.name,
                         "required_min_version": req.minimum_version,
                         "device_version": device_ver,
                         "status": status,
-                        "message": (
-                            "Model present and meets minimum version"
-                            if status == "ok"
-                            else (
-                                "Model present but older than required"
-                                if status == "older"
-                                else (
-                                    "Model not supported on device"
-                                    if status == "not_supported"
-                                    else "Model version comparison unknown"
-                                )
-                            )
-                        ),
+                        "message": msg,
                     }
                 )
 

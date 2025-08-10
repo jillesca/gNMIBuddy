@@ -78,13 +78,14 @@ class CapabilityChecker:
                     if m.matches(req.name):
                         device_ver = m.version
                         break
+                guidance = "; some collectors may not work correctly. Consider updating the device's OpenConfig model/version."
                 if device_ver:
                     warnings.append(
-                        f"Model '{req.name}' is older than required (device has {device_ver} < {req.minimum_version})"
+                        f"Model '{req.name}' is older than required (device has {device_ver} < {req.minimum_version}){guidance}"
                     )
                 else:
                     warnings.append(
-                        f"Model '{req.name}' is older than required (device has < {req.minimum_version})"
+                        f"Model '{req.name}' is older than required (device has < {req.minimum_version}){guidance}"
                     )
 
         return CapabilityCheckResult(

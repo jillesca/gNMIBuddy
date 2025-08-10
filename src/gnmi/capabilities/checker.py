@@ -72,9 +72,20 @@ class CapabilityChecker:
                     ),
                 )
             if older:
-                warnings.append(
-                    f"Model '{req.name}' is older than required (device has < {req.minimum_version})"
-                )
+                # Try to include the device's actual version in the warning
+                device_ver = None
+                for m in caps.models:
+                    if m.matches(req.name):
+                        device_ver = m.version
+                        break
+                if device_ver:
+                    warnings.append(
+                        f"Model '{req.name}' is older than required (device has {device_ver} < {req.minimum_version})"
+                    )
+                else:
+                    warnings.append(
+                        f"Model '{req.name}' is older than required (device has < {req.minimum_version})"
+                    )
 
         return CapabilityCheckResult(
             success=True,

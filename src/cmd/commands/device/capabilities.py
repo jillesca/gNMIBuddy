@@ -41,14 +41,21 @@ register_error_provider(Command.DEVICE_CAPABILITIES, error_provider)
 @register_command(Command.DEVICE_CAPABILITIES)
 @click.command(help=_get_command_help())
 @add_common_device_options
+@click.option(
+    "--all-models",
+    is_flag=True,
+    default=False,
+    help="Show all supported models (by default only required models with status are shown)",
+)
 @click.pass_context
 def device_capabilities(
-    ctx, device, output, devices, device_file, all_devices
+    ctx, device, output, devices, device_file, all_devices, all_models
 ):
     """Get gNMI capabilities from a network device"""
 
     def operation_func(device_obj, **kwargs):
-        return get_device_capabilities(device_obj)
+        # Pass flag positionally to avoid name mismatch across versions
+        return get_device_capabilities(device_obj, all_models)
 
     return execute_device_command(
         ctx=ctx,

@@ -33,7 +33,7 @@ Devices **must** support gNMI and OpenConfig models listed below:
 **OpenConfig Models dependencies**
 
 - `openconfig-system >= 0.17.1`
-- `openconfig-interfaces >= 4.0.0`
+- `openconfig-interfaces >= 3.0.0`
 - `openconfig-network-instance >= 1.3.0`
 
 **Tested on:**

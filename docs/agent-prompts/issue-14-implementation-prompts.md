@@ -143,7 +143,7 @@ Prompt
   - infer_requirements(paths: list[str]) -> list[ModelRequirement]
 - Recognize the three top-level OpenConfig modules only:
   - openconfig-system → ModelRequirement(name="openconfig-system", minimum_version="0.17.1") when path starts with that module prefix.
-  - openconfig-interfaces → … minimum_version="4.0.0".
+  - openconfig-interfaces → … minimum_version="3.0.0".
   - openconfig-network-instance → … minimum_version="1.3.0".
 - Handle patterns like "openconfig-system:/system" and "openconfig-system:system".
 - Return unique requirements (no duplicates).

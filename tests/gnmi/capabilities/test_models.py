@@ -46,7 +46,7 @@ def test_device_capabilities_methods():
     )
 
     req_sys = ModelRequirement("openconfig-system", "0.17.1")
-    req_int = ModelRequirement("openconfig-interfaces", "4.0.0")
+    req_int = ModelRequirement("openconfig-interfaces", "3.0.0")
     present, older = caps.has_model(req_sys, _cmp)
     assert present is True and older is True
     present, older = caps.has_model(req_int, _cmp)

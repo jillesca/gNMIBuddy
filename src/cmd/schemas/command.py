@@ -12,6 +12,10 @@ class Command(Enum):
     DEVICE_INFO = ("info", "Get system information from a network device")
     DEVICE_PROFILE = ("profile", "Get device profile and role information")
     DEVICE_LIST = ("list", "List all available devices in the inventory")
+    DEVICE_CAPABILITIES = (
+        "capabilities",
+        "Get gNMI capabilities from a network device",
+    )
 
     # Network commands
     NETWORK_ROUTING = (

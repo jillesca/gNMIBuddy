@@ -9,6 +9,7 @@ the gNMIBuddy application for representing operation results.
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Any, Optional, Union
+from .models import NetworkOS
 
 
 class RoutingProtocol(Enum):
@@ -130,7 +131,7 @@ class NetworkOperationResult:
 
     device_name: str
     ip_address: str
-    nos: str
+    nos: NetworkOS
     operation_type: str
     status: OperationStatus
     data: Dict[str, Any] = field(default_factory=dict)

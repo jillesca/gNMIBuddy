@@ -1,0 +1,10 @@
+[
+  {
+    "ip_address": "131.226.217.150",
+    "nos": "iosxr",
+    "port": 57777,
+    "username": "admin",
+    "password": "C1sco12345",
+    "name": "xrd-1"
+  }
+]

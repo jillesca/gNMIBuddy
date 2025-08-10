@@ -6,7 +6,6 @@ Tests the contract for parameter objects used in GNMI requests.
 
 import os
 import sys
-import pytest
 
 # Add the project root to the Python path
 sys.path.insert(
@@ -14,6 +13,7 @@ sys.path.insert(
 )
 
 from src.gnmi.parameters import GnmiRequest
+from src.gnmi.capabilities.encoding import GnmiEncoding
 
 
 class TestGnmiRequest:
@@ -25,19 +25,19 @@ class TestGnmiRequest:
         request = GnmiRequest(path=["/interfaces"])
         assert request.path == ["/interfaces"]
         assert request.prefix is None
-        assert request.encoding == "json_ietf"
+        assert request.encoding == GnmiEncoding.JSON_IETF
         assert request.datatype == "all"
 
         # Test with all core parameters plus some gNMI specific ones
         request = GnmiRequest(
             path=["/interfaces", "/network-instances"],
             prefix="/openconfig",
-            encoding="json",
+            encoding=GnmiEncoding.JSON,
             datatype="config",
         )
         assert request.path == ["/interfaces", "/network-instances"]
         assert request.prefix == "/openconfig"
-        assert request.encoding == "json"
+        assert request.encoding == GnmiEncoding.JSON
         assert request.datatype == "config"
 
     def test_mapping_functionality(self):
@@ -45,7 +45,7 @@ class TestGnmiRequest:
         # Test minimal parameters
         request = GnmiRequest(path=["/interfaces"])
         assert request["path"] == ["/interfaces"]
-        assert request["encoding"] == "json_ietf"
+        assert request["encoding"] == GnmiEncoding.JSON_IETF
         assert request["datatype"] == "all"
         # prefix is included even when None (simplified behavior)
         assert request["prefix"] is None
@@ -54,12 +54,12 @@ class TestGnmiRequest:
         request = GnmiRequest(
             path=["/interfaces", "/network-instances"],
             prefix="/openconfig",
-            encoding="json",
+            encoding=GnmiEncoding.JSON,
             datatype="config",
         )
         assert request["path"] == ["/interfaces", "/network-instances"]
         assert request["prefix"] == "/openconfig"
-        assert request["encoding"] == "json"
+        assert request["encoding"] == GnmiEncoding.JSON
         assert request["datatype"] == "config"
 
         # Test that it can be unpacked with **

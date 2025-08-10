@@ -8,6 +8,7 @@ from typing import Optional, Union
 from src.schemas.models import Device
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
+from src.gnmi.capabilities.encoding import GnmiEncoding
 from src.processors.logs.filter import filter_logs
 from src.schemas.responses import (
     ErrorResponse,
@@ -85,7 +86,7 @@ def get_logs(
     logger.debug("Generated log query: %s", log_query)
 
     # Create a GnmiRequest with the appropriate parameters for logs
-    log_request = GnmiRequest(path=[log_query], encoding="ascii")
+    log_request = GnmiRequest(path=[log_query], encoding=GnmiEncoding.ASCII)
 
     response = get_gnmi_data(device=device, request=log_request)
     logger.debug(

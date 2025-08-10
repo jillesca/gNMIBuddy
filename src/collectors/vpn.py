@@ -21,6 +21,7 @@ from src.processors.protocols.vrf import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
+from src.gnmi.capabilities.encoding import GnmiEncoding
 from src.utils.vrf_utils import (
     get_non_default_vrf_names,
     DEFAULT_INTERNAL_VRFS,
@@ -206,7 +207,7 @@ def _get_vrf_details(
     )
 
     vrf_details_request = GnmiRequest(
-        path=vrf_path_queries, encoding="json_ietf"
+        path=vrf_path_queries, encoding=GnmiEncoding.JSON_IETF
     )
 
     response = get_gnmi_data(device, vrf_details_request)

@@ -7,6 +7,11 @@ Provides structured objects for representing gNMI request parameters.
 from dataclasses import dataclass, asdict
 from typing import List, Optional, Dict, Any
 
+# Thin import for type hints and inference helper
+from src.gnmi.capabilities.inspector import RequestInspector
+from src.gnmi.capabilities.encoding import GnmiEncoding
+from src.gnmi.capabilities.models import ModelRequirement
+
 
 @dataclass
 class GnmiRequest:
@@ -20,13 +25,13 @@ class GnmiRequest:
     Attributes:
         path: List of gNMI path strings to retrieve
         prefix: Prefix for the gNMI request (optional)
-        encoding: Encoding type for the request (defaults to "json_ietf")
+        encoding: Encoding type for the request (GnmiEncoding; defaults to JSON_IETF)
         datatype: Data type to retrieve (defaults to "all")
     """
 
     path: List[str]
     prefix: Optional[str] = None
-    encoding: str = "json_ietf"
+    encoding: GnmiEncoding = GnmiEncoding.JSON_IETF
     datatype: str = "all"
 
     def _as_dict(self) -> Dict[str, Any]:
@@ -40,3 +45,8 @@ class GnmiRequest:
     def __getitem__(self, key):
         """Return item for mapping interface (enables ** unpacking)."""
         return self._as_dict()[key]
+
+    def infer_models(self) -> List[ModelRequirement]:
+        """Infer required models from request paths using RequestInspector."""
+        inspector = RequestInspector()
+        return inspector.infer_requirements(self.path)

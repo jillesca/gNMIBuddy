@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional
 
 from .errors import CapabilityError
-from .models import DeviceCapabilities, ModelRequirement
 from .service import CapabilityService
 from .inspector import RequestInspector
 from .encoding import EncodingPolicy

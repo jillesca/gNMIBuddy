@@ -9,7 +9,7 @@ If parsing fails for both sides, comparisons return None.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple
 import re
 
 

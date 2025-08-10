@@ -6,18 +6,18 @@ that can be used by both MCP and CLI interfaces.
 from typing import Optional, Union
 
 from src.services.commands import run
-from src.inventory import list_available_devices, list_available_devices_safe
+from src.schemas.models import DeviceListResult
+from src.schemas.responses import NetworkOperationResult
+from src.inventory import list_available_devices_safe
+from src.collectors.logs import get_logs as collect_logs
+from src.collectors.topology.neighbors import neighbors
 from src.collectors.vpn import get_vpn_info as collect_vpn_info
 from src.collectors.mpls import get_mpls_info as collect_mpls_info
-from src.collectors.routing import get_routing_info as collect_routing_info
-from src.collectors.interfaces import get_interfaces as collect_interfaces
-from src.collectors.logs import get_logs as collect_logs
 from src.collectors.system import get_system_info as collect_system_info
-from src.collectors.profile import get_device_profile as collect_device_profile
-from src.collectors.topology.neighbors import neighbors
 from src.collectors.topology.network_topology import get_network_topology
-from src.schemas.responses import NetworkOperationResult
-from src.schemas.models import DeviceListResult
+from src.collectors.interfaces import get_interfaces as collect_interfaces
+from src.collectors.routing import get_routing_info as collect_routing_info
+from src.collectors.profile import get_device_profile as collect_device_profile
 
 
 def get_device_profile_api(device_name: str) -> NetworkOperationResult:
@@ -208,35 +208,9 @@ def get_topology_neighbors(
     return run(device_name, neighbors)
 
 
-# def get_topology_segment(
-#     device_name: str,
-#     network: str,
-# ) -> Dict[str, Any]:
-#     """
-#     List devices on the specified L3 segment.
-
-#     Args:
-#         device_name: Name of the device in the inventory (used for context)
-#         network: The L3 network segment (e.g., "10.0.0.0/30")
-
-#     Returns:
-#         Dictionary with the device name and the list of devices on the specified segment.
-#         Example:
-#         {
-#             "device": "PE1",
-#             "segment": {
-#                 "network": "10.0.0.0/30",
-#                 "devices": ["PE1", "P1"]
-#             }
-#         }
-#     """
-
-#     return run(device_name, segment, network)
-
-
 def get_network_topology_api() -> NetworkOperationResult:
     """
-    Retrieve the full L3 IP-only direct connection list for all devices in the network (excluding management interfaces).
+    Retrieve the full L3 IP-only direct connection list for all devices in the network inventory (excluding management interfaces).
 
     This function returns a detailed list of all discovered L3 IP direct connections (edges) in the network topology graph. Each connection describes a direct L3 IP connectivity between two devices, including interface names, IP addresses, and the shared network segment. The output is suitable for LLMs and automation tools to reason about network structure, connectivity, and path computation.
 

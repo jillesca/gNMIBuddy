@@ -6,7 +6,8 @@ def path(device, target_device_name: str) -> dict:
     """
     Compute shortest path between two devices.
     """
-    topology_graph = _build_graph_ip_only()
+    topology_result = _build_graph_ip_only()
+    topology_graph = topology_result.graph
     source_device_name = device.name if hasattr(device, "name") else device
     try:
         path_nodes = nx.shortest_path(

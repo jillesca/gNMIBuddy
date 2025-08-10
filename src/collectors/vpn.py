@@ -4,12 +4,14 @@ VPN/VRF information module.
 Provides functions for retrieving VRF/VPN information from network devices using gNMI.
 """
 
-from typing import List, Optional, Union
+from typing import List, Optional
+
 from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
     OperationStatus,
     NetworkOperationResult,
+    FeatureNotFoundResponse,
 )
 from src.schemas.models import Device
 from src.processors.protocols.vrf import (
@@ -19,11 +21,11 @@ from src.processors.protocols.vrf import (
 )
 from src.gnmi.client import get_gnmi_data
 from src.gnmi.parameters import GnmiRequest
-from src.logging import get_logger, log_operation
 from src.utils.vrf_utils import (
     get_non_default_vrf_names,
     DEFAULT_INTERNAL_VRFS,
 )
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -53,23 +55,67 @@ def get_vpn_info(
         str(vrf_names_result),
     )
 
-    if not vrf_names_result:
-        logger.info("No VRFs found on device %s", device.name)
+    # Check if VRF discovery failed due to gNMI error - fail fast
+    if isinstance(vrf_names_result, ErrorResponse):
+        logger.error(
+            "Failed to discover VRFs due to gNMI error: %s",
+            vrf_names_result.message,
+        )
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos,
+            nos=device.nos.value,
             operation_type="vpn_info",
-            status=OperationStatus.SUCCESS,
-            data={"vrfs": []},
+            status=OperationStatus.FAILED,
+            data={},
+            error_response=vrf_names_result,
+            metadata={"message": "Failed to discover VRFs due to gNMI error"},
+        )
+
+    # Check if VRF feature is not found/supported
+    if isinstance(vrf_names_result, FeatureNotFoundResponse):
+        logger.info(
+            "VRF feature not found on device %s: %s",
+            device.name,
+            vrf_names_result.message,
+        )
+        return NetworkOperationResult(
+            device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos.value,
+            operation_type="vpn_info",
+            status=OperationStatus.FEATURE_NOT_AVAILABLE,
+            data={},
+            feature_not_found_response=vrf_names_result,
             metadata={
+                "message": "VRF feature not available on device",
                 "total_vrfs_on_device": 0,
                 "vrfs_returned": 0,
                 "vrf_filter_applied": vrf_name is not None,
                 "vrf_filter": vrf_name,
                 "include_details": include_details,
                 "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
+            },
+        )
+
+    # At this point, vrf_names_result must be a List[str]
+    if not vrf_names_result:
+        logger.info("No VRFs found on device %s", device.name)
+        return NetworkOperationResult(
+            device_name=device.name,
+            ip_address=device.ip_address,
+            nos=device.nos.value,
+            operation_type="vpn_info",
+            status=OperationStatus.SUCCESS,
+            data={},
+            metadata={
                 "message": "No VRFs found",
+                "total_vrfs_on_device": 0,
+                "vrfs_returned": 0,
+                "vrf_filter_applied": vrf_name is not None,
+                "vrf_filter": vrf_name,
+                "include_details": include_details,
+                "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
             },
         )
 
@@ -129,22 +175,22 @@ def _get_vrf_details(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos,
+            nos=device.nos.value,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
-            data={"vrfs": []},
+            data={},
             metadata={
+                "message": (
+                    "No VRFs found matching filter"
+                    if vrf_name_filter
+                    else "No VRFs found"
+                ),
                 "total_vrfs_on_device": total_vrfs_found,
                 "vrfs_returned": 0,
                 "vrf_filter_applied": vrf_name_filter is not None,
                 "vrf_filter": vrf_name_filter,
                 "include_details": include_details,
                 "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
-                "message": (
-                    "No VRFs found matching filter"
-                    if vrf_name_filter
-                    else "No VRFs found"
-                ),
             },
         )
 
@@ -180,10 +226,14 @@ def _get_vrf_details(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos,
+            nos=device.nos.value,
             operation_type="vpn_info",
             status=OperationStatus.FAILED,
+            data={},
             error_response=response,
+            metadata={
+                "message": "Failed to retrieve VRF details due to gNMI error"
+            },
         )
 
     try:
@@ -236,18 +286,18 @@ def _get_vrf_details(
         final_result = NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos,
+            nos=device.nos.value,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
             data={"vrfs": result_data},
             metadata={
+                "message": "VRF information retrieved",
                 "total_vrfs_on_device": total_vrfs_found,
                 "vrfs_returned": len(result_data),
                 "vrf_filter_applied": vrf_name_filter is not None,
                 "vrf_filter": vrf_name_filter,
                 "include_details": include_details,
                 "excluded_internal_vrfs": DEFAULT_INTERNAL_VRFS,
-                "message": "VRF information retrieved",
             },
         )
 
@@ -276,8 +326,10 @@ def _get_vrf_details(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos,
+            nos=device.nos.value,
             operation_type="vpn_info",
             status=OperationStatus.FAILED,
+            data={},
             error_response=error_response,
+            metadata={"message": "Error processing VRF data"},
         )

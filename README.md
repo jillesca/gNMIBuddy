@@ -13,7 +13,7 @@ Retrieve structured network data in JSON format:
 - 🏷️ **MPLS**: Labels, forwarding tables, and segment routing
 - 🔒 **VPN/VRF**: L3VPN configuration and route targets
 - 📝 **Logs**: Filtered device logs with keyword search
-- 🏠 **Topology**: Device profiles and network adjacencies
+- 🏠 **Topology**: Device neighbors and network-wide topology analysis
 
 See the [API definition](/api.py) for all available APIs and options.
 
@@ -224,6 +224,7 @@ Commands:
 
   topology (t)  Network Topology
     neighbors    Get direct neighbor information via LLDP/CDP
+    adjacency    Get network-wide IP adjacency analysis for complete topology
     network      Get complete network topology information. Queries all devices in inventory.
 
   ops (o)       Operations

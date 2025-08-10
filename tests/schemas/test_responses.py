@@ -17,6 +17,7 @@ from src.schemas.responses import (
     NetworkOperationResult,
 )
 from src.schemas.models import Device
+from src.schemas.responses import NetworkOS
 
 
 class TestOperationStatus:
@@ -286,7 +287,7 @@ class TestNetworkOperationResult:
 
         assert type_hints["device_name"] == str
         assert type_hints["ip_address"] == str
-        assert type_hints["nos"] == str
+        assert type_hints["nos"] == NetworkOS
         assert type_hints["operation_type"] == str
         assert type_hints["status"] == OperationStatus
 

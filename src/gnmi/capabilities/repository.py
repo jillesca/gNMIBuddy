@@ -8,10 +8,17 @@ from .models import DeviceCapabilities
 
 
 class DeviceCapabilitiesRepository:
-    """Simple in-memory cache keyed by a stable device key."""
+    """Simple in-memory cache keyed by a stable device key.
 
-    def __init__(self) -> None:
-        self._cache: Dict[str, DeviceCapabilities] = {}
+    Designed to behave like a process-wide shared cache so that different
+    components see the same capabilities once loaded.
+    """
+
+    # Shared cache across all instances
+    _cache: Dict[str, DeviceCapabilities] = {}
+
+    def __init__(self) -> None:  # do not reset the shared cache
+        pass
 
     @staticmethod
     def make_key(device: Device) -> str:

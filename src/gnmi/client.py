@@ -33,11 +33,11 @@ from src.gnmi.error_handlers import (
 from src.gnmi.retry_handler import with_retry
 from src.gnmi.response_parser import parse_gnmi_response, ParsedGnmiResponse
 from src.logging import get_logger
-from src.gnmi.capabilities.repository import DeviceCapabilitiesRepository
-from src.gnmi.capabilities.service import CapabilityService
-from src.gnmi.capabilities.encoding import EncodingPolicy
-from src.gnmi.capabilities.checker import CapabilityChecker
-from src.gnmi.capabilities.version import safe_compare
+from src.gnmi.preflight import (
+    perform_preflight,
+    preflight_error_details,
+    compute_effective_encoding,
+)
 from src.gnmi.capabilities.errors import CapabilityError
 
 logger = get_logger(__name__)
@@ -118,35 +118,15 @@ class GnmiRequestExecutor:
             "Request encoding: %s", getattr(request, "encoding", "default")
         )
 
-        # Capability preflight: encoding and model requirements
-        repo = DeviceCapabilitiesRepository()
-        service = CapabilityService(repo)
-        encoding_policy = EncodingPolicy()
-        checker = CapabilityChecker(service, safe_compare, encoding_policy)
-
-        inferred_requirements = request.infer_models()
-        check_result = checker.check(
-            device, request.path, getattr(request, "encoding", None)
-        )
+        # Capability preflight (cache-aware, fetch-once per device)
+        check_result = perform_preflight(device, request)
         if check_result.is_failure():
             # Early return without contacting device
-            return ErrorResponse(
-                type=check_result.error_type
-                or CapabilityError.MODEL_NOT_SUPPORTED.value,
-                message=check_result.error_message,
-            )
+            err_type, err_msg = preflight_error_details(check_result)
+            return ErrorResponse(type=err_type, message=err_msg)
 
         # Use fallback encoding only for this call, do not mutate original request
-        effective_request = GnmiRequest(
-            path=request.path,
-            prefix=request.prefix,
-            encoding=(
-                check_result.selected_encoding
-                if check_result.selected_encoding
-                else request.encoding
-            ),
-            datatype=request.datatype,
-        )
+        effective_encoding = compute_effective_encoding(check_result, request)
 
         # Log warnings if any (older models)
         for w in check_result.warnings:
@@ -161,8 +141,9 @@ class GnmiRequestExecutor:
             with gNMIclient(**connection_params) as gnmi_client:  # type: ignore[arg-type]
                 logger.debug("gNMI client connected, executing get request")
 
-                # Execute the gNMI get request
-                request_params = effective_request._as_dict()
+                # Execute the gNMI get request (override only the encoding for this call)
+                request_params = request._as_dict()
+                request_params["encoding"] = effective_encoding
                 raw_response = gnmi_client.get(**request_params)
 
                 # Log the raw response for debugging

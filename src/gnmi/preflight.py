@@ -60,9 +60,8 @@ def preflight_error_details(
 def compute_effective_encoding(
     result: CapabilityCheckResult, request: GnmiRequest
 ) -> str:
-    """Choose the encoding for this call without mutating the original request."""
-    return (
-        result.selected_encoding
-        if result.selected_encoding
-        else request.encoding
-    )
+    """Choose encoding as canonical string for this call without mutating the request."""
+    if result.selected_encoding:
+        return result.selected_encoding
+    # request.encoding is GnmiEncoding; rely on Enum.__str__ for canonical value
+    return str(getattr(request, "encoding", ""))

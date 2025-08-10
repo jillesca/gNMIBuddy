@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
+from .encoding import GnmiEncoding
 
 
 @dataclass(frozen=True)
@@ -72,7 +73,7 @@ class DeviceCapabilities:
     """
 
     models: List[ModelIdentifier]
-    encodings: List[str]
+    encodings: List[GnmiEncoding]
     gnmi_version: Optional[str] = None
 
     def has_model(
@@ -108,21 +109,11 @@ class DeviceCapabilities:
 
         return present, older_than_min
 
-    def supports_encoding(
-        self,
-        encoding: str,
-        normalize: Callable[[Optional[str]], Optional[str]],
-    ) -> bool:
-        """Return True if the requested encoding is supported by device.
-
-        The normalize function canonicalizes input and capability encodings
-        into a common form (e.g., JSON_IETF -> json_ietf).
-        """
+    def supports_encoding(self, encoding: Optional[GnmiEncoding]) -> bool:
+        """Return True if the requested enum encoding is supported by device."""
         if encoding is None:
             return True
-        enc = normalize(encoding)
-        supported = {normalize(e) for e in self.encodings}
-        return enc in supported
+        return encoding in set(self.encodings)
 
     def __repr__(self) -> str:  # pragma: no cover - trivial
         return (
@@ -132,5 +123,5 @@ class DeviceCapabilities:
 
     def __str__(self) -> str:  # pragma: no cover - trivial
         models_str = ", ".join(str(m) for m in self.models)
-        encs = ", ".join(self.encodings)
+        encs = ", ".join(str(e) for e in self.encodings)
         return f"models=[{models_str}] encodings=[{encs}] gnmi={self.gnmi_version or '-'}"

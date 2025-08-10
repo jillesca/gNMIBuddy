@@ -8,6 +8,7 @@ from pygnmi.client import gNMIclient
 
 from src.schemas.models import Device
 from .models import DeviceCapabilities, ModelIdentifier
+from .encoding import GnmiEncoding
 from .repository import DeviceCapabilitiesRepository
 
 
@@ -40,18 +41,15 @@ class CapabilityService:
             "show_diff": device.show_diff,
         }
         models: List[ModelIdentifier] = []
-        encodings: List[str] = []
+        encodings: List[GnmiEncoding] = []
         gnmi_version: str | None = None
 
-        def normalize_encoding(e: str | None) -> str | None:
-            if e is None:
-                return None
-            m = {
-                "JSON_IETF": "json_ietf",
-                "JSON": "json",
-                "ASCII": "ascii",
-            }
-            return m.get(e, m.get(e.upper(), e.lower()))
+        def normalize_encoding(e: str | None) -> GnmiEncoding | None:
+            """Convert server-reported encoding to our enum, case-insensitive.
+
+            We normalize early so the rest of the code uses enums only.
+            """
+            return GnmiEncoding.from_any(e)
 
         with gNMIclient(**params) as client:  # type: ignore[arg-type]
             resp: Dict[str, Any] = client.capabilities() or {}
@@ -70,6 +68,4 @@ class CapabilityService:
                     encodings.append(ne)
             gnmi_version = resp.get("gNMI_version")
 
-        return DeviceCapabilities(
-            models=models, encodings=encodings, gnmi_version=gnmi_version
-        )
+        return DeviceCapabilities(models, encodings, gnmi_version)

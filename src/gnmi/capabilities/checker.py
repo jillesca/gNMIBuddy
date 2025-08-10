@@ -9,7 +9,7 @@ from .errors import CapabilityError
 from .models import DeviceCapabilities
 from .service import CapabilityService
 from .inspector import RequestInspector
-from .encoding import EncodingPolicy
+from .encoding import EncodingPolicy, GnmiEncoding
 
 
 @dataclass
@@ -37,7 +37,10 @@ class CapabilityChecker:
         self.inspector = RequestInspector()
 
     def check(
-        self, device, paths: List[str], requested_encoding: Optional[str]
+        self,
+        device,
+        paths: List[str],
+        requested_encoding: Optional[GnmiEncoding | str],
     ) -> CapabilityCheckResult:
         caps = self.service.get_or_fetch(device)
 
@@ -55,6 +58,16 @@ class CapabilityChecker:
             )
 
         warnings: List[str] = []
+        if (
+            used_fallback
+            and requested_encoding is not None
+            and selected is not None
+        ):
+            req_str = str(requested_encoding)
+            sel_str = str(selected)
+            warnings.append(
+                f"Requested encoding '{req_str}' not supported; using fallback '{sel_str}'."
+            )
 
         # Infer requirements
         requirements = self.inspector.infer_requirements(paths)
@@ -91,14 +104,14 @@ class CapabilityChecker:
         return CapabilityCheckResult(
             success=True,
             warnings=warnings,
-            selected_encoding=selected,
+            selected_encoding=str(selected),
         )
 
     def check_with_caps(
         self,
         caps: DeviceCapabilities,
         paths: List[str],
-        requested_encoding: Optional[str],
+        requested_encoding: Optional[GnmiEncoding | str],
     ) -> CapabilityCheckResult:
         """Check capabilities using a provided, already-fetched DeviceCapabilities.
 
@@ -119,6 +132,16 @@ class CapabilityChecker:
             )
 
         warnings: List[str] = []
+        if (
+            used_fallback
+            and requested_encoding is not None
+            and selected is not None
+        ):
+            req_str = str(requested_encoding)
+            sel_str = str(selected)
+            warnings.append(
+                f"Requested encoding '{req_str}' not supported; using fallback '{sel_str}'."
+            )
 
         # Infer requirements
         requirements = self.inspector.infer_requirements(paths)
@@ -155,5 +178,5 @@ class CapabilityChecker:
         return CapabilityCheckResult(
             success=True,
             warnings=warnings,
-            selected_encoding=selected,
+            selected_encoding=str(selected),
         )

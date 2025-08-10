@@ -4,6 +4,7 @@ from src.gnmi.capabilities.models import (
     ModelRequirement,
     DeviceCapabilities,
 )
+from src.gnmi.capabilities.encoding import GnmiEncoding
 
 
 def test_model_identifier_basic():
@@ -41,7 +42,7 @@ def test_device_capabilities_methods():
             ModelIdentifier(name="openconfig-system", version="0.17.0"),
             ModelIdentifier(name="openconfig-interfaces", version="4.1.0"),
         ],
-        encodings=["JSON_IETF", "JSON"],
+        encodings=[GnmiEncoding.JSON_IETF, GnmiEncoding.JSON],
         gnmi_version="0.8.0",
     )
 
@@ -52,6 +53,6 @@ def test_device_capabilities_methods():
     present, older = caps.has_model(req_int, _cmp)
     assert present is True and older is False
 
-    assert caps.supports_encoding("json_ietf", _norm)
-    assert caps.supports_encoding("json", _norm)
-    assert not caps.supports_encoding("ascii", _norm)
+    assert caps.supports_encoding(GnmiEncoding.JSON_IETF)
+    assert caps.supports_encoding(GnmiEncoding.JSON)
+    assert not caps.supports_encoding(GnmiEncoding.ASCII)

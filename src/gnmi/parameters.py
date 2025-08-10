@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 
 # Thin import for type hints and inference helper
 from src.gnmi.capabilities.inspector import RequestInspector
+from src.gnmi.capabilities.encoding import GnmiEncoding
 from src.gnmi.capabilities.models import ModelRequirement
 
 
@@ -24,13 +25,13 @@ class GnmiRequest:
     Attributes:
         path: List of gNMI path strings to retrieve
         prefix: Prefix for the gNMI request (optional)
-        encoding: Encoding type for the request (defaults to "json_ietf")
+        encoding: Encoding type for the request (GnmiEncoding; defaults to JSON_IETF)
         datatype: Data type to retrieve (defaults to "all")
     """
 
     path: List[str]
     prefix: Optional[str] = None
-    encoding: str = "json_ietf"
+    encoding: GnmiEncoding = GnmiEncoding.JSON_IETF
     datatype: str = "all"
 
     def _as_dict(self) -> Dict[str, Any]:

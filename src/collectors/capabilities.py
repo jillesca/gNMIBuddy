@@ -140,7 +140,7 @@ def get_device_capabilities(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=getattr(device.nos, "value", str(device.nos)),
+            nos=device.nos,
             operation_type="capabilities",
             status=OperationStatus.SUCCESS,
             data=data,
@@ -151,7 +151,7 @@ def get_device_capabilities(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=getattr(device.nos, "value", str(device.nos)),
+            nos=device.nos,
             operation_type="capabilities",
             status=OperationStatus.FAILED,
             error_response=ErrorResponse(

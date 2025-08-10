@@ -27,7 +27,8 @@ from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
 )
-from src.schemas.models import Device
+from src.schemas.models import Device, NetworkOS
+from src.gnmi.capabilities.encoding import GnmiEncoding
 
 
 class TestRoutingInfoFunctions:
@@ -44,7 +45,7 @@ class TestRoutingInfoFunctions:
             "openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol/bgp"
             in request.path[0]
         )
-        assert request.encoding == "json_ietf"
+        assert request.encoding == GnmiEncoding.JSON_IETF
         assert request.datatype == "all"
 
     def test_isis_request(self):
@@ -56,7 +57,7 @@ class TestRoutingInfoFunctions:
         assert len(request.path) == 2
         assert any("interfaces" in path for path in request.path)
         assert any("global" in path for path in request.path)
-        assert request.encoding == "json_ietf"
+        assert request.encoding == GnmiEncoding.JSON_IETF
         assert request.datatype == "all"
 
     @patch("src.collectors.routing._get_bgp_info")
@@ -69,7 +70,7 @@ class TestRoutingInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -78,7 +79,7 @@ class TestRoutingInfoFunctions:
         bgp_response = NetworkOperationResult(
             device_name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             operation_type="routing_info",
             status=OperationStatus.SUCCESS,
             data={
@@ -91,7 +92,7 @@ class TestRoutingInfoFunctions:
         isis_response = NetworkOperationResult(
             device_name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             operation_type="routing_info",
             status=OperationStatus.SUCCESS,
             data={
@@ -136,7 +137,7 @@ class TestRoutingInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -145,7 +146,7 @@ class TestRoutingInfoFunctions:
         bgp_response = NetworkOperationResult(
             device_name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             operation_type="routing_info",
             status=OperationStatus.SUCCESS,
             data={
@@ -185,7 +186,7 @@ class TestRoutingInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -275,7 +276,7 @@ class TestRoutingInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -305,7 +306,7 @@ class TestRoutingInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )

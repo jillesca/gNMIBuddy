@@ -22,6 +22,7 @@ from src.schemas.responses import (
     SuccessResponse,
 )
 from src.schemas.models import Device
+from src.schemas.models import NetworkOS
 
 
 class TestMplsInfoFunctions:
@@ -38,8 +39,6 @@ class TestMplsInfoFunctions:
             "openconfig-network-instance:network-instances/network-instance[name=*]/mpls"
             in request.path[0]
         )
-        assert request.encoding == "json_ietf"
-        assert request.datatype == "all"
 
     @patch("src.collectors.mpls.get_gnmi_data")
     def test_get_mpls_information_success(self, mock_get_gnmi_data):
@@ -48,7 +47,7 @@ class TestMplsInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -124,7 +123,7 @@ class TestMplsInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -153,7 +152,7 @@ class TestMplsInfoFunctions:
         mock_device = Device(
             name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )

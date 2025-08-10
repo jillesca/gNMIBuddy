@@ -13,6 +13,17 @@ from src.cmd.registries.command_registry import (
 from src.collectors.capabilities import get_device_capabilities
 from src.cmd.examples.example_builder import ExampleBuilder, ExampleSet
 
+DESCRIPTION = """\b
+Get gNMI capabilities from a network device.
+
+By default, shows a focused summary of required OpenConfig models with status
+(ok/older/not_supported/unknown), the device's gNMI version, and encodings.
+Use --all-models to list every supported model and encoding.
+
+When a model is older than required, a warning is shown and some collectors may
+not work correctly. Consider updating the device's OpenConfig model/version.
+"""
+
 
 def device_capabilities_examples() -> ExampleSet:
     return ExampleBuilder.standard_command_examples(
@@ -27,7 +38,7 @@ def device_capabilities_examples() -> ExampleSet:
 
 
 def detailed_examples() -> str:
-    return device_capabilities_examples().for_help()
+    return f"{DESCRIPTION}\n{device_capabilities_examples().for_help()}"
 
 
 def _get_command_help() -> str:

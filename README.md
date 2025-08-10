@@ -52,6 +52,20 @@ gNMIBuddy identifies devices by hostname and looks up their corresponding IP add
 
 Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
 
+### Device Capabilities
+
+Fetch the device's gNMI capabilities (supported models, encodings, gNMI version):
+
+- Single device:
+  - uv run gnmibuddy.py --inventory path/to/devices.json device capabilities --device R1
+- All devices:
+  - uv run gnmibuddy.py --inventory path/to/devices.json device capabilities --all-devices
+
+Output formats:
+
+- JSON (default): add --output json
+- YAML: add --output yaml
+
 > [!TIP]
 > Store environment variables in a `.env` file.
 

@@ -58,6 +58,10 @@ class CommandRegistry:
                 group=CommandGroup.DEVICE,
                 requires_device=False,
             ),
+            CommandInfo(
+                command=Command.DEVICE_CAPABILITIES,
+                group=CommandGroup.DEVICE,
+            ),
             # Network commands
             CommandInfo(
                 command=Command.NETWORK_ROUTING,

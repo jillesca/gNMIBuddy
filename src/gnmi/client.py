@@ -33,6 +33,12 @@ from src.gnmi.error_handlers import (
 from src.gnmi.retry_handler import with_retry
 from src.gnmi.response_parser import parse_gnmi_response, ParsedGnmiResponse
 from src.logging import get_logger
+from src.gnmi.capabilities.repository import DeviceCapabilitiesRepository
+from src.gnmi.capabilities.service import CapabilityService
+from src.gnmi.capabilities.encoding import EncodingPolicy
+from src.gnmi.capabilities.checker import CapabilityChecker
+from src.gnmi.capabilities.version import safe_compare
+from src.gnmi.capabilities.errors import CapabilityError
 
 logger = get_logger(__name__)
 
@@ -112,17 +118,51 @@ class GnmiRequestExecutor:
             "Request encoding: %s", getattr(request, "encoding", "default")
         )
 
+        # Capability preflight: encoding and model requirements
+        repo = DeviceCapabilitiesRepository()
+        service = CapabilityService(repo)
+        encoding_policy = EncodingPolicy()
+        checker = CapabilityChecker(service, safe_compare, encoding_policy)
+
+        inferred_requirements = request.infer_models()
+        check_result = checker.check(
+            device, request.path, getattr(request, "encoding", None)
+        )
+        if check_result.is_failure():
+            # Early return without contacting device
+            return ErrorResponse(
+                type=check_result.error_type
+                or CapabilityError.MODEL_NOT_SUPPORTED.value,
+                message=check_result.error_message,
+            )
+
+        # Use fallback encoding only for this call, do not mutate original request
+        effective_request = GnmiRequest(
+            path=request.path,
+            prefix=request.prefix,
+            encoding=(
+                check_result.selected_encoding
+                if check_result.selected_encoding
+                else request.encoding
+            ),
+            datatype=request.datatype,
+        )
+
+        # Log warnings if any (older models)
+        for w in check_result.warnings:
+            logger.warning(w)
+
         connection_params = self.connection_manager.create_connection_params(
             device
         )
 
         logger.debug("Establishing gNMI connection to %s", device.name)
         try:
-            with gNMIclient(**connection_params) as gnmi_client:
+            with gNMIclient(**connection_params) as gnmi_client:  # type: ignore[arg-type]
                 logger.debug("gNMI client connected, executing get request")
 
                 # Execute the gNMI get request
-                request_params = request._as_dict()
+                request_params = effective_request._as_dict()
                 raw_response = gnmi_client.get(**request_params)
 
                 # Log the raw response for debugging
@@ -143,6 +183,10 @@ class GnmiRequestExecutor:
                 )
 
                 # Create network response
+                if not parsed_data:
+                    return ErrorResponse(
+                        type="NO_DATA", message="No data returned from device"
+                    )
                 network_response = self._create_network_response(parsed_data)
                 logger.debug(
                     "Created NetworkResponse - type: %s",
@@ -179,7 +223,11 @@ class GnmiRequestExecutor:
 
             if first_notification and first_notification.has_data:
                 data = first_notification.updates
-                timestamp = first_notification.timestamp
+                timestamp = (
+                    str(first_notification.timestamp)
+                    if first_notification.timestamp is not None
+                    else None
+                )
 
                 logger.debug(
                     "SuccessResponse created - data items: %d, timestamp: %s",
@@ -327,7 +375,6 @@ def get_gnmi_data(
 if __name__ == "__main__":
     from pprint import pprint as pp
     from src.logging import LoggingConfigurator
-    from src.schemas.responses import OperationStatus
 
     # Configure detailed logging for development
     LoggingConfigurator.configure(global_level="DEBUG")
@@ -338,7 +385,7 @@ if __name__ == "__main__":
     try:
         # Get the directory of the current script
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        # Path to sandbox.json (one level up from the gnmi directory)
+        # Path to hosts.json (one level up from the gnmi directory)
         json_file_path = os.path.join(
             os.path.dirname(script_dir), "hosts.json"
         )
@@ -349,7 +396,7 @@ if __name__ == "__main__":
         devices = parse_json_file(json_file_path)
         if not devices:
             logger.error("No devices found in inventory file")
-            exit(1)
+            sys.exit(1)
 
         device = Device(**devices[0])
         logger.info(
@@ -374,39 +421,13 @@ if __name__ == "__main__":
         # Execute the request
         result = get_gnmi_data(device, request)
 
-        # Display results
+        # Display very simple results
         print("\n" + "=" * 60)
         print("gNMI REQUEST RESULTS")
         print("=" * 60)
-
         print(f"\nDevice: {device.name}")
-        print(f"Status: {result.status.value}")
-
-        if result.status == OperationStatus.SUCCESS:
-            print(f"Operation: {result.operation_type}")
-            print(f"Data items: {len(result.data) if result.data else 0}")
-            print(f"\nResponse data:")
-            pp(result.data)
-
-            if hasattr(result, "metadata") and result.metadata:
-                print(f"\nMetadata:")
-                pp(result.metadata)
-        else:
-            print(
-                f"Error Type: {result.error_response.type if result.error_response else 'Unknown'}"
-            )
-            print(
-                f"Error Message: {result.error_response.message if result.error_response else 'No message'}"
-            )
-
-            if result.feature_not_found_response:
-                print(
-                    f"Feature: {result.feature_not_found_response.feature_name}"
-                )
-                print(
-                    f"Feature Message: {result.feature_not_found_response.message}"
-                )
-
+        print(f"Result type: {type(result).__name__}")
+        print(str(result))
         print("\n" + "=" * 60)
         logger.info("Development testing completed successfully")
 
@@ -416,10 +437,10 @@ if __name__ == "__main__":
         print(
             "Please ensure you have a valid inventory file or update the path."
         )
-        exit(1)
+        sys.exit(1)
 
     except Exception as e:
         logger.error("Development testing failed: %s", e)
         print(f"\nERROR: Development testing failed: {e}")
         pp(e)
-        exit(1)
+        sys.exit(1)

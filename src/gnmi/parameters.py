@@ -7,6 +7,10 @@ Provides structured objects for representing gNMI request parameters.
 from dataclasses import dataclass, asdict
 from typing import List, Optional, Dict, Any
 
+# Thin import for type hints and inference helper
+from src.gnmi.capabilities.inspector import RequestInspector
+from src.gnmi.capabilities.models import ModelRequirement
+
 
 @dataclass
 class GnmiRequest:
@@ -40,3 +44,8 @@ class GnmiRequest:
     def __getitem__(self, key):
         """Return item for mapping interface (enables ** unpacking)."""
         return self._as_dict()[key]
+
+    def infer_models(self) -> List[ModelRequirement]:
+        """Infer required models from request paths using RequestInspector."""
+        inspector = RequestInspector()
+        return inspector.infer_requirements(self.path)

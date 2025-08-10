@@ -45,6 +45,7 @@ COMMAND_MODULES: List[str] = [
     "src.cmd.commands.device.info",
     "src.cmd.commands.device.profile",
     "src.cmd.commands.device.list",
+    "src.cmd.commands.device.capabilities",
     # Network commands - Commands for network protocol analysis
     "src.cmd.commands.network.routing",
     "src.cmd.commands.network.interface",

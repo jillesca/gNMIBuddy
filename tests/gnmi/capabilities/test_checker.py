@@ -1,9 +1,10 @@
 from src.gnmi.capabilities.checker import CapabilityChecker
 from src.gnmi.capabilities.models import DeviceCapabilities, ModelIdentifier
-from src.gnmi.capabilities.repository import DeviceCapabilitiesRepository
 from src.gnmi.capabilities.service import CapabilityService
 from src.gnmi.capabilities.encoding import EncodingPolicy
 from src.schemas.models import Device
+from src.gnmi.capabilities.encoding import GnmiEncoding
+from src.gnmi.capabilities.errors import CapabilityError
 
 
 class FakeService(CapabilityService):
@@ -25,16 +26,19 @@ def _cmp(a, b):
 def test_checker_missing_model():
     caps = DeviceCapabilities(
         models=[ModelIdentifier("openconfig-system", "0.17.1")],
-        encodings=["json_ietf"],
+        encodings=[GnmiEncoding.JSON_IETF],
     )
     service = FakeService(caps)
     checker = CapabilityChecker(service, _cmp, EncodingPolicy())
     device = Device(name="R1", ip_address="1.1.1.1")
 
     result = checker.check(
-        device, ["openconfig-interfaces:interfaces"], "json_ietf"
+        device, ["openconfig-interfaces:interfaces"], GnmiEncoding.JSON_IETF
     )
-    assert result.is_failure() and result.error_type == "MODEL_NOT_SUPPORTED"
+    assert (
+        result.is_failure()
+        and result.error_type == CapabilityError.MODEL_NOT_SUPPORTED
+    )
 
 
 def test_checker_older_model_warning_and_success():
@@ -43,7 +47,7 @@ def test_checker_older_model_warning_and_success():
             ModelIdentifier("openconfig-system", "0.17.0"),
             ModelIdentifier("openconfig-interfaces", "4.1.0"),
         ],
-        encodings=["json"],
+        encodings=[GnmiEncoding.JSON],
     )
     service = FakeService(caps)
     checker = CapabilityChecker(service, _cmp, EncodingPolicy())
@@ -55,16 +59,37 @@ def test_checker_older_model_warning_and_success():
             "openconfig-system:/system",
             "openconfig-interfaces:interfaces",
         ],
-        "json",
+        GnmiEncoding.JSON,
     )
-    assert result.success is True and result.selected_encoding == "json"
+    assert (
+        result.success is True
+        and result.selected_encoding == GnmiEncoding.JSON
+    )
     assert any("older" in w for w in result.warnings)
 
 
 def test_checker_encoding_not_supported():
     caps = DeviceCapabilities(
         models=[ModelIdentifier("openconfig-system", "0.17.1")],
-        encodings=["json"],
+        encodings=[GnmiEncoding.JSON],
+    )
+    service = FakeService(caps)
+    checker = CapabilityChecker(service, _cmp, EncodingPolicy())
+    device = Device(name="R1", ip_address="1.1.1.1")
+
+    result = checker.check(
+        device, ["openconfig-system:/system"], GnmiEncoding.JSON_IETF
+    )
+    assert (
+        result.is_failure()
+        and result.error_type == CapabilityError.ENCODING_NOT_SUPPORTED
+    )
+
+
+def test_checker_fallback_encoding():
+    caps = DeviceCapabilities(
+        models=[ModelIdentifier("openconfig-system", "0.17.1")],
+        encodings=[GnmiEncoding.ASCII],
     )
     service = FakeService(caps)
     checker = CapabilityChecker(service, _cmp, EncodingPolicy())
@@ -72,18 +97,6 @@ def test_checker_encoding_not_supported():
 
     result = checker.check(device, ["openconfig-system:/system"], "json_ietf")
     assert (
-        result.is_failure() and result.error_type == "ENCODING_NOT_SUPPORTED"
+        result.success is True
+        and result.selected_encoding == GnmiEncoding.ASCII
     )
-
-
-def test_checker_fallback_encoding():
-    caps = DeviceCapabilities(
-        models=[ModelIdentifier("openconfig-system", "0.17.1")],
-        encodings=["ASCII"],
-    )
-    service = FakeService(caps)
-    checker = CapabilityChecker(service, _cmp, EncodingPolicy())
-    device = Device(name="R1", ip_address="1.1.1.1")
-
-    result = checker.check(device, ["openconfig-system:/system"], "json_ietf")
-    assert result.success is True and result.selected_encoding == "ascii"

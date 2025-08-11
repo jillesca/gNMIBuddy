@@ -91,7 +91,7 @@ class InventoryValidator:
 
         logger.debug(
             "Validation completed: %s, Total: %d, Valid: %d, Invalid: %d, Errors: %d",
-            result.status.value,
+            str(result.status),
             total_count,
             valid_count,
             total_count - valid_count,
@@ -611,7 +611,7 @@ class InventoryValidator:
             )
             return True
         except ValueError:
-            valid_values = [nos.value for nos in NetworkOS]
+            valid_values = [str(nos) for nos in NetworkOS]
             logger.error(
                 "Device '%s': invalid nos value '%s', valid values: %s",
                 device_name,

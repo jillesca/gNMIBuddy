@@ -152,7 +152,7 @@ def _display_table_format(result) -> None:
     click.echo("Inventory Validation Results")
     click.echo("============================")
     click.echo(f"File: {result.file_path}")
-    click.echo(f"Status: {result.status.value}")
+    click.echo(f"Status: {str(result.status)}")
     click.echo(f"Total Devices: {result.total_devices}")
     click.echo(f"Valid Devices: {result.valid_devices}")
     click.echo(f"Invalid Devices: {result.invalid_devices}")

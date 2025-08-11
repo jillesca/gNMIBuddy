@@ -16,8 +16,8 @@ from .encoding import EncodingPolicy, GnmiEncoding
 class CapabilityCheckResult:
     success: bool
     warnings: List[str] = field(default_factory=list)
-    selected_encoding: Optional[str] = None
-    error_type: Optional[str] = None
+    selected_encoding: Optional[GnmiEncoding] = None
+    error_type: Optional[CapabilityError] = None
     error_message: Optional[str] = None
 
     def is_failure(self) -> bool:
@@ -51,7 +51,7 @@ class CapabilityChecker:
         if selected is None:
             return CapabilityCheckResult(
                 success=False,
-                error_type=CapabilityError.ENCODING_NOT_SUPPORTED.value,
+                error_type=CapabilityError.ENCODING_NOT_SUPPORTED,
                 error_message=(
                     f"Requested encoding '{requested_encoding}' is not supported by device"
                 ),
@@ -79,7 +79,7 @@ class CapabilityChecker:
                 )
                 return CapabilityCheckResult(
                     success=False,
-                    error_type=CapabilityError.MODEL_NOT_SUPPORTED.value,
+                    error_type=CapabilityError.MODEL_NOT_SUPPORTED,
                     error_message=(
                         f"Required model '{req.name}{min_ver}' not supported by device"
                     ),
@@ -104,7 +104,7 @@ class CapabilityChecker:
         return CapabilityCheckResult(
             success=True,
             warnings=warnings,
-            selected_encoding=str(selected),
+            selected_encoding=selected,
         )
 
     def check_with_caps(
@@ -125,7 +125,7 @@ class CapabilityChecker:
         if selected is None:
             return CapabilityCheckResult(
                 success=False,
-                error_type=CapabilityError.ENCODING_NOT_SUPPORTED.value,
+                error_type=CapabilityError.ENCODING_NOT_SUPPORTED,
                 error_message=(
                     f"Requested encoding '{requested_encoding}' is not supported by device"
                 ),
@@ -153,7 +153,7 @@ class CapabilityChecker:
                 )
                 return CapabilityCheckResult(
                     success=False,
-                    error_type=CapabilityError.MODEL_NOT_SUPPORTED.value,
+                    error_type=CapabilityError.MODEL_NOT_SUPPORTED,
                     error_message=(
                         f"Required model '{req.name}{min_ver}' not supported by device"
                     ),
@@ -178,5 +178,5 @@ class CapabilityChecker:
         return CapabilityCheckResult(
             success=True,
             warnings=warnings,
-            selected_encoding=str(selected),
+            selected_encoding=selected,
         )

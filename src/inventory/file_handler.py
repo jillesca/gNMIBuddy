@@ -151,7 +151,7 @@ def _convert_device_data(device_data: DeviceData) -> DeviceData:
         try:
             converted_data["nos"] = NetworkOS(nos_value)
         except ValueError as e:
-            valid_values = [nos.value for nos in NetworkOS]
+            valid_values = [str(nos) for nos in NetworkOS]
             error_msg = f"Invalid network OS '{nos_value}'. Must be one of: {valid_values}"
             logger.error(error_msg)
             raise ValueError(error_msg) from e

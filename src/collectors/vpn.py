@@ -65,7 +65,7 @@ def get_vpn_info(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.FAILED,
             data={},
@@ -83,7 +83,7 @@ def get_vpn_info(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.FEATURE_NOT_AVAILABLE,
             data={},
@@ -105,7 +105,7 @@ def get_vpn_info(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
             data={},
@@ -176,7 +176,7 @@ def _get_vrf_details(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
             data={},
@@ -227,7 +227,7 @@ def _get_vrf_details(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.FAILED,
             data={},
@@ -287,7 +287,7 @@ def _get_vrf_details(
         final_result = NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.SUCCESS,
             data={"vrfs": result_data},
@@ -327,7 +327,7 @@ def _get_vrf_details(
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="vpn_info",
             status=OperationStatus.FAILED,
             data={},

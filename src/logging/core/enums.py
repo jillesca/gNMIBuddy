@@ -105,6 +105,9 @@ class SuppressionMode(Enum):
         """Convert SuppressionMode to string representation."""
         return self.value
 
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.value
+
 
 class EnvironmentVariable(Enum):
     """

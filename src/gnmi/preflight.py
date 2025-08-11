@@ -52,9 +52,9 @@ def preflight_error_details(
     Keeps ErrorResponse creation in the client while centralizing defaulting
     and extraction logic here for readability.
     """
-    err_type = result.error_type or CapabilityError.MODEL_NOT_SUPPORTED.value
+    err_type = result.error_type or CapabilityError.MODEL_NOT_SUPPORTED
     err_msg = result.error_message or "Preflight failed"
-    return err_type, err_msg
+    return (str(err_type), err_msg)
 
 
 def compute_effective_encoding(
@@ -62,6 +62,6 @@ def compute_effective_encoding(
 ) -> str:
     """Choose encoding as canonical string for this call without mutating the request."""
     if result.selected_encoding:
-        return result.selected_encoding
+        return str(result.selected_encoding)
     # request.encoding is GnmiEncoding; rely on Enum.__str__ for canonical value
     return str(getattr(request, "encoding", ""))

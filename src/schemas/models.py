@@ -16,6 +16,9 @@ class NetworkOS(Enum):
 
     IOSXR = "iosxr"
 
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.value
+
 
 @dataclass
 class DeviceListResult:

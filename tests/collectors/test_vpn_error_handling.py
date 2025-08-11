@@ -13,8 +13,7 @@ Key Test Scenarios:
 5. Fail-Fast Behavior: Verify functions stop processing on errors
 """
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from src.schemas.models import Device, NetworkOS
 from src.schemas.responses import (
     ErrorResponse,
@@ -61,7 +60,7 @@ class TestVpnErrorHandling:
         assert result.error_response == error_response
         assert result.device_name == self.device.name
         assert result.ip_address == self.device.ip_address
-        assert result.nos == self.device.nos.value
+        assert result.nos == self.device.nos
         assert result.operation_type == "vpn_info"
 
         # Verify metadata provides context
@@ -100,8 +99,8 @@ class TestVpnErrorHandling:
         metadata = result.metadata
         assert metadata["message"] == "VRF feature not available on device"
         assert metadata["total_vrfs_on_device"] == 0
-        assert metadata["include_details"] == True
-        assert metadata["vrf_filter_applied"] == False
+        assert metadata["include_details"] is True
+        assert metadata["vrf_filter_applied"] is False
 
     @patch("src.collectors.vpn.get_non_default_vrf_names")
     def test_vpn_info_legitimate_empty_vrfs(self, mock_get_vrf_names):
@@ -124,7 +123,7 @@ class TestVpnErrorHandling:
         assert metadata["message"] == "No VRFs found"
         assert metadata["total_vrfs_on_device"] == 0
         assert metadata["vrfs_returned"] == 0
-        assert metadata["vrf_filter_applied"] == True
+        assert metadata["vrf_filter_applied"] is True
         assert metadata["vrf_filter"] == "test-vrf"
 
     @patch("src.collectors.vpn.get_non_default_vrf_names")
@@ -156,9 +155,6 @@ class TestVpnErrorHandling:
 
     def test_vpn_info_direct_isinstance_pattern(self):
         """Test that the code uses direct isinstance checks as required."""
-        # This test verifies the implementation follows the mandatory pattern
-        # of using direct isinstance(response, ErrorResponse) checks
-
         # Read the source code to verify pattern
         import inspect
 
@@ -264,4 +260,4 @@ class TestVpnErrorHandling:
         # Verify device context is also preserved
         assert result.device_name == self.device.name
         assert result.ip_address == self.device.ip_address
-        assert result.nos == self.device.nos.value
+        assert result.nos == self.device.nos

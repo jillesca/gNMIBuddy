@@ -36,6 +36,11 @@ Devices **must** support gNMI and OpenConfig models listed below:
 - `openconfig-interfaces >= 3.0.0`
 - `openconfig-network-instance >= 1.3.0`
 
+> [!NOTE]
+> If the required model for a function is not found, gNMIBuddy will return an error. If the model version is older than required, it will continue execution but warn the user about potential errors.
+
+You can use `uv run gnmibuddy.py device capabilities` to verify the supported models on a specific device. See the options available.
+
 **Tested on:**
 
 - Cisco XRd Control Plane (`24.4.1.26I`)
@@ -51,20 +56,6 @@ gNMIBuddy identifies devices by hostname and looks up their corresponding IP add
 > Without a device inventory file, gNMIBuddy cannot operate.
 
 Provide device inventory via `--inventory PATH` or set `NETWORK_INVENTORY` env var.
-
-### Device Capabilities
-
-Fetch the device's gNMI capabilities (supported models, encodings, gNMI version):
-
-- Single device:
-  - uv run gnmibuddy.py --inventory path/to/devices.json device capabilities --device R1
-- All devices:
-  - uv run gnmibuddy.py --inventory path/to/devices.json device capabilities --all-devices
-
-Output formats:
-
-- JSON (default): add --output json
-- YAML: add --output yaml
 
 > [!TIP]
 > Store environment variables in a `.env` file.
@@ -226,6 +217,7 @@ Options:
 
 Commands:
   device (d)    Device Information
+    capabilities Get gNMI capabilities from a network device
     info         Get system information from a network device
     list         List all available devices in the inventory
     profile      Get device profile and role information

@@ -25,6 +25,9 @@ class RoutingProtocol(Enum):
     CONNECTED = "connected"
     STATIC = "static"
 
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.value
+
 
 class OperationStatus(Enum):
     """
@@ -40,6 +43,9 @@ class OperationStatus(Enum):
     PARTIAL_SUCCESS = (
         "partial_success"  # New status for multi-protocol operations
     )
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.value
 
 
 @dataclass
@@ -230,6 +236,9 @@ class ValidationStatus(Enum):
     PASSED = "PASSED"
     FAILED = "FAILED"
 
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.value
+
 
 @dataclass
 class ValidationError:
@@ -282,7 +291,10 @@ class ValidationResult:
 
     def __str__(self) -> str:
         """String representation for debugging."""
-        return f"ValidationResult(status={self.status.value}, total={self.total_devices}, valid={self.valid_devices}, invalid={self.invalid_devices}, errors={len(self.errors)})"
+        return (
+            f"ValidationResult(status={str(self.status)}, total={self.total_devices}, "
+            f"valid={self.valid_devices}, invalid={self.invalid_devices}, errors={len(self.errors)})"
+        )
 
 
 # Type alias for return types - Go-like error handling pattern

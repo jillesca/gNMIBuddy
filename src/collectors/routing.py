@@ -35,7 +35,7 @@ class ProtocolCollectionResult:
     """Represents the result of collecting data from multiple protocols."""
 
     protocols: List[Dict]
-    protocol_statuses: Dict[str, str]
+    protocol_statuses: Dict[str, OperationStatus]
     protocol_errors: Dict[str, Dict[str, str]]
 
     @property
@@ -44,7 +44,7 @@ class ProtocolCollectionResult:
             [
                 s
                 for s in self.protocol_statuses.values()
-                if s == OperationStatus.SUCCESS.value
+                if s == OperationStatus.SUCCESS
             ]
         )
 
@@ -54,7 +54,7 @@ class ProtocolCollectionResult:
             [
                 s
                 for s in self.protocol_statuses.values()
-                if s == OperationStatus.FAILED.value
+                if s == OperationStatus.FAILED
             ]
         )
 
@@ -64,7 +64,7 @@ class ProtocolCollectionResult:
             [
                 s
                 for s in self.protocol_statuses.values()
-                if s == OperationStatus.FEATURE_NOT_AVAILABLE.value
+                if s == OperationStatus.FEATURE_NOT_AVAILABLE
             ]
         )
 
@@ -101,7 +101,7 @@ def get_routing_info(
     protocols_to_query = _normalize_protocols(protocol)
     logger.debug(
         "Normalized protocols to query: %s",
-        [p.value for p in protocols_to_query],
+        [str(p) for p in protocols_to_query],
     )
 
     collection_result = _collect_protocol_data(
@@ -161,7 +161,7 @@ def bgp_request() -> GnmiRequest:
 
 def get_protocol_status(
     result: NetworkOperationResult, protocol_name: str
-) -> Optional[str]:
+) -> Optional[OperationStatus]:
     """Get the status of a specific protocol from a NetworkOperationResult."""
     return result.metadata.get("protocol_statuses", {}).get(protocol_name)
 
@@ -179,7 +179,7 @@ def get_successful_protocols(result: NetworkOperationResult) -> List[str]:
     return [
         protocol_name
         for protocol_name, status in protocol_statuses.items()
-        if status == OperationStatus.SUCCESS.value
+        if status == OperationStatus.SUCCESS
     ]
 
 
@@ -189,7 +189,7 @@ def get_failed_protocols(result: NetworkOperationResult) -> List[str]:
     return [
         protocol_name
         for protocol_name, status in protocol_statuses.items()
-        if status == OperationStatus.FAILED.value
+        if status == OperationStatus.FAILED
     ]
 
 
@@ -199,7 +199,7 @@ def get_unavailable_protocols(result: NetworkOperationResult) -> List[str]:
     return [
         protocol_name
         for protocol_name, status in protocol_statuses.items()
-        if status == OperationStatus.FEATURE_NOT_AVAILABLE.value
+        if status == OperationStatus.FEATURE_NOT_AVAILABLE
     ]
 
 
@@ -234,11 +234,11 @@ def _collect_protocol_data(
     logger.debug("Collecting data for %d protocols", len(protocols_to_query))
 
     protocols = []
-    protocol_statuses = {}
+    protocol_statuses: Dict[str, OperationStatus] = {}
     protocol_errors = {}
 
     for protocol_enum in protocols_to_query:
-        protocol_name = protocol_enum.value
+        protocol_name = str(protocol_enum)
         logger.debug("Processing protocol: %s", protocol_name)
 
         protocol_result = _get_protocol_data(
@@ -249,8 +249,8 @@ def _collect_protocol_data(
             protocol_name,
             protocol_result.status,
         )
-
-        protocol_statuses[protocol_name] = protocol_result.status.value
+        # Record status and capture data or errors per protocol
+        protocol_statuses[protocol_name] = protocol_result.status
 
         if protocol_result.status == OperationStatus.SUCCESS:
             protocols.append(
@@ -270,14 +270,14 @@ def _get_protocol_data(
     device: Device, protocol: RoutingProtocol, include_details: bool
 ) -> NetworkOperationResult:
     """Get data for a specific protocol."""
-    logger.debug("Getting %s data for device %s", protocol.value, device.name)
+    logger.debug("Getting %s data for device %s", protocol, device.name)
 
     if protocol == RoutingProtocol.BGP:
         return _get_bgp_info(device, include_details)
     elif protocol == RoutingProtocol.ISIS:
         return _get_isis_info(device, include_details)
     else:
-        logger.warning("Unsupported protocol: %s", protocol.value)
+        logger.warning("Unsupported protocol: %s", protocol)
         return _create_unsupported_protocol_result(device, protocol)
 
 
@@ -304,7 +304,7 @@ def _create_metadata(
     include_details: bool,
 ) -> Dict:
     """Create metadata dictionary for the operation result."""
-    protocol_str = ", ".join([p.value for p in protocols_to_query])
+    protocol_str = ", ".join([str(p) for p in protocols_to_query])
 
     metadata = {
         "protocol": protocol_str,
@@ -399,7 +399,7 @@ def _create_unsupported_protocol_result(
     """Create an error result for unsupported protocols."""
     error_response = ErrorResponse(
         type="UNSUPPORTED_PROTOCOL",
-        message=f"Protocol {protocol.value} is not supported",
+        message=f"Protocol {protocol} is not supported",
     )
     return NetworkOperationResult(
         device_name=device.name,
@@ -488,7 +488,7 @@ def _get_isis_info(
                 "summary": summary,
             },
             metadata={
-                "protocol": RoutingProtocol.ISIS.value,
+                "protocol": str(RoutingProtocol.ISIS),
                 "include_details": include_details,
             },
         )
@@ -588,7 +588,7 @@ def _get_bgp_info(
                 "summary": summary,
             },
             metadata={
-                "protocol": RoutingProtocol.BGP.value,
+                "protocol": str(RoutingProtocol.BGP),
                 "include_details": include_details,
             },
         )

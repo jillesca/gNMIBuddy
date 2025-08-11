@@ -25,12 +25,12 @@ class TestOperationStatus:
 
     def test_operation_status_values(self):
         """Test that OperationStatus has correct values."""
-        assert OperationStatus.SUCCESS.value == "success"
-        assert OperationStatus.FAILED.value == "failed"
-        assert (
-            OperationStatus.FEATURE_NOT_AVAILABLE.value
-            == "feature_not_available"
-        )
+
+    assert str(OperationStatus.SUCCESS) == "success"
+    assert str(OperationStatus.FAILED) == "failed"
+    assert (
+        str(OperationStatus.FEATURE_NOT_AVAILABLE) == "feature_not_available"
+    )
 
     def test_operation_status_membership(self):
         """Test OperationStatus enum membership."""
@@ -40,12 +40,12 @@ class TestOperationStatus:
 
     def test_operation_status_string_representation(self):
         """Test OperationStatus string representation."""
-        assert str(OperationStatus.SUCCESS) == "OperationStatus.SUCCESS"
-        assert str(OperationStatus.FAILED) == "OperationStatus.FAILED"
-        assert (
-            str(OperationStatus.FEATURE_NOT_AVAILABLE)
-            == "OperationStatus.FEATURE_NOT_AVAILABLE"
-        )
+
+    assert str(OperationStatus.SUCCESS) == "success"
+    assert str(OperationStatus.FAILED) == "failed"
+    assert (
+        str(OperationStatus.FEATURE_NOT_AVAILABLE) == "feature_not_available"
+    )
 
     def test_operation_status_equality(self):
         """Test OperationStatus equality comparisons."""
@@ -180,7 +180,7 @@ class TestNetworkOperationResult:
     def setup_method(self):
         """Setup test fixtures."""
         self.device = Device(
-            name="test-device", ip_address="192.168.1.1", nos="iosxr"
+            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
         )
 
     def test_network_operation_result_creation_minimal(self):
@@ -188,14 +188,14 @@ class TestNetworkOperationResult:
         result = NetworkOperationResult(
             device_name="test-device",
             ip_address="192.168.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             operation_type="system_info",
             status=OperationStatus.SUCCESS,
         )
 
         assert result.device_name == "test-device"
         assert result.ip_address == "192.168.1.1"
-        assert result.nos == "iosxr"
+        assert result.nos == NetworkOS.IOSXR
         assert result.operation_type == "system_info"
         assert result.status == OperationStatus.SUCCESS
         assert result.data == {}
@@ -271,7 +271,7 @@ class TestNetworkOperationResult:
         result = NetworkOperationResult(
             device_name="test",
             ip_address="1.1.1.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             operation_type="test",
             status=OperationStatus.SUCCESS,
         )
@@ -317,7 +317,7 @@ class TestResponseSerializationIntegration:
     def setup_method(self):
         """Setup test fixtures."""
         self.device = Device(
-            name="test-device", ip_address="192.168.1.1", nos="iosxr"
+            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
         )
 
     def test_successful_operation_serialization(self):
@@ -346,7 +346,7 @@ class TestResponseSerializationIntegration:
         result_dict = {
             "device_name": result.device_name,
             "ip_address": result.ip_address,
-            "nos": result.nos,
+            "nos": str(result.nos),
             "operation_type": result.operation_type,
             "status": result.status.value,
             "data": result.data,

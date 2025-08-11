@@ -329,7 +329,7 @@ class TestInventoryValidator:
 
         str_repr = str(result)
         assert "ValidationResult" in str_repr
-        assert str(result.status.value) in str_repr
+        assert str(result.status) in str_repr
         assert str(result.total_devices) in str_repr
         assert str(result.valid_devices) in str_repr
 

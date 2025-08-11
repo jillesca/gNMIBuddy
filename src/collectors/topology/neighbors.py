@@ -45,7 +45,7 @@ def neighbors(device: Device) -> NetworkOperationResult:
             return NetworkOperationResult(
                 device_name=device.name,
                 ip_address=device.ip_address,
-                nos=device.nos.value,
+                nos=device.nos,
                 operation_type="topology_neighbors",
                 status=OperationStatus.FAILED,
                 data={},
@@ -67,7 +67,7 @@ def neighbors(device: Device) -> NetworkOperationResult:
             return NetworkOperationResult(
                 device_name=device.name,
                 ip_address=device.ip_address,
-                nos=device.nos.value,
+                nos=device.nos,
                 operation_type="topology_neighbors",
                 status=OperationStatus.SUCCESS,
                 data={},
@@ -104,7 +104,7 @@ def neighbors(device: Device) -> NetworkOperationResult:
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="topology_neighbors",
             status=OperationStatus.SUCCESS,
             data={"neighbors": neighbor_list},
@@ -127,7 +127,7 @@ def neighbors(device: Device) -> NetworkOperationResult:
         return NetworkOperationResult(
             device_name=device.name,
             ip_address=device.ip_address,
-            nos=device.nos.value,
+            nos=device.nos,
             operation_type="topology_neighbors",
             status=OperationStatus.FAILED,
             data={},

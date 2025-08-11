@@ -25,7 +25,7 @@ from src.schemas.responses import (
     OperationStatus,
     FeatureNotFoundResponse,
 )
-from src.schemas.models import Device
+from src.schemas.models import Device, NetworkOS
 
 
 class TestSimplifiedRoutingFunctionality:
@@ -34,18 +34,18 @@ class TestSimplifiedRoutingFunctionality:
     def test_partial_success_bgp_not_configured_isis_configured(self):
         """Test scenario where BGP is not configured but ISIS is configured."""
         mock_device = Device(
-            name="xrd-3",
+            name="test-device-1",
             ip_address="10.10.20.103",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             port=57777,
-            username="admin",
-            password="admin",
+            username="test_user",
+            password="test_pass",
         )
 
         # Mock BGP to return feature not found
         bgp_feature_not_found = FeatureNotFoundResponse(
             feature_name="bgp",
-            message="Feature not found on device xrd-3: BGP not configured",
+            message="Feature not found on device test-device-1: BGP not configured",
         )
         bgp_result = NetworkOperationResult(
             device_name=mock_device.name,
@@ -86,7 +86,7 @@ class TestSimplifiedRoutingFunctionality:
             # Verify overall response
             assert isinstance(response, NetworkOperationResult)
             assert response.status == OperationStatus.PARTIAL_SUCCESS
-            assert response.device_name == "xrd-3"
+            assert response.device_name == "test-device-1"
 
             # Verify data contains only ISIS (successful protocol)
             routing_data = response.data["routing_protocols"]
@@ -102,8 +102,11 @@ class TestSimplifiedRoutingFunctionality:
 
             # Verify protocol statuses in metadata
             protocol_statuses = response.metadata["protocol_statuses"]
-            assert protocol_statuses["bgp"] == "feature_not_available"
-            assert protocol_statuses["isis"] == "success"
+            assert (
+                protocol_statuses["bgp"]
+                == OperationStatus.FEATURE_NOT_AVAILABLE
+            )
+            assert protocol_statuses["isis"] == OperationStatus.SUCCESS
 
             # Verify protocol errors in metadata
             protocol_errors = response.metadata.get("protocol_errors", {})
@@ -115,9 +118,13 @@ class TestSimplifiedRoutingFunctionality:
             assert get_unavailable_protocols(response) == ["bgp"]
             assert get_failed_protocols(response) == []
             assert (
-                get_protocol_status(response, "bgp") == "feature_not_available"
+                get_protocol_status(response, "bgp")
+                == OperationStatus.FEATURE_NOT_AVAILABLE
             )
-            assert get_protocol_status(response, "isis") == "success"
+            assert (
+                get_protocol_status(response, "isis")
+                == OperationStatus.SUCCESS
+            )
             assert get_protocol_error(response, "bgp") is not None
 
     def test_helper_functions_with_metadata(self):
@@ -126,14 +133,14 @@ class TestSimplifiedRoutingFunctionality:
         mock_response = NetworkOperationResult(
             device_name="test-device",
             ip_address="10.0.0.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             operation_type="routing_info",
             status=OperationStatus.PARTIAL_SUCCESS,
             metadata={
                 "protocol_statuses": {
-                    "bgp": "feature_not_available",
-                    "isis": "success",
-                    "ospf": "failed",
+                    "bgp": OperationStatus.FEATURE_NOT_AVAILABLE,
+                    "isis": OperationStatus.SUCCESS,
+                    "ospf": OperationStatus.FAILED,
                 },
                 "protocol_errors": {
                     "bgp": {
@@ -153,10 +160,16 @@ class TestSimplifiedRoutingFunctionality:
         # Test protocol status
         assert (
             get_protocol_status(mock_response, "bgp")
-            == "feature_not_available"
+            == OperationStatus.FEATURE_NOT_AVAILABLE
         )
-        assert get_protocol_status(mock_response, "isis") == "success"
-        assert get_protocol_status(mock_response, "ospf") == "failed"
+        assert (
+            get_protocol_status(mock_response, "isis")
+            == OperationStatus.SUCCESS
+        )
+        assert (
+            get_protocol_status(mock_response, "ospf")
+            == OperationStatus.FAILED
+        )
         assert get_protocol_status(mock_response, "rip") is None
 
         # Test protocol errors
@@ -177,10 +190,10 @@ class TestSimplifiedRoutingFunctionality:
         mock_device = Device(
             name="test-device",
             ip_address="10.0.0.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             port=57777,
-            username="admin",
-            password="admin",
+            username="test_user",
+            password="test_pass",
         )
 
         # Mock both protocols to return success
@@ -231,10 +244,10 @@ class TestSimplifiedRoutingFunctionality:
         mock_device = Device(
             name="test-device",
             ip_address="10.0.0.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             port=57777,
-            username="admin",
-            password="admin",
+            username="test_user",
+            password="test_pass",
         )
 
         # Mock both protocols to return feature not found
@@ -292,10 +305,10 @@ class TestSimplifiedRoutingFunctionality:
         mock_device = Device(
             name="test-device",
             ip_address="10.0.0.1",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
             port=57777,
-            username="admin",
-            password="admin",
+            username="test_user",
+            password="test_pass",
         )
 
         # Mock BGP to return feature not found
@@ -326,6 +339,7 @@ class TestSimplifiedRoutingFunctionality:
 
             # Verify protocol status and error
             assert (
-                get_protocol_status(response, "bgp") == "feature_not_available"
+                get_protocol_status(response, "bgp")
+                == OperationStatus.FEATURE_NOT_AVAILABLE
             )
             assert get_protocol_error(response, "bgp") is not None

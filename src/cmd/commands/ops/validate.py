@@ -199,7 +199,7 @@ def _run_collector_tests(
                         "ip_address": result.ip_address,
                         "nos": result.nos,
                         "operation_type": result.operation_type,
-                        "status": result.status.value,
+                        "status": result.status,
                         "metadata": result.metadata,
                     }
 
@@ -226,7 +226,7 @@ def _run_collector_tests(
                         "ip_address": getattr(device_obj, "ip_address", None),
                         "nos": getattr(device_obj, "nos", None),
                         "operation_type": test_name,
-                        "status": OperationStatus.SUCCESS.value,
+                        "status": OperationStatus.SUCCESS,
                         "metadata": {},
                     }
                     if include_data:
@@ -250,7 +250,7 @@ def _run_collector_tests(
                         "ip_address": getattr(device_obj, "ip_address", None),
                         "nos": getattr(device_obj, "nos", None),
                         "operation_type": test_name,
-                        "status": OperationStatus.FAILED.value,
+                        "status": OperationStatus.FAILED,
                         "metadata": {},
                         "error_response": {
                             "type": "CollectorError",

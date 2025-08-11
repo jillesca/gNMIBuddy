@@ -101,7 +101,7 @@ class TestTopologyNeighborsErrorHandling:
         assert result.error_response == error_response
         assert result.device_name == self.device.name
         assert result.ip_address == self.device.ip_address
-        assert result.nos == self.device.nos.value
+        assert result.nos == self.device.nos
         assert result.operation_type == "topology_neighbors"
 
         # Verify metadata provides context about the error
@@ -109,7 +109,7 @@ class TestTopologyNeighborsErrorHandling:
             "Failed to build topology due to gNMI errors"
             in result.metadata["message"]
         )
-        assert result.metadata["device_in_topology"] == False
+        assert result.metadata["device_in_topology"] is False
 
         # Verify fail-fast behavior - no further processing was attempted
         mock_build_graph.assert_called_once()
@@ -267,7 +267,9 @@ class TestTopologyNeighborsErrorHandling:
         # Arrange: Create ErrorResponse with specific context from interface collection
         original_error = ErrorResponse(
             type="gNMIException",
-            message="GRPC ERROR Host: 10.10.20.101:57777, Error: authentication failed during interface collection",
+            message=(
+                "GRPC ERROR Host: 10.10.20.101:57777, Error: authentication failed during interface collection"
+            ),
             details={
                 "host": "10.10.20.101",
                 "port": 57777,
@@ -294,7 +296,7 @@ class TestTopologyNeighborsErrorHandling:
         # Verify device context is also preserved
         assert result.device_name == self.device.name
         assert result.ip_address == self.device.ip_address
-        assert result.nos == self.device.nos.value
+        assert result.nos == self.device.nos
 
     @patch("src.collectors.topology.neighbors._build_graph_ip_only")
     def test_topology_neighbors_data_structure_consistency(

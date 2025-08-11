@@ -9,5 +9,8 @@ class CapabilityError(Enum):
     MODEL_NOT_SUPPORTED = "MODEL_NOT_SUPPORTED"
     ENCODING_NOT_SUPPORTED = "ENCODING_NOT_SUPPORTED"
 
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.value
+
 
 __all__ = ["CapabilityError"]

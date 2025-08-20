@@ -3,7 +3,7 @@
 MCP entry point for gNMIBuddy - Registers network tool functions as MCP tools.
 Uses a decorator factory to register API functions without duplicating signatures and docstrings.
 """
-import os
+import inspect
 from functools import wraps
 from typing import Optional
 
@@ -46,6 +46,58 @@ logger.std_logger.info("Running gNMIBuddy version: %s", gnmibuddy_version)
 logger.std_logger.info("Python version: %s", python_version)
 
 
+def requires_device_name_parameter(func) -> bool:
+    """
+    Check if a function requires a device_name parameter.
+
+    Args:
+        func: The function to inspect
+
+    Returns:
+        bool: True if the function has a device_name parameter, False otherwise
+    """
+    sig = inspect.signature(func)
+    return "device_name" in sig.parameters
+
+
+def validate_device_name_provided(args: tuple, kwargs: dict) -> bool:
+    """
+    Check if device_name is provided in function arguments.
+
+    Args:
+        args: Positional arguments tuple
+        kwargs: Keyword arguments dictionary
+
+    Returns:
+        bool: True if device_name is provided and not empty, False otherwise
+    """
+    # Check if device_name is provided as first positional argument
+    if len(args) > 0 and args[0]:
+        return True
+
+    # Check if device_name is provided in keyword arguments
+    device_name_in_kwargs = kwargs.get("device_name")
+    return bool(device_name_in_kwargs)
+
+
+def create_missing_device_name_error(func_name: str) -> str:
+    """
+    Create an LLM-friendly error message for missing device_name parameter.
+
+    Args:
+        func_name: Name of the function that's missing the device_name
+
+    Returns:
+        str: Formatted error message with usage examples and guidance
+    """
+    return (
+        f"❌ MISSING REQUIRED PARAMETER: The function '{func_name}' requires a 'device_name' parameter. "
+        f"Please provide the device name as the first argument or use device_name='<device_name>' in your function call. "
+        f"Example: {func_name}('xrd-1') or {func_name}(device_name='xrd-1'). "
+        f"Use get_devices() to see available devices in the inventory."
+    )
+
+
 def register_as_mcp_tool(func):
     """
     Decorator factory that creates an MCP tool wrapper for an API function.
@@ -73,6 +125,16 @@ def register_as_mcp_tool(func):
             await tool_logger.debug(
                 "Arguments: args=%s, kwargs=%s", args, kwargs
             )
+
+            # Validate device_name parameter for functions that require it
+            if requires_device_name_parameter(func):
+                if not validate_device_name_provided(args, kwargs):
+                    error_msg = create_missing_device_name_error(func.__name__)
+                    await tool_logger.error(
+                        "Missing required device_name parameter for function: %s",
+                        func.__name__,
+                    )
+                    raise ValueError(error_msg)
 
             result = func(*args, **kwargs)
 

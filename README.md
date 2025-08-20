@@ -108,7 +108,6 @@ echo '#!/usr/bin/env bash' > /tmp/gnmibuddy-mcp-wrapper \
 && echo 'exec uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy-mcp "$@"' >> /tmp/gnmibuddy-mcp-wrapper \
 && chmod +x /tmp/gnmibuddy-mcp-wrapper \
 && NETWORK_INVENTORY=xrd_sandbox.json npx @modelcontextprotocol/inspector /tmp/gnmibuddy-mcp-wrapper
-EOF
 ```
 
 > [!TIP]

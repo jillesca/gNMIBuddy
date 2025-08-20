@@ -15,6 +15,7 @@ class NetworkOS(Enum):
     """Supported Network Operating Systems"""
 
     IOSXR = "iosxr"
+    UNKNOWN = "unknown"
 
     def __str__(self) -> str:  # pragma: no cover - trivial
         return self.value

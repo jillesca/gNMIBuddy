@@ -10,7 +10,7 @@ from src.logging import get_logger
 from src.schemas.responses import (
     NetworkOperationResult,
 )
-from src.schemas.models import Device, DeviceErrorResult
+from src.schemas.models import Device, DeviceErrorResult, NetworkOS
 from src.schemas.responses import ErrorResponse, OperationStatus
 
 logger = get_logger(__name__)
@@ -96,7 +96,7 @@ def run(
         return NetworkOperationResult(
             device_name=device_name,
             ip_address="unknown",
-            nos="unknown",
+            nos=NetworkOS.UNKNOWN,
             operation_type="device_retrieval",
             status=OperationStatus.FAILED,
             error_response=error_response,

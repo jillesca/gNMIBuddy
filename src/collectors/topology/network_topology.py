@@ -3,6 +3,7 @@ from src.schemas.responses import (
     OperationStatus,
     NetworkOperationResult,
 )
+from src.schemas.models import NetworkOS
 from .utils import _build_graph_ip_only
 from src.logging import get_logger, log_operation
 
@@ -38,7 +39,7 @@ def get_network_topology() -> NetworkOperationResult:
             return NetworkOperationResult(
                 device_name="ALL_DEVICES",
                 ip_address="0.0.0.0",
-                nos="N/A",
+                nos=NetworkOS.UNKNOWN,
                 operation_type="network_topology",
                 status=OperationStatus.FAILED,
                 data={},
@@ -56,7 +57,7 @@ def get_network_topology() -> NetworkOperationResult:
             return NetworkOperationResult(
                 device_name="ALL_DEVICES",
                 ip_address="0.0.0.0",
-                nos="N/A",
+                nos=NetworkOS.UNKNOWN,
                 operation_type="network_topology",
                 status=OperationStatus.FAILED,
                 data={},
@@ -110,7 +111,7 @@ def get_network_topology() -> NetworkOperationResult:
         return NetworkOperationResult(
             device_name="ALL_DEVICES",
             ip_address="0.0.0.0",
-            nos="N/A",
+            nos=NetworkOS.UNKNOWN,
             operation_type="network_topology",
             status=OperationStatus.SUCCESS,
             data={"direct_connections": direct_connections},
@@ -134,7 +135,7 @@ def get_network_topology() -> NetworkOperationResult:
         return NetworkOperationResult(
             device_name="ALL_DEVICES",
             ip_address="0.0.0.0",
-            nos="N/A",
+            nos=NetworkOS.UNKNOWN,
             operation_type="network_topology",
             status=OperationStatus.FAILED,
             data={},

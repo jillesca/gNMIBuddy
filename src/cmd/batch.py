@@ -13,6 +13,7 @@ from src.schemas.responses import (
     ErrorResponse,
 )
 from src.logging import get_logger
+from src.schemas.models import NetworkOS
 from src.inventory.manager import InventoryManager
 
 logger = get_logger(__name__)
@@ -229,7 +230,7 @@ class BatchOperationExecutor:
         return NetworkOperationResult(
             device_name=device_name,
             ip_address="unknown",  # We might not have this info in error cases
-            nos="unknown",
+            nos=NetworkOS.UNKNOWN,
             operation_type=operation_type,
             status=OperationStatus.FAILED,
             data={},

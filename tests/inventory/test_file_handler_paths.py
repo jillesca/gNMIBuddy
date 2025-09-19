@@ -208,7 +208,7 @@ class TestFileHandlerPaths:
         assert len(devices) == 2
         assert "test-device-1" in devices
         assert "test-device-2" in devices
-        assert devices["test-device-1"].ip_address == "10.0.0.1"
+        assert str(devices["test-device-1"].ip_address) == "10.0.0.1"
 
     def test_load_inventory_relative_path(self, temp_inventory_file):
         """Test load_inventory with relative path."""
@@ -226,7 +226,7 @@ class TestFileHandlerPaths:
             assert len(devices) == 2
             assert "test-device-1" in devices
             assert "test-device-2" in devices
-            assert devices["test-device-1"].ip_address == "10.0.0.1"
+            assert str(devices["test-device-1"].ip_address) == "10.0.0.1"
         finally:
             os.chdir(original_cwd)
 

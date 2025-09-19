@@ -77,7 +77,7 @@ class TestDeviceModel:
 
         # Test all default values
         assert device.name == ""
-        assert device.ip_address == ""
+        assert str(device.ip_address) == "127.0.0.1"
         assert device.port == 830
         assert device.nos == NetworkOS.IOSXR
         assert device.username is None  # Now optional
@@ -139,11 +139,17 @@ class TestDeviceModel:
 
     def test_device_field_types(self):
         """Test that Device fields have correct type annotations."""
+        import ipaddress
+        from typing import Union
+
         type_hints = get_type_hints(Device)
 
         # Test key field types
         assert type_hints["name"] == str
-        assert type_hints["ip_address"] == str
+        assert (
+            type_hints["ip_address"]
+            == Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+        )
         assert type_hints["port"] == int
         assert type_hints["nos"] == NetworkOS
         assert type_hints["username"] == Optional[str]  # Now optional
@@ -269,7 +275,7 @@ class TestDeviceModelIntegration:
         device = Device(**converted_data)
 
         assert device.name == "PE1-NYC"
-        assert device.ip_address == "10.0.1.100"
+        assert str(device.ip_address) == "10.0.1.100"
         assert device.port == 57400
         assert device.nos == NetworkOS.IOSXR
         assert device.username == "gnmi"

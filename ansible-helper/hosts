@@ -13,3 +13,6 @@ ansible_user=cisco
 ansible_password=C1sco12345
 ansible_connection=network_cli
 ansible_network_os=cisco.iosxr.iosxr
+ansible_iosxr_use_proxy=false
+# Skip platform detection to avoid 'show inventory' command issues with XRd
+ansible_iosxr_platform=iosxr

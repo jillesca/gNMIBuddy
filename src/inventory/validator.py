@@ -887,6 +887,19 @@ class InventoryValidator:
             nos_value = converted_data["nos"]
             converted_data["nos"] = NetworkOS(nos_value)
 
+        # Convert ip_address string to ipaddress object if present
+        if "ip_address" in converted_data and isinstance(
+            converted_data["ip_address"], str
+        ):
+            ip_str = converted_data["ip_address"]
+            if ip_str.strip():  # Only convert non-empty strings
+                try:
+                    converted_data["ip_address"] = ip_address(ip_str)
+                except (AddressValueError, ValueError):
+                    # Leave as string - the validation will catch this error
+                    # and provide appropriate error messages
+                    pass
+
         return converted_data
 
     def _create_result(

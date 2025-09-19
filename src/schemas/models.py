@@ -6,6 +6,7 @@ Contains data models for representing network devices and related
 inventory structures used throughout the application.
 """
 
+import ipaddress
 from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Union
@@ -78,7 +79,9 @@ class Device:
     """
 
     name: str = ""
-    ip_address: str = ""
+    ip_address: Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None] = (
+        None
+    )
     port: int = 830
     nos: NetworkOS = NetworkOS.IOSXR
     username: Optional[str] = None

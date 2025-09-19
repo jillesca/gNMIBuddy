@@ -356,8 +356,8 @@ Single device operations return a `NetworkOperationResult` object with detailed 
 @dataclass
 class NetworkOperationResult:
     device_name: str
-    ip_address: str
-    nos: str
+    ip_address: IPAddress
+    nos: NetworkOS
     operation_type: str
     status: OperationStatus
     data: Dict[str, Any] = field(default_factory=dict)

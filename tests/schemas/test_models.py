@@ -218,37 +218,37 @@ class TestDeviceListResult:
 
 
 class TestDeviceErrorResult:
-    """Test suite for DeviceErrorResult TypedDict."""
+    """Test suite for DeviceErrorResult dataclass."""
 
     def test_device_error_result_with_device_info(self):
         """Test DeviceErrorResult with device information."""
-        error_result: DeviceErrorResult = {
-            "error": "Connection failed",
-            "device_info": {
+        error_result = DeviceErrorResult(
+            msg="Connection failed",
+            nos=NetworkOS.IOSXR,
+            ip_address=None,
+            device_info={
                 "name": "test-device",
                 "ip_address": "192.168.1.1",
                 "port": 57400,
                 "nos": "iosxr",
             },
-        }
+        )
 
-        assert "error" in error_result
-        assert "device_info" in error_result
-        assert error_result["error"] == "Connection failed"
-        assert error_result["device_info"] is not None
-        assert error_result["device_info"]["name"] == "test-device"
+        assert error_result.msg == "Connection failed"
+        assert error_result.nos == NetworkOS.IOSXR
+        assert error_result.device_info is not None
+        assert error_result.device_info["name"] == "test-device"
 
     def test_device_error_result_without_device_info(self):
         """Test DeviceErrorResult without device information."""
-        error_result: DeviceErrorResult = {
-            "error": "Generic error",
-            "device_info": None,
-        }
+        error_result = DeviceErrorResult(
+            msg="Generic error",
+            device_info=None,
+        )
 
-        assert "error" in error_result
-        assert "device_info" in error_result
-        assert error_result["error"] == "Generic error"
-        assert error_result["device_info"] is None
+        assert error_result.msg == "Generic error"
+        assert error_result.nos == NetworkOS.UNKNOWN  # Default value
+        assert error_result.device_info is None
 
 
 class TestDeviceModelIntegration:

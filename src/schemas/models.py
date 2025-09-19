@@ -47,7 +47,7 @@ class DeviceErrorResult:
     """Result class for device error conditions."""
 
     msg: str
-    nos: str = "unknown"
+    nos: NetworkOS = NetworkOS.UNKNOWN
     ip_address: IPAddress = None
     device_info: Optional[Dict[str, Any]] = None
 

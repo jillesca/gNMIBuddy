@@ -1,3 +1,4 @@
+import ipaddress
 from src.gnmi.capabilities.checker import CapabilityChecker
 from src.gnmi.capabilities.models import DeviceCapabilities, ModelIdentifier
 from src.gnmi.capabilities.service import CapabilityService
@@ -30,7 +31,7 @@ def test_checker_missing_model():
     )
     service = FakeService(caps)
     checker = CapabilityChecker(service, _cmp, EncodingPolicy())
-    device = Device(name="R1", ip_address="1.1.1.1")
+    device = Device(name="R1", ip_address=ipaddress.IPv4Address("1.1.1.1"))
 
     result = checker.check(
         device, ["openconfig-interfaces:interfaces"], GnmiEncoding.JSON_IETF
@@ -51,7 +52,7 @@ def test_checker_older_model_warning_and_success():
     )
     service = FakeService(caps)
     checker = CapabilityChecker(service, _cmp, EncodingPolicy())
-    device = Device(name="R1", ip_address="1.1.1.1")
+    device = Device(name="R1", ip_address=ipaddress.IPv4Address("1.1.1.1"))
 
     result = checker.check(
         device,
@@ -75,7 +76,7 @@ def test_checker_encoding_not_supported():
     )
     service = FakeService(caps)
     checker = CapabilityChecker(service, _cmp, EncodingPolicy())
-    device = Device(name="R1", ip_address="1.1.1.1")
+    device = Device(name="R1", ip_address=ipaddress.IPv4Address("1.1.1.1"))
 
     result = checker.check(
         device, ["openconfig-system:/system"], GnmiEncoding.JSON_IETF
@@ -93,7 +94,7 @@ def test_checker_fallback_encoding():
     )
     service = FakeService(caps)
     checker = CapabilityChecker(service, _cmp, EncodingPolicy())
-    device = Device(name="R1", ip_address="1.1.1.1")
+    device = Device(name="R1", ip_address=ipaddress.IPv4Address("1.1.1.1"))
 
     result = checker.check(device, ["openconfig-system:/system"], "json_ietf")
     assert (

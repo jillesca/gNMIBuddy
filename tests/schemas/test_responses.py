@@ -7,6 +7,7 @@ and functionality for the new NetworkOperationResult architecture.
 """
 
 import json
+from ipaddress import ip_address
 from dataclasses import fields
 from typing import get_type_hints
 from src.schemas.responses import (
@@ -16,7 +17,7 @@ from src.schemas.responses import (
     SuccessResponse,
     NetworkOperationResult,
 )
-from src.schemas.models import Device
+from src.schemas.models import Device, IPAddress
 from src.schemas.responses import NetworkOS
 
 
@@ -180,21 +181,23 @@ class TestNetworkOperationResult:
     def setup_method(self):
         """Setup test fixtures."""
         self.device = Device(
-            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
+            name="test-device",
+            ip_address=ip_address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
         )
 
     def test_network_operation_result_creation_minimal(self):
         """Test NetworkOperationResult creation with minimal required fields."""
         result = NetworkOperationResult(
             device_name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ip_address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             operation_type="system_info",
             status=OperationStatus.SUCCESS,
         )
 
         assert result.device_name == "test-device"
-        assert result.ip_address == "192.168.1.1"
+        assert result.ip_address == ip_address("192.168.1.1")
         assert result.nos == NetworkOS.IOSXR
         assert result.operation_type == "system_info"
         assert result.status == OperationStatus.SUCCESS
@@ -270,7 +273,7 @@ class TestNetworkOperationResult:
         """Test NetworkOperationResult default values."""
         result = NetworkOperationResult(
             device_name="test",
-            ip_address="1.1.1.1",
+            ip_address=ip_address("1.1.1.1"),
             nos=NetworkOS.IOSXR,
             operation_type="test",
             status=OperationStatus.SUCCESS,
@@ -286,7 +289,7 @@ class TestNetworkOperationResult:
         type_hints = get_type_hints(NetworkOperationResult)
 
         assert type_hints["device_name"] == str
-        assert type_hints["ip_address"] == str
+        assert type_hints["ip_address"] == IPAddress
         assert type_hints["nos"] == NetworkOS
         assert type_hints["operation_type"] == str
         assert type_hints["status"] == OperationStatus
@@ -317,7 +320,9 @@ class TestResponseSerializationIntegration:
     def setup_method(self):
         """Setup test fixtures."""
         self.device = Device(
-            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
+            name="test-device",
+            ip_address=ip_address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
         )
 
     def test_successful_operation_serialization(self):
@@ -345,7 +350,7 @@ class TestResponseSerializationIntegration:
         # Should be JSON serializable
         result_dict = {
             "device_name": result.device_name,
-            "ip_address": result.ip_address,
+            "ip_address": str(result.ip_address),
             "nos": str(result.nos),
             "operation_type": result.operation_type,
             "status": result.status.value,

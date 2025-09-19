@@ -4,9 +4,9 @@ File handling module for inventory.
 Handles parsing JSON inventory files and related file operations.
 """
 
+import ipaddress
 import json
 import os
-import sys
 from typing import Dict, List, Any, Optional, cast
 from pathlib import Path
 
@@ -132,16 +132,17 @@ def _convert_device_data(device_data: DeviceData) -> DeviceData:
     """
     Convert device data from JSON format to Device-compatible format.
 
-    Handles conversion of string 'nos' field to NetworkOS enum.
+    Handles conversion of string 'nos' field to NetworkOS enum and
+    string 'ip_address' field to ipaddress object.
 
     Args:
         device_data: Raw device data from JSON
 
     Returns:
-        Device data with enum conversions applied
+        Device data with enum and ipaddress conversions applied
 
     Raises:
-        ValueError: If nos value is not supported
+        ValueError: If nos value is not supported or ip_address is invalid
     """
     converted_data = device_data.copy()
 
@@ -155,6 +156,29 @@ def _convert_device_data(device_data: DeviceData) -> DeviceData:
             error_msg = f"Invalid network OS '{nos_value}'. Must be one of: {valid_values}"
             logger.error(error_msg)
             raise ValueError(error_msg) from e
+
+    # Convert ip_address string to ipaddress object if present
+    if "ip_address" in converted_data and isinstance(
+        converted_data["ip_address"], str
+    ):
+        ip_str = converted_data["ip_address"]
+        if ip_str.strip():  # Only convert non-empty strings
+            try:
+                converted_data["ip_address"] = ipaddress.ip_address(ip_str)
+                logger.debug(
+                    "Converted IP address '%s' to %s object",
+                    ip_str,
+                    type(converted_data["ip_address"]).__name__,
+                )
+            except (ipaddress.AddressValueError, ValueError) as e:
+                error_msg = f"Invalid IP address '{ip_str}': {e}"
+                logger.error(error_msg)
+                raise ValueError(error_msg) from e
+        else:
+            # Empty IP address is not allowed
+            error_msg = "IP address cannot be empty"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
     return converted_data
 

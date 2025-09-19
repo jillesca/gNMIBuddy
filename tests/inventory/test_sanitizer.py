@@ -6,6 +6,7 @@ Tests sensitive data redaction, non-sensitive data preservation,
 class-based data structures, and edge cases.
 """
 
+import ipaddress
 import pytest
 from typing import List
 from src.inventory.sanitizer import DeviceDataSanitizer
@@ -25,7 +26,7 @@ class TestDeviceDataSanitizer:
         """Create a test device with sensitive authentication data."""
         return Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="admin",
@@ -46,7 +47,7 @@ class TestDeviceDataSanitizer:
         """Create a test device without sensitive authentication data."""
         return Device(
             name="test-device-minimal",
-            ip_address="10.1.1.1",
+            ip_address=ipaddress.IPv4Address("10.1.1.1"),
             port=830,
             nos=NetworkOS.IOSXR,
             username="user",
@@ -78,7 +79,7 @@ class TestDeviceDataSanitizer:
 
         # Verify non-sensitive data is preserved
         assert sanitized.name == "test-device"
-        assert sanitized.ip_address == "192.168.1.1"
+        assert sanitized.ip_address == ipaddress.IPv4Address("192.168.1.1")
         assert sanitized.port == 57777
         assert sanitized.nos == NetworkOS.IOSXR
         assert sanitized.username == "admin"
@@ -115,7 +116,7 @@ class TestDeviceDataSanitizer:
 
         # Verify all other data is preserved
         assert sanitized.name == "test-device-minimal"
-        assert sanitized.ip_address == "10.1.1.1"
+        assert sanitized.ip_address == ipaddress.IPv4Address("10.1.1.1")
         assert sanitized.port == 830
         assert sanitized.nos == NetworkOS.IOSXR
         assert sanitized.username == "user"
@@ -209,7 +210,7 @@ class TestDeviceDataSanitizer:
         """Test handling of empty string password."""
         device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="",  # Empty string
             path_cert="",  # Empty string
@@ -227,7 +228,7 @@ class TestDeviceDataSanitizer:
         """Test handling of whitespace-only sensitive fields."""
         device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="   ",  # Whitespace only
             path_cert="\t\n",  # Tabs and newlines
@@ -249,7 +250,7 @@ class TestDeviceDataSanitizer:
 
         device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="secret123",
         )

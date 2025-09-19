@@ -6,9 +6,13 @@ Contains data models for representing network devices and related
 inventory structures used throughout the application.
 """
 
+import ipaddress
 from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Union
+
+
+IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None]
 
 
 class NetworkOS(Enum):
@@ -43,8 +47,8 @@ class DeviceErrorResult:
     """Result class for device error conditions."""
 
     msg: str
-    nos: str = "unknown"
-    ip_address: str = "unknown"
+    nos: NetworkOS = NetworkOS.UNKNOWN
+    ip_address: IPAddress = None
     device_info: Optional[Dict[str, Any]] = None
 
 
@@ -54,8 +58,9 @@ class Device:
     Device representation with all attributes from src.inventory.
 
     Attributes:
-        name: Device hostname or identifier
-        ip_address: IP address for device management
+        name: Device hostname or identifier (required)
+        ip_address: IP address for device management (required)
+        nos: Network Operating System identifier
         port: Port number for device connections
         nos: Network Operating System identifier
         username: Authentication username (optional, required if not using certificates)
@@ -78,7 +83,7 @@ class Device:
     """
 
     name: str = ""
-    ip_address: str = ""
+    ip_address: IPAddress = None
     port: int = 830
     nos: NetworkOS = NetworkOS.IOSXR
     username: Optional[str] = None
@@ -92,3 +97,8 @@ class Device:
     grpc_options: Optional[list] = None
     show_diff: Optional[str] = None
     insecure: bool = True
+
+    @property
+    def host(self) -> str:
+        """Return string representation of the IP address for network connections."""
+        return str(self.ip_address)

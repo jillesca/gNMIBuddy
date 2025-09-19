@@ -5,15 +5,26 @@
 
   vars:
     ansible_command_timeout: 60
+    # Disable platform detection to avoid 'show inventory' command
+    ansible_network_os: cisco.iosxr.iosxr
+    ansible_iosxr_use_proxy: false
+    # Force disable facts gathering and platform detection
+    ansible_gather_subset: "!all"
+    ansible_facts_modules: []
+    # Skip device platform detection entirely
+    ansible_iosxr_skip_platform_detection: true
 
   tasks:
     - name: Enable gRPC
       cisco.iosxr.iosxr_config:
         lines:
           - grpc
+        backup: no
+
     - name: Configure gRPC parameters
       cisco.iosxr.iosxr_config:
         lines:
           - port 57777
           - no-tls
         parents: grpc
+        backup: no

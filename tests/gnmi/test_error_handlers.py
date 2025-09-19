@@ -3,11 +3,9 @@
 Tests for the error handling functions in gnmi/error_handlers.py.
 """
 
+import ipaddress
 import os
 import sys
-import re
-import pytest
-from unittest.mock import MagicMock, patch
 
 # Add the project root to the Python path
 sys.path.insert(
@@ -15,14 +13,13 @@ sys.path.insert(
 )
 
 import grpc
-from src.schemas.models import Device
+from src.schemas.models import Device, NetworkOS
 from src.gnmi.error_handlers import (
     handle_timeout_error,
     handle_rpc_error,
     handle_connection_refused,
     handle_generic_error,
     _extract_feature_name,
-    _log_error,
 )
 from src.schemas.responses import ErrorResponse, FeatureNotFoundResponse
 
@@ -48,11 +45,11 @@ class Test_ErrorHandlers:
         """Setup test fixtures."""
         self.device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             port=57400,
             username="admin",
             password="admin",
-            nos="iosxr",
+            nos=NetworkOS.IOSXR,
         )
 
     def test_handle_timeout_error(self):
@@ -60,9 +57,10 @@ class Test_ErrorHandlers:
         result = handle_timeout_error(self.device)
         assert isinstance(result, ErrorResponse)
         assert result.type == "CONNECTION_TIMEOUT"
+        assert result.message is not None
         assert "Connection timeout" in result.message
         assert self.device.name in result.message
-        assert self.device.ip_address in result.message
+        assert str(self.device.ip_address) in result.message
         assert "error_class" in result.details
 
     def test_handle_connection_refused(self):
@@ -70,9 +68,10 @@ class Test_ErrorHandlers:
         result = handle_connection_refused(self.device)
         assert isinstance(result, ErrorResponse)
         assert result.type == "CONNECTION_REFUSED"
+        assert result.message is not None
         assert "Connection refused" in result.message
         assert self.device.name in result.message
-        assert self.device.ip_address in result.message
+        assert str(self.device.ip_address) in result.message
 
     def test_handle_rpc_error_regular_error(self):
         """Test the handle_rpc_error function with a regular error."""
@@ -83,6 +82,7 @@ class Test_ErrorHandlers:
         result = handle_rpc_error(self.device, error)
         assert isinstance(result, ErrorResponse)
         assert result.type == "GRPC_ERROR"
+        assert result.message is not None
         assert "gRPC error" in result.message
         assert self.device.name in result.message
         assert error.code().name in result.message
@@ -99,6 +99,7 @@ class Test_ErrorHandlers:
         result = handle_rpc_error(self.device, error)
         assert isinstance(result, FeatureNotFoundResponse)
         assert result.feature_name == feature_name
+        assert result.message is not None
         assert feature_name in result.message
         assert self.device.name in result.message
         assert "code" in result.details
@@ -111,6 +112,7 @@ class Test_ErrorHandlers:
         result = handle_generic_error(self.device, error)
         assert isinstance(result, ErrorResponse)
         assert result.type == "ValueError"
+        assert result.message is not None
         assert str(error) in result.message
 
     def test_handle_generic_error_feature_not_found(self):
@@ -121,6 +123,7 @@ class Test_ErrorHandlers:
         result = handle_generic_error(self.device, error)
         assert isinstance(result, FeatureNotFoundResponse)
         assert result.feature_name == feature_name
+        assert result.message is not None
         assert "not found" in result.message.lower()
         assert self.device.name in result.message
         # The generic error handler creates an empty details dict

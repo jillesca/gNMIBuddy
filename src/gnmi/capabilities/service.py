@@ -27,7 +27,7 @@ class CapabilityService:
     def _fetch(self, device: Device) -> DeviceCapabilities:
         # Build connection params locally to avoid circular import with gnmi.client
         params = {
-            "target": (device.ip_address, device.port),
+            "target": (device.host, device.port),
             "username": device.username,
             "password": device.password,
             "insecure": device.insecure,

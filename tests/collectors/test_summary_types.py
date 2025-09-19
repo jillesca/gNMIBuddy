@@ -4,6 +4,7 @@
 Test module to diagnose type annotation issues in NetworkOperationResult response classes
 """
 
+import ipaddress
 import sys
 
 # Add src to path
@@ -12,6 +13,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from src.schemas.responses import NetworkOperationResult, OperationStatus
+from src.schemas.models import NetworkOS
 
 
 def test_network_operation_result_structure():
@@ -20,8 +22,8 @@ def test_network_operation_result_structure():
     # Create an instance of NetworkOperationResult to test
     result = NetworkOperationResult(
         device_name="test-device",
-        ip_address="192.168.1.1",
-        nos="iosxr",
+        ip_address=ipaddress.IPv4Address("192.168.1.1"),
+        nos=NetworkOS.IOSXR,
         operation_type="mpls",
         status=OperationStatus.SUCCESS,
         data={"test": "data"},

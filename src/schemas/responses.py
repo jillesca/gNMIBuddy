@@ -9,7 +9,7 @@ the gNMIBuddy application for representing operation results.
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Any, Optional, Union
-from .models import NetworkOS
+from .models import NetworkOS, IPAddress
 
 
 class RoutingProtocol(Enum):
@@ -117,7 +117,6 @@ class SuccessResponse:
         return f"SuccessResponse(data_count={data_count}{timestamp_str})"
 
 
-# Unified response object for all network tools
 @dataclass
 class NetworkOperationResult:
     """
@@ -136,7 +135,7 @@ class NetworkOperationResult:
     """
 
     device_name: str
-    ip_address: str
+    ip_address: IPAddress
     nos: NetworkOS
     operation_type: str
     status: OperationStatus

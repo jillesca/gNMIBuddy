@@ -5,6 +5,7 @@ Tests for validate command integration.
 Tests that the validate command includes topology_adjacency function properly.
 """
 
+import ipaddress
 from src.schemas.models import Device, NetworkOS
 from src.inventory.manager import InventoryManager
 
@@ -19,7 +20,7 @@ class TestValidateCommandIntegration:
 
         self.device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             port=57400,
             username="admin",
             password="admin",

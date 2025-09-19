@@ -60,12 +60,12 @@ class GnmiConnectionManager:
         logger.debug(
             "Creating gNMI connection params for device %s (%s:%d)",
             device.name,
-            device.ip_address,
+            device.host,
             device.port,
         )
 
         params = {
-            "target": (device.ip_address, device.port),
+            "target": (device.host, device.port),
             "username": device.username,
             "password": device.password,
             "insecure": device.insecure,
@@ -383,17 +383,19 @@ if __name__ == "__main__":
         logger.info(
             "Testing with device: %s (%s:%d)",
             device.name,
-            device.ip_address,
+            device.host,
             device.port,
         )
 
         # Creating a GnmiRequest for an example query
+        from src.gnmi.capabilities.encoding import GnmiEncoding
+
         request = GnmiRequest(
             path=[
                 "openconfig-interfaces:interfaces/interface[name=*]/state/admin-status",
                 "openconfig-interfaces:interfaces/interface[name=*]/state/oper-status",
             ],
-            encoding="json_ietf",
+            encoding=GnmiEncoding.JSON_IETF,
         )
 
         logger.info("Executing gNMI request...")

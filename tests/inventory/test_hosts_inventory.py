@@ -31,7 +31,7 @@ class TestHostsInventory:
         assert not isinstance(
             device, DeviceErrorResult
         ), "Should successfully retrieve test-device-1 device"
-        assert device.ip_address == "10.0.0.1"
+        assert str(device.ip_address) == "10.0.0.1"
         assert device.port == 57777
         assert device.nos == NetworkOS.IOSXR
         assert device.username == "test_user"
@@ -81,6 +81,6 @@ class TestHostsInventory:
 
         # Check test-device-2
         test_device_2 = devices["test-device-2"]
-        assert test_device_2.ip_address == "10.0.0.2"
+        assert str(test_device_2.ip_address) == "10.0.0.2"
         assert test_device_2.port == 57777
         assert test_device_2.nos == NetworkOS.IOSXR

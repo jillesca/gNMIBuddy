@@ -5,9 +5,10 @@ Integration tests for the device list CLI command with sanitization.
 Tests CLI output redaction, class-based data handling, and no sensitive data leakage.
 """
 
+import ipaddress
 import pytest
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from click.testing import CliRunner
 
 from src.cmd.commands.device.list import device_list
@@ -28,7 +29,7 @@ class TestDeviceListCLIIntegration:
         """Create a mock device with sensitive authentication data."""
         return Device(
             name="test-device-1",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="admin",
@@ -57,7 +58,7 @@ class TestDeviceListCLIIntegration:
         """Create a mock sanitized device list result."""
         sanitized_device = Device(
             name="test-device-1",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="admin",
@@ -402,7 +403,7 @@ class TestDeviceListCLIIntegration:
         # Create multiple devices with different sensitive data patterns
         device1 = Device(
             name="device-1",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             username="admin",
             password="secret1",
@@ -411,7 +412,7 @@ class TestDeviceListCLIIntegration:
 
         device2 = Device(
             name="device-2",
-            ip_address="192.168.1.2",
+            ip_address=ipaddress.IPv4Address("192.168.1.2"),
             nos=NetworkOS.IOSXR,
             username="user",
             password=None,  # No password
@@ -421,7 +422,7 @@ class TestDeviceListCLIIntegration:
         # Create sanitized versions
         sanitized_device1 = Device(
             name="device-1",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             username="admin",
             password="***",
@@ -430,7 +431,7 @@ class TestDeviceListCLIIntegration:
 
         sanitized_device2 = Device(
             name="device-2",
-            ip_address="192.168.1.2",
+            ip_address=ipaddress.IPv4Address("192.168.1.2"),
             nos=NetworkOS.IOSXR,
             username="user",
             password=None,

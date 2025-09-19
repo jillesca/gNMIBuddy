@@ -1,10 +1,13 @@
+import ipaddress
 from src.gnmi.capabilities.repository import DeviceCapabilitiesRepository
 from src.gnmi.capabilities.models import DeviceCapabilities, ModelIdentifier
 from src.schemas.models import Device
 
 
 def _dev(name="R1"):
-    return Device(name=name, ip_address="10.0.0.1", port=57777)
+    return Device(
+        name=name, ip_address=ipaddress.IPv4Address("10.0.0.1"), port=57777
+    )
 
 
 def test_repo_keying_and_basic_ops():

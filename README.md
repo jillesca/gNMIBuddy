@@ -28,6 +28,13 @@ See the [API definition](/api.py) for all available APIs and options.
 
 ### Device Compatibility
 
+**Tested on:**
+
+- Cisco XRd Control Plane (`24.4.1.26I`, `25.3.1`)
+
+> [!NOTE]
+> The `get_logs()` function only works on IOS-XR.
+
 Devices **must** support gNMI and OpenConfig models listed below:
 
 **OpenConfig Models dependencies**
@@ -39,14 +46,11 @@ Devices **must** support gNMI and OpenConfig models listed below:
 > [!NOTE]
 > If the required model for a function is not found, gNMIBuddy will return an error. If the model version is older than required, it will continue execution but warn the user about potential errors.
 
-You can use `uv run gnmibuddy.py device capabilities` to verify the supported models on a specific device. See the options available.
+You can use the capabilities command to verify the supported models on a specific device. If you have many devices you can use the `--device` option.
 
-**Tested on:**
-
-- Cisco XRd Control Plane (`24.4.1.26I`)
-
-> [!NOTE]
-> The `get_logs()` function only works on IOS-XR.
+```bash
+uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy device capabilities --all-devices
+```
 
 ### Device Inventory file
 
@@ -299,7 +303,7 @@ Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.c
 # If you cloned the repo
 # Enable gRPC on the DevNet XRd Sandbox
 ANSIBLE_HOST_KEY_CHECKING=False \
-uvx --from ansible-core --with "paramiko,ansible" \
+uvx --from "ansible-core==2.19.2" --with "paramiko,ansible" \
 ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
 ```
 
@@ -313,7 +317,7 @@ bash -c 'TMPDIR=$(mktemp -d) \
 && trap "rm -rf $TMPDIR" EXIT \
 && curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/xrd_apply_config.yaml > "$TMPDIR/playbook.yaml" \
 && curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/hosts > "$TMPDIR/hosts" \
-&& uvx --from ansible-core --with "paramiko,ansible" ansible-playbook "$TMPDIR/playbook.yaml" -i "$TMPDIR/hosts"'
+&& uvx --from "ansible-core==2.19.2" --with "paramiko,ansible" ansible-playbook "$TMPDIR/playbook.yaml" -i "$TMPDIR/hosts"'
 ```
 
 </details>

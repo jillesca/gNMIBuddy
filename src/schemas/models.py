@@ -97,3 +97,8 @@ class Device:
     grpc_options: Optional[list] = None
     show_diff: Optional[str] = None
     insecure: bool = True
+
+    @property
+    def host(self) -> str:
+        """Return string representation of the IP address for network connections."""
+        return str(self.ip_address)

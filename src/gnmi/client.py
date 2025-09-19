@@ -60,12 +60,12 @@ class GnmiConnectionManager:
         logger.debug(
             "Creating gNMI connection params for device %s (%s:%d)",
             device.name,
-            device.ip_address,
+            device.host,
             device.port,
         )
 
         params = {
-            "target": (str(device.ip_address), device.port),
+            "target": (device.host, device.port),
             "username": device.username,
             "password": device.password,
             "insecure": device.insecure,
@@ -383,7 +383,7 @@ if __name__ == "__main__":
         logger.info(
             "Testing with device: %s (%s:%d)",
             device.name,
-            device.ip_address,
+            device.host,
             device.port,
         )
 

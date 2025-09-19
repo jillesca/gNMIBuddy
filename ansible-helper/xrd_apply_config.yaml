@@ -5,6 +5,9 @@
 
   vars:
     ansible_command_timeout: 60
+    # Disable platform detection to avoid 'show inventory' command
+    ansible_network_os: cisco.iosxr.iosxr
+    ansible_iosxr_use_proxy: false
 
   tasks:
     - name: Enable gRPC

@@ -6,12 +6,12 @@ Tests api.get_devices() returns sanitized data, MCP server tool registration,
 class-based data structures, and automatic sanitization inheritance.
 """
 
+import ipaddress
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import api
 from src.schemas.models import Device, DeviceListResult, NetworkOS
-from src.inventory.manager import InventoryManager
 
 
 class TestAPIIntegration:
@@ -22,7 +22,7 @@ class TestAPIIntegration:
         """Create a mock device with sensitive authentication data."""
         return Device(
             name="api-test-device",
-            ip_address="10.0.1.100",
+            ip_address=ipaddress.IPv4Address("10.0.1.100"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="gnmi_user",
@@ -45,7 +45,7 @@ class TestAPIIntegration:
         """Create a mock sanitized device list result."""
         sanitized_device = Device(
             name="api-test-device",
-            ip_address="10.0.1.100",
+            ip_address=ipaddress.IPv4Address("10.0.1.100"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="gnmi_user",
@@ -91,7 +91,7 @@ class TestAPIIntegration:
 
             # Verify non-sensitive data is preserved
             assert device.name == "api-test-device"
-            assert device.ip_address == "10.0.1.100"
+            assert device.ip_address == ipaddress.IPv4Address("10.0.1.100")
             assert device.username == "gnmi_user"
             assert device.path_root == "/secure/ca.pem"  # Not sensitive
 
@@ -160,7 +160,7 @@ class TestAPIIntegration:
         # Create multiple devices with different sensitivity patterns
         device1 = Device(
             name="device-1",
-            ip_address="10.0.1.1",
+            ip_address=ipaddress.IPv4Address("10.0.1.1"),
             nos=NetworkOS.IOSXR,
             password="***",
             path_cert="***",
@@ -168,7 +168,7 @@ class TestAPIIntegration:
 
         device2 = Device(
             name="device-2",
-            ip_address="10.0.1.2",
+            ip_address=ipaddress.IPv4Address("10.0.1.2"),
             nos=NetworkOS.IOSXR,
             password=None,  # No password
             path_cert=None,  # No cert
@@ -240,7 +240,7 @@ class TestMCPServerIntegration:
         # Mock a sanitized device result
         sanitized_device = Device(
             name="mcp-test-device",
-            ip_address="172.16.1.1",
+            ip_address=ipaddress.IPv4Address("172.16.1.1"),
             nos=NetworkOS.IOSXR,
             username="mcp_user",
             password="***",  # Sanitized
@@ -301,7 +301,7 @@ class TestMCPServerIntegration:
 
         sanitized_device = Device(
             name="flow-test-device",
-            ip_address="192.168.100.1",
+            ip_address=ipaddress.IPv4Address("192.168.100.1"),
             nos=NetworkOS.IOSXR,
             password="***",
             path_cert="***",
@@ -328,7 +328,7 @@ class TestMCPServerIntegration:
 
         sanitized_device = Device(
             name="class-test-device",
-            ip_address="10.100.1.1",
+            ip_address=ipaddress.IPv4Address("10.100.1.1"),
             nos=NetworkOS.IOSXR,
             username="test_user",
             password="***",
@@ -360,7 +360,7 @@ class TestMCPServerIntegration:
         # Create a result that matches the expected interface
         test_device = Device(
             name="compat-test",
-            ip_address="172.20.1.1",
+            ip_address=ipaddress.IPv4Address("172.20.1.1"),
             nos=NetworkOS.IOSXR,
             password="***",
         )

@@ -6,6 +6,7 @@ Verifies all existing functionality still works, performance hasn't degraded,
 error handling remains intact, and backward compatibility is maintained.
 """
 
+import ipaddress
 import pytest
 import time
 from unittest.mock import patch, MagicMock
@@ -24,7 +25,7 @@ class TestRegressionFunctionality:
         """Create a sample device for testing."""
         return Device(
             name="regression-test-device",
-            ip_address="192.168.100.1",
+            ip_address=ipaddress.IPv4Address("192.168.100.1"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="test_user",
@@ -74,7 +75,7 @@ class TestRegressionFunctionality:
 
             # Verify non-sensitive data is preserved
             assert device.name == "regression-test-device"
-            assert device.ip_address == "192.168.100.1"
+            assert device.ip_address == ipaddress.IPv4Address("192.168.100.1")
 
     def test_device_model_cleanup_verification(self, sample_device):
         """Test that deprecated device methods have been properly removed."""
@@ -85,7 +86,9 @@ class TestRegressionFunctionality:
 
         # Verify the device still works for core functionality
         assert sample_device.name == "regression-test-device"
-        assert sample_device.ip_address == "192.168.100.1"
+        assert sample_device.ip_address == ipaddress.IPv4Address(
+            "192.168.100.1"
+        )
         assert (
             sample_device.password == "test_password"
         )  # Sensitive data intact in Device object
@@ -95,7 +98,9 @@ class TestRegressionFunctionality:
 
         # Test device creation with minimal fields (original way)
         device = Device(
-            name="compat-test", ip_address="10.1.1.1", nos=NetworkOS.IOSXR
+            name="compat-test",
+            ip_address=ipaddress.IPv4Address("10.1.1.1"),
+            nos=NetworkOS.IOSXR,
         )
 
         # Verify default values are unchanged
@@ -109,7 +114,7 @@ class TestRegressionFunctionality:
         # Test device creation with all fields (original way)
         full_device = Device(
             name="full-test",
-            ip_address="10.1.1.2",
+            ip_address=ipaddress.IPv4Address("10.1.1.2"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="admin",
@@ -172,21 +177,21 @@ class TestRegressionFunctionality:
 
         device1 = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="secret",
         )
 
         device2 = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="secret",
         )
 
         device3 = Device(
             name="different-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="secret",
         )
@@ -211,7 +216,7 @@ class TestRegressionPerformance:
         for i in range(100):
             device = Device(
                 name=f"perf-test-device-{i}",
-                ip_address=f"192.168.1.{i+1}",
+                ip_address=ipaddress.IPv4Address(f"192.168.1.{i+1}"),
                 nos=NetworkOS.IOSXR,
                 username="admin",
                 password=f"password_{i}",
@@ -247,7 +252,7 @@ class TestRegressionPerformance:
         devices = [
             Device(
                 name=f"list-perf-{i}",
-                ip_address=f"10.0.0.{i+1}",
+                ip_address=ipaddress.IPv4Address(f"10.0.0.{i+1}"),
                 nos=NetworkOS.IOSXR,
                 password=f"secret_{i}",
             )
@@ -293,7 +298,7 @@ class TestRegressionPerformance:
         devices = [
             Device(
                 name=f"api-perf-{i}",
-                ip_address=f"172.16.0.{i+1}",
+                ip_address=ipaddress.IPv4Address(f"172.16.0.{i+1}"),
                 nos=NetworkOS.IOSXR,
                 password="secret",
             )
@@ -303,7 +308,7 @@ class TestRegressionPerformance:
         sanitized_devices = [
             Device(
                 name=f"api-perf-{i}",
-                ip_address=f"172.16.0.{i+1}",
+                ip_address=ipaddress.IPv4Address(f"172.16.0.{i+1}"),
                 nos=NetworkOS.IOSXR,
                 password="***",
             )
@@ -338,7 +343,7 @@ class TestRegressionEdgeCases:
 
         device = Device(
             name="none-test",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             username=None,
             password=None,
@@ -361,7 +366,7 @@ class TestRegressionEdgeCases:
 
         device = Device(
             name="special-char-test",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="p@$$w0rd!@#$%^&*()",
             path_cert="/path/with spaces/cert-file.pem",
@@ -394,7 +399,7 @@ class TestRegressionDataIntegrity:
 
         device = Device(
             name="immutability-test",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password=original_password,
             path_cert=original_cert,
@@ -420,7 +425,7 @@ class TestRegressionDataIntegrity:
         """Test that Device objects maintain basic functionality after cleanup."""
         device = Device(
             name="basic-test",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="test_password",
         )
@@ -428,12 +433,12 @@ class TestRegressionDataIntegrity:
         # Verify basic Device functionality still works
         assert device.name == "basic-test"
         assert device.password == "test_password"
-        assert device.ip_address == "192.168.1.1"
+        assert device.ip_address == ipaddress.IPv4Address("192.168.1.1")
 
         # Verify equality comparison still works
         device2 = Device(
             name="basic-test",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             password="test_password",
         )

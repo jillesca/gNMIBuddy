@@ -4,6 +4,7 @@ Tests for the logging functions in network_tools/logging.py.
 Uses mocking to test the logging functions without making actual GNMI requests.
 """
 
+import ipaddress
 import os
 import sys
 import pytest
@@ -21,7 +22,7 @@ from src.schemas.responses import (
     ErrorResponse,
     SuccessResponse,
 )
-from src.schemas.models import Device
+from src.schemas.models import Device, NetworkOS
 
 
 class TestLoggingFunctions:
@@ -33,8 +34,8 @@ class TestLoggingFunctions:
         # Create a mock device
         mock_device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
-            nos="iosxr",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -113,8 +114,8 @@ class TestLoggingFunctions:
         # Create a mock device
         mock_device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
-            nos="iosxr",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -145,8 +146,8 @@ class TestLoggingFunctions:
         # Create a mock device
         mock_device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
-            nos="iosxr",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -294,8 +295,8 @@ class TestMinutesValidation:
         # Create a mock device
         mock_device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
-            nos="iosxr",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -326,8 +327,8 @@ class TestMinutesValidation:
         # Create a mock device
         mock_device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
-            nos="iosxr",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )
@@ -356,8 +357,8 @@ class TestMinutesValidation:
         # Create a mock device
         mock_device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
-            nos="iosxr",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
             username="admin",
             password="password",
         )

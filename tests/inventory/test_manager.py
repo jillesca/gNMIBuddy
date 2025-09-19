@@ -4,6 +4,7 @@ Tests for the inventory manager module.
 Focuses on testing the get_device and list_devices functions.
 """
 
+import ipaddress
 import os
 import unittest
 from unittest.mock import patch
@@ -139,7 +140,7 @@ class TestAutoInitialization(unittest.TestCase):
         # Setup the mocked devices
         test_device1 = Device(
             name="test-device-1",
-            ip_address="10.0.0.1",
+            ip_address=ipaddress.IPv4Address("10.0.0.1"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="test_user",
@@ -147,7 +148,7 @@ class TestAutoInitialization(unittest.TestCase):
         )
         test_device2 = Device(
             name="test-device-2",
-            ip_address="10.0.0.2",
+            ip_address=ipaddress.IPv4Address("10.0.0.2"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="test_user",
@@ -186,7 +187,7 @@ class TestAutoInitialization(unittest.TestCase):
         # Setup the mocked device
         test_device = Device(
             name="test-device-1",
-            ip_address="10.0.0.1",
+            ip_address=ipaddress.IPv4Address("10.0.0.1"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="test_user",
@@ -220,7 +221,7 @@ class TestAutoInitialization(unittest.TestCase):
         # Setup the mocked device
         test_device = Device(
             name="test-device-1",
-            ip_address="10.0.0.1",
+            ip_address=ipaddress.IPv4Address("10.0.0.1"),
             port=57777,
             nos=NetworkOS.IOSXR,
             username="test_user",

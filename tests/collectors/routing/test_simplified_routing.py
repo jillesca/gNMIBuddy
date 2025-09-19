@@ -3,6 +3,7 @@
 Tests for the simplified routing functionality with metadata-based approach.
 """
 
+import ipaddress
 import os
 import sys
 from unittest.mock import patch
@@ -35,7 +36,7 @@ class TestSimplifiedRoutingFunctionality:
         """Test scenario where BGP is not configured but ISIS is configured."""
         mock_device = Device(
             name="test-device-1",
-            ip_address="10.10.20.103",
+            ip_address=ipaddress.IPv4Address("10.10.20.103"),
             nos=NetworkOS.IOSXR,
             port=57777,
             username="test_user",
@@ -132,7 +133,7 @@ class TestSimplifiedRoutingFunctionality:
         # Create a mock response with mixed results
         mock_response = NetworkOperationResult(
             device_name="test-device",
-            ip_address="10.0.0.1",
+            ip_address=ipaddress.IPv4Address("10.0.0.1"),
             nos=NetworkOS.IOSXR,
             operation_type="routing_info",
             status=OperationStatus.PARTIAL_SUCCESS,
@@ -189,7 +190,7 @@ class TestSimplifiedRoutingFunctionality:
         """Test scenario where all protocols are successful."""
         mock_device = Device(
             name="test-device",
-            ip_address="10.0.0.1",
+            ip_address=ipaddress.IPv4Address("10.0.0.1"),
             nos=NetworkOS.IOSXR,
             port=57777,
             username="test_user",
@@ -243,7 +244,7 @@ class TestSimplifiedRoutingFunctionality:
         """Test scenario where all protocols are not configured."""
         mock_device = Device(
             name="test-device",
-            ip_address="10.0.0.1",
+            ip_address=ipaddress.IPv4Address("10.0.0.1"),
             nos=NetworkOS.IOSXR,
             port=57777,
             username="test_user",
@@ -304,7 +305,7 @@ class TestSimplifiedRoutingFunctionality:
         """Test querying a single protocol that is not configured."""
         mock_device = Device(
             name="test-device",
-            ip_address="10.0.0.1",
+            ip_address=ipaddress.IPv4Address("10.0.0.1"),
             nos=NetworkOS.IOSXR,
             port=57777,
             username="test_user",

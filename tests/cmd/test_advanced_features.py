@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Tests for Phase 4 advanced CLI features"""
 
+import ipaddress
 import pytest
 import json
 import yaml
 import tempfile
 import os
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from click.testing import CliRunner
 from src.cmd.formatters import (
     JSONFormatter,
@@ -29,6 +30,7 @@ from src.schemas.responses import (
     OperationStatus,
     ErrorResponse,
 )
+from src.schemas.models import NetworkOS
 from src.cmd.parser import cli
 
 
@@ -273,8 +275,8 @@ class TestBatchOperations:
         """Test NetworkOperationResult dataclass"""
         result = NetworkOperationResult(
             device_name="R1",
-            ip_address="192.168.1.1",
-            nos="iosxr",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
             operation_type="interface_info",
             status=OperationStatus.SUCCESS,
             data={"status": "up"},
@@ -282,8 +284,8 @@ class TestBatchOperations:
         )
 
         assert result.device_name == "R1"
-        assert result.ip_address == "192.168.1.1"
-        assert result.nos == "iosxr"
+        assert result.ip_address == ipaddress.IPv4Address("192.168.1.1")
+        assert result.nos == NetworkOS.IOSXR
         assert result.operation_type == "interface_info"
         assert result.status == OperationStatus.SUCCESS
         assert result.data == {"status": "up"}
@@ -311,8 +313,8 @@ class TestBatchOperations:
         results = [
             NetworkOperationResult(
                 device_name="R1",
-                ip_address="192.168.1.1",
-                nos="iosxr",
+                ip_address=ipaddress.IPv4Address("192.168.1.1"),
+                nos=NetworkOS.IOSXR,
                 operation_type="interface_info",
                 status=OperationStatus.SUCCESS,
                 data={"status": "up"},
@@ -320,8 +322,8 @@ class TestBatchOperations:
             ),
             NetworkOperationResult(
                 device_name="R2",
-                ip_address="192.168.1.2",
-                nos="iosxr",
+                ip_address=ipaddress.IPv4Address("192.168.1.2"),
+                nos=NetworkOS.IOSXR,
                 operation_type="interface_info",
                 status=OperationStatus.FAILED,
                 data={},
@@ -332,8 +334,8 @@ class TestBatchOperations:
             ),
             NetworkOperationResult(
                 device_name="R3",
-                ip_address="192.168.1.3",
-                nos="iosxr",
+                ip_address=ipaddress.IPv4Address("192.168.1.3"),
+                nos=NetworkOS.IOSXR,
                 operation_type="interface_info",
                 status=OperationStatus.SUCCESS,
                 data={"status": "up"},
@@ -447,8 +449,8 @@ class TestBatchOperations:
         def mock_operation(device_name):
             return NetworkOperationResult(
                 device_name=device_name,
-                ip_address="192.168.1.1",
-                nos="iosxr",
+                ip_address=ipaddress.IPv4Address("192.168.1.1"),
+                nos=NetworkOS.IOSXR,
                 operation_type="test",
                 status=OperationStatus.SUCCESS,
                 data={"device": device_name, "status": "success"},
@@ -478,8 +480,8 @@ class TestBatchOperations:
                 raise Exception("Connection failed")
             return NetworkOperationResult(
                 device_name=device_name,
-                ip_address="192.168.1.1",
-                nos="iosxr",
+                ip_address=ipaddress.IPv4Address("192.168.1.1"),
+                nos=NetworkOS.IOSXR,
                 operation_type="test",
                 status=OperationStatus.SUCCESS,
                 data={"device": device_name, "status": "success"},

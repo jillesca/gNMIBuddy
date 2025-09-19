@@ -148,7 +148,7 @@ class TestDeviceModel:
         assert type_hints["name"] == str
         assert (
             type_hints["ip_address"]
-            == Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+            == Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None]
         )
         assert type_hints["port"] == int
         assert type_hints["nos"] == NetworkOS

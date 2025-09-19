@@ -95,7 +95,7 @@ def run(
         )
         return NetworkOperationResult(
             device_name=device_name,
-            ip_address="unknown",
+            ip_address=None,
             nos=NetworkOS.UNKNOWN,
             operation_type="device_retrieval",
             status=OperationStatus.FAILED,

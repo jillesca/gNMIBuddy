@@ -48,7 +48,7 @@ class DeviceErrorResult:
 
     msg: str
     nos: str = "unknown"
-    ip_address: str = "unknown"
+    ip_address: IPAddress = None
     device_info: Optional[Dict[str, Any]] = None
 
 

@@ -49,7 +49,8 @@ Devices **must** support gNMI and OpenConfig models listed below:
 You can use the capabilities command to verify the supported models on a specific device. If you have many devices you can use the `--device` option.
 
 ```bash
-uvx --from git+https://github.com/jillesca/gNMIBuddy.git gnmibuddy device capabilities --all-devices
+uvx --from git+https://github.com/jillesca/gNMIBuddy.git \
+gnmibuddy device capabilities --all-devices
 ```
 
 ### Device Inventory file

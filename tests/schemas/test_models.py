@@ -2,10 +2,11 @@
 """
 Tests for device models in src/schemas/models.py.
 
-Tests the Device dataclass and related TypedDict classes to ensure
+Tests the Device dataclass and related dataclass models to ensure
 proper validation and functionality.
 """
 
+import ipaddress
 from dataclasses import fields
 from typing import get_type_hints, Optional
 from src.schemas.models import (
@@ -22,11 +23,13 @@ class TestDeviceModel:
     def test_device_creation_with_minimal_fields(self):
         """Test Device creation with only required fields."""
         device = Device(
-            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
+            name="test-device",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
         )
 
         assert device.name == "test-device"
-        assert device.ip_address == "192.168.1.1"
+        assert device.ip_address == ipaddress.IPv4Address("192.168.1.1")
         assert device.nos == NetworkOS.IOSXR
         assert device.port == 830  # Default value
         assert device.username is None  # Default value (optional)
@@ -39,7 +42,7 @@ class TestDeviceModel:
         """Test Device creation with all fields specified."""
         device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             port=57400,
             nos=NetworkOS.IOSXR,
             username="admin",
@@ -56,7 +59,7 @@ class TestDeviceModel:
         )
 
         assert device.name == "test-device"
-        assert device.ip_address == "192.168.1.1"
+        assert device.ip_address == ipaddress.IPv4Address("192.168.1.1")
         assert device.port == 57400
         assert device.nos == NetworkOS.IOSXR
         assert device.username == "admin"
@@ -96,7 +99,7 @@ class TestDeviceModel:
         """Test that to_device_info method has been removed."""
         device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             port=57400,
             nos=NetworkOS.IOSXR,
             username="admin",
@@ -108,7 +111,7 @@ class TestDeviceModel:
 
         # Verify the device still works for basic functionality
         assert device.name == "test-device"
-        assert device.ip_address == "192.168.1.1"
+        assert device.ip_address == ipaddress.IPv4Address("192.168.1.1")
         assert device.port == 57400
         assert device.nos == NetworkOS.IOSXR
 
@@ -161,16 +164,20 @@ class TestDeviceModel:
     def test_device_equality(self):
         """Test Device equality comparison."""
         device1 = Device(
-            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
+            name="test-device",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
         )
 
         device2 = Device(
-            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
+            name="test-device",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
         )
 
         device3 = Device(
             name="different-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
         )
 
@@ -180,7 +187,9 @@ class TestDeviceModel:
     def test_device_string_representation(self):
         """Test Device string representation."""
         device = Device(
-            name="test-device", ip_address="192.168.1.1", nos=NetworkOS.IOSXR
+            name="test-device",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
         )
 
         device_str = str(device)
@@ -190,31 +199,43 @@ class TestDeviceModel:
 
 
 class TestDeviceListResult:
-    """Test suite for DeviceListResult TypedDict."""
+    """Test suite for DeviceListResult dataclass."""
 
     def test_device_list_result_structure(self):
         """Test that DeviceListResult has correct structure."""
-        # This is a TypedDict, so we test with actual data
-        device_list: DeviceListResult = {
-            "devices": [
-                {"name": "device1", "ip_address": "192.168.1.1"},
-                {"name": "device2", "ip_address": "192.168.1.2"},
-            ]
-        }
+        # Create some test devices
+        device1 = Device(
+            name="device1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
+            nos=NetworkOS.IOSXR,
+        )
+        device2 = Device(
+            name="device2",
+            ip_address=ipaddress.IPv4Address("192.168.1.2"),
+            nos=NetworkOS.IOSXR,
+        )
 
-        assert "devices" in device_list
-        assert isinstance(device_list["devices"], list)
-        assert len(device_list["devices"]) == 2
-        assert device_list["devices"][0]["name"] == "device1"
-        assert device_list["devices"][1]["name"] == "device2"
+        device_list = DeviceListResult(devices=[device1, device2])
+
+        assert hasattr(device_list, "devices")
+        assert isinstance(device_list.devices, list)
+        assert len(device_list.devices) == 2
+        assert device_list.devices[0].name == "device1"
+        assert device_list.devices[1].name == "device2"
+        assert device_list.devices[0].ip_address == ipaddress.IPv4Address(
+            "192.168.1.1"
+        )
+        assert device_list.devices[1].ip_address == ipaddress.IPv4Address(
+            "192.168.1.2"
+        )
 
     def test_device_list_result_empty(self):
         """Test DeviceListResult with empty device list."""
-        device_list: DeviceListResult = {"devices": []}
+        device_list = DeviceListResult(devices=[])
 
-        assert "devices" in device_list
-        assert isinstance(device_list["devices"], list)
-        assert len(device_list["devices"]) == 0
+        assert hasattr(device_list, "devices")
+        assert isinstance(device_list.devices, list)
+        assert len(device_list.devices) == 0
 
 
 class TestDeviceErrorResult:
@@ -225,7 +246,7 @@ class TestDeviceErrorResult:
         error_result = DeviceErrorResult(
             msg="Connection failed",
             nos=NetworkOS.IOSXR,
-            ip_address=None,
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             device_info={
                 "name": "test-device",
                 "ip_address": "192.168.1.1",
@@ -292,7 +313,7 @@ class TestDeviceSanitizationMethods:
         """Test that Device model maintains a clean interface without deprecated methods."""
         device = Device(
             name="test-device",
-            ip_address="192.168.1.1",
+            ip_address=ipaddress.IPv4Address("192.168.1.1"),
             nos=NetworkOS.IOSXR,
             username="admin",
             password="secret123",
@@ -307,7 +328,7 @@ class TestDeviceSanitizationMethods:
 
         # Verify the device still works as expected for actual use cases
         assert device.name == "test-device"
-        assert device.ip_address == "192.168.1.1"
+        assert device.ip_address == ipaddress.IPv4Address("192.168.1.1")
         assert (
             device.password == "secret123"
         )  # Full data preserved in Device object

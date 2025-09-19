@@ -77,7 +77,7 @@ class TestDeviceModel:
 
         # Test all default values
         assert device.name == ""
-        assert str(device.ip_address) == "127.0.0.1"
+        assert device.ip_address == None
         assert device.port == 830
         assert device.nos == NetworkOS.IOSXR
         assert device.username is None  # Now optional

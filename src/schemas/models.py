@@ -12,6 +12,9 @@ from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Union
 
 
+IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None]
+
+
 class NetworkOS(Enum):
     """Supported Network Operating Systems"""
 
@@ -55,8 +58,9 @@ class Device:
     Device representation with all attributes from src.inventory.
 
     Attributes:
-        name: Device hostname or identifier
-        ip_address: IP address for device management
+        name: Device hostname or identifier (required)
+        ip_address: IP address for device management (required)
+        nos: Network Operating System identifier
         port: Port number for device connections
         nos: Network Operating System identifier
         username: Authentication username (optional, required if not using certificates)
@@ -79,9 +83,7 @@ class Device:
     """
 
     name: str = ""
-    ip_address: Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None] = (
-        None
-    )
+    ip_address: IPAddress = None
     port: int = 830
     nos: NetworkOS = NetworkOS.IOSXR
     username: Optional[str] = None

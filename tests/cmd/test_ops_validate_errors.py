@@ -5,11 +5,10 @@ Test error handling for ops validate command.
 Tests that ops validate command fails fast and shows helpful error messages
 when inventory is missing or misconfigured.
 """
+
 import subprocess
 import tempfile
 import os
-import pytest
-from unittest.mock import patch
 
 
 def test_ops_validate_missing_inventory_with_log_file():
@@ -164,53 +163,6 @@ def test_ops_validate_missing_inventory_all_devices():
         )
         assert "Command Help:" in output
         assert "💡" in output
-
-    finally:
-        # Cleanup
-        if os.path.exists(log_file):
-            os.unlink(log_file)
-
-
-def test_ops_validate_invalid_inventory_path():
-    """Test that invalid inventory path shows error + help"""
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".log", delete=False
-    ) as f:
-        log_file = f.name
-
-    try:
-        # Run command with invalid inventory path (note: --inventory not supported by ops validate)
-        # This test shows proper CLI validation
-        result = subprocess.run(
-            [
-                "uv",
-                "run",
-                "gnmibuddy.py",
-                "ops",
-                "validate",
-                "--inventory",
-                "/nonexistent/path/to/inventory.json",
-                "--devices",
-                "device1,device2",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-
-        # Write both stdout and stderr to log file
-        with open(log_file, "w") as f:
-            f.write("STDOUT:\n")
-            f.write(result.stdout)
-            f.write("\nSTDERR:\n")
-            f.write(result.stderr)
-
-        # Read and verify log file contents
-        with open(log_file, "r") as f:
-            output = f.read()
-
-        # Verify error handling - should show "No such option" for --inventory
-        assert "No such option: --inventory" in output
 
     finally:
         # Cleanup

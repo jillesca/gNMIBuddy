@@ -1,10 +1,10 @@
 ---
-name: python-engineering
-description: Python software engineering standards for gNMIBuddy. Load when doing coding, implementation, refactoring, code review, or object design work. Covers DRY, KISS, YAGNI, SOLID, object design, readability, and Martin Fowler's refactoring guidelines.
+name: sw-engineering
+description: Software engineering standards for gNMIBuddy. Load when doing coding, implementation, refactoring, code review, or object design work. Covers DRY, KISS, YAGNI, SOLID, object design, readability, and Martin Fowler's refactoring guidelines.
 user-invocable: true
 ---
 
-# Python Engineering Standards
+# Software Engineering Standards
 
 ## Core Principles
 

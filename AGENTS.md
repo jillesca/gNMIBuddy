@@ -25,5 +25,5 @@ These apply to every Python file in this project:
 ## Coding and Design Work
 
 When doing implementation, refactoring, code review, or object design work, load the
-`python-engineering` skill for the full set of engineering principles (DRY, KISS, YAGNI,
+`sw-engineering` skill for the full set of engineering principles (DRY, KISS, YAGNI,
 SOLID, object design, readability, and Martin Fowler's refactoring guidelines).

@@ -8,9 +8,8 @@ FastMCP's context logging capabilities while falling back to standard logging.
 
 from typing import Optional
 
-
 try:
-    from mcp.server.fastmcp import Context as MCPContext
+    from fastmcp import Context as MCPContext
 except ImportError:
     MCPContext = None
 

@@ -1,0 +1,42 @@
+# Version control
+.git/
+
+# Local development environment
+.venv/
+.agents/
+.cursor/
+.vscode/
+
+# Build and packaging artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tests
+tests/
+
+# Runtime logs
+logs/
+
+# Documentation and non-runtime directories
+docs/
+examples/
+completions/
+ansible-helper/
+
+# Project meta files not needed at runtime
+AGENTS.md
+skills-lock.json
+LICENSE
+.gitignore
+.containerignore
+
+# Sandbox inventory files — never bake these in accidentally
+ao_sandbox.json
+xrd_sandbox.json
+*test*.json
+
+# Build-time staging file — present only during `make build`, then removed
+.build_inventory.json

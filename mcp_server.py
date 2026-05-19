@@ -3,11 +3,15 @@
 MCP entry point for gNMIBuddy - Registers network tool functions as MCP tools.
 Uses a decorator factory to register API functions without duplicating signatures and docstrings.
 """
+
 import inspect
+import os
 from functools import wraps
 from typing import Optional
 
-from mcp.server.fastmcp import FastMCP, Context
+from fastmcp import FastMCP, Context
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 from src.logging import ExternalLibrarySuppressor
 
@@ -27,11 +31,10 @@ from src.logging import (
 )
 from src.config.environment import get_settings
 
-
 mcp_env_config = read_mcp_environment_config()
 setup_mcp_logging(tool_debug_mode=mcp_env_config.get("tool_debug_mode", False))
 
-mcp = FastMCP("gNMIBuddy")
+mcp = FastMCP(name="gNMIBuddy")
 logger = get_mcp_logger(__name__)
 
 logger.std_logger.info("Started MCP server for gNMIBuddy")
@@ -160,6 +163,11 @@ def register_as_mcp_tool(func):
     return wrapper
 
 
+@mcp.custom_route(path="/health", methods=["GET"])
+async def health_check(request: Request) -> PlainTextResponse:
+    return PlainTextResponse(content="OK")
+
+
 # Register all API functions as MCP tools
 register_as_mcp_tool(api.get_routing_info)
 register_as_mcp_tool(api.get_logs)
@@ -175,8 +183,18 @@ register_as_mcp_tool(api.get_topology_neighbors)
 
 def main():
     """Run the MCP server"""
-    logger.std_logger.info("Starting FastMCP server")
-    mcp.run()
+    transport = os.environ.get(key="GNMIBUDDY_TRANSPORT", default="stdio")
+    logger.std_logger.info(
+        "Starting FastMCP server with transport: %s", transport
+    )
+
+    if transport == "http":
+        host = os.environ.get(key="GNMIBUDDY_HOST", default="0.0.0.0")
+        port = int(os.environ.get(key="GNMIBUDDY_PORT", default="8000"))
+        logger.std_logger.info("HTTP transport on %s:%s", host, port)
+        mcp.run(transport="http", host=host, port=port)
+    else:
+        mcp.run()
 
 
 if __name__ == "__main__":

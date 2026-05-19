@@ -38,5 +38,3 @@ ao_sandbox.json
 xrd_sandbox.json
 *test*.json
 
-# Build-time staging file — present only during `make build`, then removed
-.build_inventory.json

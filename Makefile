@@ -22,14 +22,14 @@ endif
 
 ## run — start the container in detached mode
 run:
-	podman run -d \
+	podman run --detach --rm \
 		--name $(CONTAINER_NAME) \
 		-p $(HOST_PORT):8000 \
 		$(IMAGE_NAME):$(IMAGE_TAG)
 
 ## stop — stop and remove the running container
 stop:
-	podman rm -f $(CONTAINER_NAME) 2>/dev/null || true
+	podman rm -f $(CONTAINER_NAME) 
 
 ## restart — stop then start the container
 restart: stop run
@@ -42,9 +42,9 @@ logs:
 shell:
 	podman exec -it $(CONTAINER_NAME) /bin/bash
 
-## clean — stop the container and remove the image
+## clean — stop the container
 clean: stop
-	podman rmi -f $(IMAGE_NAME):$(IMAGE_TAG) 2>/dev/null || true
+	podman rm -f $(IMAGE_NAME):$(IMAGE_TAG) 
 	rm -f .build_inventory.json
 
 ## fresh — delete existing container/image, rebuild, and run (requires NETWORK_INVENTORY)

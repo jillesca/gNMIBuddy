@@ -30,7 +30,7 @@ class TestDeviceListCLIIntegration:
         return Device(
             name="test-device-1",
             ip_address=ipaddress.IPv4Address("192.168.1.1"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="admin",
             password="secret123",
@@ -59,7 +59,7 @@ class TestDeviceListCLIIntegration:
         sanitized_device = Device(
             name="test-device-1",
             ip_address=ipaddress.IPv4Address("192.168.1.1"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="admin",
             password="***",  # Sanitized

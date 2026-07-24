@@ -8,7 +8,7 @@
     {
       "name": "DEFAULT",
       "enable": true,
-      "port": 57777,
+      "port": 57400,
       "transport_security": false,
       "listen_addresses": [
         "ANY"

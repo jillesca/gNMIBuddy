@@ -298,7 +298,11 @@ Choose the approach that fits your needs:
 
 ## 🧪 Testing with DevNet Sandbox
 
-Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/), follow the instructions to bring up a MPLS network with docker, then configure gNMI with the included Ansible playbook:
+Don't have network devices? Use the [DevNet XRd Sandbox](https://devnetsandbox.cisco.com/DevNet/), follow the instructions to bring up a segment routing network with gNMI configured.
+
+Use the `xrd_sandbox.json` inventory file to connect to the XRd devices running in the DevNet Sandbox.
+
+If gNMI is not enabled, you can enable it with the following commands:
 
 ```bash
 # If you cloned the repo
@@ -307,38 +311,6 @@ ANSIBLE_HOST_KEY_CHECKING=False \
 uvx --from "ansible-core==2.19.2" --with "paramiko,ansible" \
 ansible-playbook ansible-helper/xrd_apply_config.yaml -i ansible-helper/hosts
 ```
-
-<details>
-<summary><strong>If you didn't clone the repo use this command</strong></summary>
-
-```bash
-# Self-contained command that downloads files automatically
-ANSIBLE_HOST_KEY_CHECKING=False \
-bash -c 'TMPDIR=$(mktemp -d) \
-&& trap "rm -rf $TMPDIR" EXIT \
-&& curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/xrd_apply_config.yaml > "$TMPDIR/playbook.yaml" \
-&& curl -s https://raw.githubusercontent.com/jillesca/gNMIBuddy/refs/heads/main/ansible-helper/hosts > "$TMPDIR/hosts" \
-&& uvx --from "ansible-core==2.19.2" --with "paramiko,ansible" ansible-playbook "$TMPDIR/playbook.yaml" -i "$TMPDIR/hosts"'
-```
-
-</details>
-
-Test with the `xrd_sandbox.json` inventory file part of the repository.
-
-<details>
-<summary><strong>If you have problems with Ansible</strong></summary>
-
-Enable manually gNMI. Apply this configuration to all XRd devices:
-
-```bash
-grpc
- port 57777
- no-tls
-```
-
-Don't forget to `commit` your changes to XRd.
-
-</details>
 
 ### Testing with AI Agents
 

@@ -24,7 +24,7 @@
     - name: Configure gRPC parameters
       cisco.iosxr.iosxr_config:
         lines:
-          - port 57777
+          - port 57400
           - no-tls
         parents: grpc
         backup: no

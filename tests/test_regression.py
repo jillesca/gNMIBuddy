@@ -26,7 +26,7 @@ class TestRegressionFunctionality:
         return Device(
             name="regression-test-device",
             ip_address=ipaddress.IPv4Address("192.168.100.1"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_password",
@@ -115,7 +115,7 @@ class TestRegressionFunctionality:
         full_device = Device(
             name="full-test",
             ip_address=ipaddress.IPv4Address("10.1.1.2"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="admin",
             password="secret",

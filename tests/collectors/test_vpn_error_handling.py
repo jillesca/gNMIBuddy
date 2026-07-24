@@ -45,7 +45,7 @@ class TestVpnErrorHandling:
         # Arrange: Mock get_non_default_vrf_names to return ErrorResponse
         error_response = ErrorResponse(
             type="gNMIException",
-            message="GRPC ERROR Host: 192.168.1.1:57777, Error: authentication failed",
+            message="GRPC ERROR Host: 192.168.1.1:57400, Error: authentication failed",
             details={"error_code": 401, "grpc_code": "UNAUTHENTICATED"},
         )
         mock_get_vrf_names.return_value = error_response
@@ -238,10 +238,10 @@ class TestVpnErrorHandling:
         # Arrange: Create ErrorResponse with specific context
         original_error = ErrorResponse(
             type="gNMIException",
-            message="GRPC ERROR Host: 10.10.20.101:57777, Error: authentication failed",
+            message="GRPC ERROR Host: 10.10.20.101:57400, Error: authentication failed",
             details={
                 "host": "10.10.20.101",
-                "port": 57777,
+                "port": 57400,
                 "error_class": "AuthenticationException",
                 "timestamp": "2025-08-05T07:11:33",
             },

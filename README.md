@@ -180,6 +180,42 @@ The `uvx` method automatically builds and runs the tool in an isolated environme
 
 </details>
 
+## 🐳 Running as a Container
+
+Build and run gNMIBuddy as a container image using the provided `Makefile` targets. The `Makefile` auto-detects Docker or Podman (Docker preferred); override with `CONTAINER_ENGINE=docker` or `CONTAINER_ENGINE=podman` if you need to force one.
+
+Device inventory is provided at runtime as a mounted file.
+
+```bash
+# Build the image (no inventory needed)
+make build
+
+# Run it, mounting your inventory file read-only into the container
+# or set the NETWORK_INVENTORY in a .env file
+make run NETWORK_INVENTORY=/path/to/inventory.json
+
+# Tail logs / stop the container
+make logs
+make stop
+```
+
+> [!TIP]
+> Run `make help` for the rest of the targets (`restart`, `shell`, `clean`, `fresh`).
+
+You can test it locally with the `modelcontextprotocol/inspector`.
+
+```bash
+npx @modelcontextprotocol/inspector --transport http --server-url http://0.0.0.0:8000/mcp
+```
+
+### Running on Kubernetes
+
+The container expects a device inventory file at the path in the `NETWORK_INVENTORY` environment variable (`/app/inventory.json` by default). There's no bundled Kubernetes manifest — the exact mechanism depends on your cluster — but the requirement is generic:
+
+- Build the image with any OCI-compatible builder (Docker, Buildah, Kaniko, `docker buildx`, your CI's own build step, etc.). The `Containerfile` is standard and carries no device-specific data, so the resulting image is safe to push to your registry.
+- Store the inventory as a Kubernetes `Secret`.
+- Mount that `Secret` as a volume on the pod at `/app/inventory.json` (or mount it elsewhere and point `NETWORK_INVENTORY` at that path via the pod's env).
+
 ## 📖 CLI Reference
 
 ```bash

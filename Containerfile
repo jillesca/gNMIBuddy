@@ -6,14 +6,14 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
 
 # Copy files required by the package installation
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md uv.lock ./
 COPY src/ ./src/
 COPY mcp_server.py api.py gnmibuddy.py ./
 
-# Create a venv and install the package with all dependencies.
-# No cache to keep the layer lean.
-RUN uv venv /app/.venv && \
-    uv pip install --python /app/.venv/bin/python --no-cache .
+# Install the exact locked dependencies (matches what was tested).
+# --locked fails the build if uv.lock is out of sync with pyproject.toml.
+# --no-editable so the runtime stage only needs the venv, not the source tree.
+RUN uv sync --locked --no-dev --no-editable --no-cache
 
 
 # Stage 2: Runtime — minimal image with only what is needed to run
@@ -24,11 +24,6 @@ WORKDIR /app
 # Copy the fully-installed virtual environment from the builder stage
 COPY --from=builder /app/.venv /app/.venv
 
-# Bake the network inventory into the image.
-# This file is staged by `make build` from the path provided in INVENTORY_FILE.
-# The build fails here if the inventory was not staged — this is intentional.
-COPY .build_inventory.json /app/inventory.json
-
 # Create a non-root user and transfer ownership of the working directory
 RUN useradd --no-create-home --shell /bin/false appuser && \
     chown -R appuser:appuser /app
@@ -36,6 +31,9 @@ RUN useradd --no-create-home --shell /bin/false appuser && \
 USER appuser
 
 ENV PATH="/app/.venv/bin:$PATH"
+# Default mount point for the device inventory. 
+# Mount your inventory file here at runtime (or override this
+# variable to point elsewhere).
 ENV NETWORK_INVENTORY=/app/inventory.json
 ENV GNMIBUDDY_TRANSPORT=http
 ENV GNMIBUDDY_HOST=0.0.0.0

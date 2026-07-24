@@ -1,0 +1,150 @@
+{
+  "response": [
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/mpls",
+      "val": {
+        "global": {
+          "state": {
+            "null-label": "openconfig-mpls-types:IMPLICIT",
+            "ttl-propagation": true
+          },
+          "reserved-label-blocks": {
+            "reserved-label-block": [
+              {
+                "local-id": "default-srgb",
+                "state": {
+                  "local-id": "default-srgb",
+                  "lower-bound": 16000,
+                  "upper-bound": 18000
+                }
+              },
+              {
+                "local-id": "default-srlb",
+                "state": {
+                  "local-id": "default-srlb",
+                  "lower-bound": 15000,
+                  "upper-bound": 15999
+                }
+              }
+            ]
+          },
+          "interface-attributes": {
+            "interface": [
+              {
+                "interface-id": "GigabitEthernet0/0/0/0",
+                "state": {
+                  "interface-id": "GigabitEthernet0/0/0/0",
+                  "mpls-enabled": true
+                },
+                "interface-ref": {
+                  "state": {
+                    "interface": "GigabitEthernet0/0/0/0"
+                  }
+                }
+              },
+              {
+                "interface-id": "GigabitEthernet0/0/0/1",
+                "state": {
+                  "interface-id": "GigabitEthernet0/0/0/1",
+                  "mpls-enabled": true
+                },
+                "interface-ref": {
+                  "state": {
+                    "interface": "GigabitEthernet0/0/0/1"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "te-global-attributes": {
+          "te-lsp-timers": {
+            "state": {
+              "install-delay": 20,
+              "cleanup-delay": 20,
+              "reoptimize-timer": 3600
+            }
+          },
+          "openconfig-rsvp-sr-ext:bandwidth-measurement": {
+            "state": {
+              "measure-sr-traffic": false,
+              "collection-interval": 60,
+              "adjustment-interval": 180,
+              "bandwidth-multiplier": "1.0000",
+              "effective-adjustment-interval": 180
+            },
+            "update-trigger": {
+              "state": {
+                "update-trigger": "ADJUSTED_MAX_RESERVABLE_PCT",
+                "adjusted-max-reservable-bw-pct": 10
+              }
+            }
+          }
+        },
+        "signaling-protocols": {
+          "rsvp-te": {
+            "global": {
+              "soft-preemption": {
+                "state": {
+                  "enable": false,
+                  "soft-preemption-timeout": 60
+                }
+              },
+              "graceful-restart": {
+                "state": {
+                  "enable": false,
+                  "restart-time": 120,
+                  "recovery-time": 120
+                }
+              },
+              "hellos": {
+                "state": {
+                  "hello-interval": 5000,
+                  "refresh-reduction": true
+                }
+              },
+              "state": {
+                "counters": {
+                  "path-timeouts": "0",
+                  "reservation-timeouts": "0",
+                  "rate-limited-messages": "0",
+                  "in-path-messages": "0",
+                  "in-path-error-messages": "0",
+                  "in-path-tear-messages": "0",
+                  "in-reservation-messages": "0",
+                  "in-reservation-error-messages": "0",
+                  "in-reservation-tear-messages": "0",
+                  "in-hello-messages": "0",
+                  "in-srefresh-messages": "0",
+                  "in-ack-messages": "0",
+                  "out-path-messages": "0",
+                  "out-path-error-messages": "0",
+                  "out-path-tear-messages": "0",
+                  "out-reservation-messages": "0",
+                  "out-reservation-error-messages": "0",
+                  "out-reservation-tear-messages": "0",
+                  "out-hello-messages": "0",
+                  "out-srefresh-messages": "0",
+                  "out-ack-messages": "0",
+                  "errors": {
+                    "authentication-fail": "0",
+                    "bad-checksum": "0",
+                    "bad-packet-format": "0",
+                    "bad-packet-length": "0",
+                    "out-of-order": "0",
+                    "received-nack": "0",
+                    "transmit-failure": "0",
+                    "transmit-queue-full": "0",
+                    "unknown-ack": "0",
+                    "unknown-nack": "0"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "timestamp": 1745243372208408292
+}

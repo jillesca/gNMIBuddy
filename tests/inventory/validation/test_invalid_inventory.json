@@ -1,0 +1,19 @@
+[
+  {
+    "ip_address": "10.10.20.101",
+    "nos": "iosxr",
+    "port": 57400,
+    "username": "cisco",
+    "password": "C1sco12345",
+    "name": "xrd-1"
+  },
+  {
+    "ip_address": "invalid-ip-address",
+    "nos": "invalid_nos",
+    "port": "invalid_port",
+    "name": ""
+  },
+  {
+    "nos": "iosxr"
+  }
+]

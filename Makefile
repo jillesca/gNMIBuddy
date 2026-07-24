@@ -9,43 +9,77 @@ CONTAINER_NAME := gnmibuddy-mcp
 IMAGE_TAG      := $(shell awk -F'"' '/^version/{print $$2}' pyproject.toml)
 HOST_PORT      := $(or $(GNMIBUDDY_PORT),8000)
 
+# Auto-detect container engine (Docker preferred, then Podman).
+# Override explicitly with: make <target> CONTAINER_ENGINE=docker|podman
+ifndef CONTAINER_ENGINE
+  ifneq ($(shell command -v docker 2>/dev/null),)
+    CONTAINER_ENGINE := docker
+  else ifneq ($(shell command -v podman 2>/dev/null),)
+    CONTAINER_ENGINE := podman
+  endif
+endif
+
 .PHONY: build run stop restart logs shell clean fresh dev dev-http help
 
-## build — build the container image (requires NETWORK_INVENTORY set in .env or environment)
+## build — build the container image (auto-detects Docker or Podman)
 build:
-ifndef NETWORK_INVENTORY
-	$(error NETWORK_INVENTORY is required. Set it in .env or as: make build NETWORK_INVENTORY=/path/to/inventory.json)
+ifeq ($(CONTAINER_ENGINE),)
+	$(error Neither Docker nor Podman was found. Install one of them, or set CONTAINER_ENGINE=docker|podman explicitly)
 endif
-	cp $(NETWORK_INVENTORY) .build_inventory.json
-	podman build -t $(IMAGE_NAME):$(IMAGE_TAG) .
-	rm -f .build_inventory.json
+	$(CONTAINER_ENGINE) build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
-## run — start the container in detached mode
+## run — start the container in detached mode (requires NETWORK_INVENTORY, mounted read-only into the container)
 run:
-	podman run -d \
+ifeq ($(CONTAINER_ENGINE),)
+	$(error Neither Docker nor Podman was found. Install one of them, or set CONTAINER_ENGINE=docker|podman explicitly)
+endif
+ifndef NETWORK_INVENTORY
+	$(error NETWORK_INVENTORY is required. Set it in .env or as: make run NETWORK_INVENTORY=/path/to/inventory.json)
+endif
+	$(CONTAINER_ENGINE) run -d \
 		--name $(CONTAINER_NAME) \
 		-p $(HOST_PORT):8000 \
+		-v $(abspath $(NETWORK_INVENTORY)):/app/inventory.json:ro \
 		$(IMAGE_NAME):$(IMAGE_TAG)
 
 ## stop — stop and remove the running container
 stop:
-	podman rm -f $(CONTAINER_NAME) 2>/dev/null || true
+ifeq ($(CONTAINER_ENGINE),)
+	$(error Neither Docker nor Podman was found. Install one of them, or set CONTAINER_ENGINE=docker|podman explicitly)
+endif
+	@if $(CONTAINER_ENGINE) inspect $(CONTAINER_NAME) >/dev/null 2>&1; then \
+		$(CONTAINER_ENGINE) rm -f $(CONTAINER_NAME); \
+	else \
+		echo "No container named $(CONTAINER_NAME) to stop."; \
+	fi
 
 ## restart — stop then start the container
 restart: stop run
 
 ## logs — tail the container logs
 logs:
-	podman logs -f $(CONTAINER_NAME)
+ifeq ($(CONTAINER_ENGINE),)
+	$(error Neither Docker nor Podman was found. Install one of them, or set CONTAINER_ENGINE=docker|podman explicitly)
+endif
+	$(CONTAINER_ENGINE) logs -f $(CONTAINER_NAME)
 
 ## shell — open a shell in the running container
 shell:
-	podman exec -it $(CONTAINER_NAME) /bin/bash
+ifeq ($(CONTAINER_ENGINE),)
+	$(error Neither Docker nor Podman was found. Install one of them, or set CONTAINER_ENGINE=docker|podman explicitly)
+endif
+	$(CONTAINER_ENGINE) exec -it $(CONTAINER_NAME) /bin/bash
 
 ## clean — stop the container and remove the image
 clean: stop
-	podman rmi -f $(IMAGE_NAME):$(IMAGE_TAG) 2>/dev/null || true
-	rm -f .build_inventory.json
+ifeq ($(CONTAINER_ENGINE),)
+	$(error Neither Docker nor Podman was found. Install one of them, or set CONTAINER_ENGINE=docker|podman explicitly)
+endif
+	@if $(CONTAINER_ENGINE) image inspect $(IMAGE_NAME):$(IMAGE_TAG) >/dev/null 2>&1; then \
+		$(CONTAINER_ENGINE) rmi -f $(IMAGE_NAME):$(IMAGE_TAG); \
+	else \
+		echo "No image $(IMAGE_NAME):$(IMAGE_TAG) to remove."; \
+	fi
 
 ## fresh — delete existing container/image, rebuild, and run (requires NETWORK_INVENTORY)
 fresh: clean build run

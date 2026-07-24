@@ -3,9 +3,6 @@ tmp-ai-sp-tools.code-workspace
 .cursor/
 .vscode/
 
-# Container build staging (temporary file created by `make build`, never committed)
-.build_inventory.json
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

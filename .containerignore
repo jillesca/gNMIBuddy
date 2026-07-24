@@ -34,7 +34,6 @@ LICENSE
 .containerignore
 
 # Sandbox inventory files — never bake these in accidentally
-ao_sandbox.json
 xrd_sandbox.json
 *test*.json
 

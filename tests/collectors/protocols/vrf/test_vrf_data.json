@@ -1,0 +1,211 @@
+{
+  "response": [
+    {
+      "path": "network-instances/network-instance[name=100]",
+      "val": {
+        "name": "100",
+        "state": {
+          "name": "100",
+          "type": "openconfig-network-instance-types:L3VRF",
+          "enabled": true,
+          "enabled-address-families": [
+            "openconfig-types:IPV4",
+            "openconfig-types:IPV6"
+          ],
+          "route-distinguisher": "100.100.100.101:100"
+        },
+        "interfaces": {
+          "interface": [
+            {
+              "id": "GigabitEthernet0/0/0/2",
+              "state": {
+                "id": "GigabitEthernet0/0/0/2",
+                "interface": "GigabitEthernet0/0/0/2",
+                "subinterface": 0,
+                "associated-address-families": [
+                  "openconfig-types:IPV4",
+                  "openconfig-types:IPV6"
+                ]
+              }
+            }
+          ]
+        },
+        "protocols": {
+          "protocol": [
+            {
+              "identifier": "openconfig-policy-types:BGP",
+              "name": "default",
+              "bgp": {
+                "global": {
+                  "route-selection-options": {
+                    "state": {
+                      "always-compare-med": false,
+                      "ignore-as-path-length": false,
+                      "external-compare-router-id": false,
+                      "enable-aigp": true,
+                      "ignore-next-hop-igp-metric": false
+                    }
+                  },
+                  "afi-safis": {
+                    "afi-safi": [
+                      {
+                        "afi-safi-name": "openconfig-bgp-types:IPV4_UNICAST",
+                        "state": {
+                          "enabled": true,
+                          "total-paths": 1,
+                          "total-prefixes": 1,
+                          "afi-safi-name": "openconfig-bgp-types:IPV4_UNICAST"
+                        },
+                        "route-selection-options": {
+                          "state": {
+                            "always-compare-med": false,
+                            "ignore-as-path-length": false,
+                            "external-compare-router-id": false,
+                            "enable-aigp": true,
+                            "ignore-next-hop-igp-metric": false
+                          }
+                        },
+                        "use-multiple-paths": {
+                          "state": {
+                            "enabled": false
+                          },
+                          "ebgp": {
+                            "state": {
+                              "maximum-paths": 1
+                            }
+                          },
+                          "ibgp": {
+                            "state": {
+                              "maximum-paths": 1
+                            }
+                          }
+                        },
+                        "add-paths": {
+                          "state": {
+                            "receive": false,
+                            "send": false
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "state": {
+                    "as": 100,
+                    "router-id": "100.100.100.101",
+                    "total-paths": 1,
+                    "total-prefixes": 1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "inter-instance-policies": {
+          "apply-policy": {
+            "state": {
+              "export-policy": [
+                "100"
+              ]
+            }
+          },
+          "import-export-policy": {
+            "state": {
+              "import-route-target": [
+                "100:100"
+              ],
+              "export-route-target": [
+                "100:100"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "path": "network-instances/network-instance[name=Mgmt]",
+      "val": {
+        "name": "Mgmt",
+        "state": {
+          "name": "Mgmt",
+          "type": "openconfig-network-instance-types:L3VRF",
+          "enabled": true,
+          "enabled-address-families": [
+            "openconfig-types:IPV4",
+            "openconfig-types:IPV6"
+          ]
+        },
+        "interfaces": {
+          "interface": [
+            {
+              "id": "MgmtEth0/RP0/CPU0/0",
+              "state": {
+                "id": "MgmtEth0/RP0/CPU0/0",
+                "interface": "MgmtEth0/RP0/CPU0/0",
+                "subinterface": 0,
+                "associated-address-families": [
+                  "openconfig-types:IPV4",
+                  "openconfig-types:IPV6"
+                ]
+              }
+            }
+          ]
+        },
+        "protocols": {
+          "protocol": [
+            {
+              "identifier": "STATIC",
+              "name": "DEFAULT",
+              "static-routes": {
+                "static": [
+                  {
+                    "prefix": "0.0.0.0/0",
+                    "state": {
+                      "prefix": "0.0.0.0/0"
+                    },
+                    "next-hops": {
+                      "next-hop": [
+                        {
+                          "index": "##198.18.128.1##",
+                          "state": {
+                            "index": "##198.18.128.1##",
+                            "next-hop": "198.18.128.1",
+                            "metric": 0,
+                            "preference": 1
+                          },
+                          "enable-bfd": {
+                            "state": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "state": {
+                "identifier": "STATIC",
+                "name": "DEFAULT",
+                "enabled": true,
+                "default-metric": 1
+              }
+            }
+          ]
+        },
+        "tables": {
+          "table": [
+            {
+              "protocol": "openconfig-policy-types:STATIC",
+              "address-family": "openconfig-types:IPV4",
+              "state": {
+                "protocol": "openconfig-policy-types:STATIC",
+                "address-family": "openconfig-types:IPV4"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "timestamp": 1745255227135712076
+}

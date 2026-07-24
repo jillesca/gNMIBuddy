@@ -1,0 +1,305 @@
+{
+  "data": {
+    "data_timestamp": 1745226178804367333,
+    "data_timestamp_str": "2025-04-21 10:02:58",
+    "as_number": 100,
+    "router_id": "100.100.100.101",
+    "total_paths": 57,
+    "total_prefixes": 57,
+    "address_families": [
+      "l3vpn_ipv4_unicast"
+    ],
+    "address_family_details": [
+      {
+        "name": "l3vpn_ipv4_unicast",
+        "enabled": true,
+        "total_paths": 1,
+        "total_prefixes": 1
+      }
+    ],
+    "neighbor_groups": [
+      {
+        "name": "RR",
+        "remote_as": 100,
+        "update_source": "Loopback0",
+        "send_community": "NONE",
+        "address_families": [
+          {
+            "name": "l3vpn_ipv4_unicast",
+            "enabled": true,
+            "route_reflector_client": false
+          }
+        ]
+      },
+      {
+        "name": "SR-PCE",
+        "remote_as": 100,
+        "update_source": "Loopback0",
+        "send_community": "NONE",
+        "address_families": []
+      }
+    ],
+    "neighbors": [
+      {
+        "address": "100.100.100.107",
+        "neighbor_group": "SR-PCE",
+        "config": {
+          "remote_as": 100,
+          "peer_type": "INTERNAL",
+          "send_community": "NONE",
+          "enabled": true,
+          "dynamically_configured": false
+        },
+        "state": {
+          "session_state": "ESTABLISHED",
+          "established_transitions": "1",
+          "supported_capabilities": [
+            "openconfig-bgp-types:ROUTE_REFRESH",
+            "openconfig-bgp-types:ASN32",
+            "openconfig-bgp-types:MPBGP"
+          ],
+          "last_established_time": 1744111180.0801861,
+          "last_established_readable": "2025-04-08 12:19:40"
+        },
+        "transport": {
+          "local_address": "100.100.100.101",
+          "local_port": 179,
+          "remote_address": "100.100.100.107",
+          "remote_port": 61013,
+          "passive_mode": false,
+          "tcp_mss": 1240
+        },
+        "timers": {
+          "connect_retry": 30,
+          "hold_time": 180,
+          "keepalive_interval": 60,
+          "min_advertisement_interval": 0,
+          "negotiated_hold_time": 180
+        },
+        "graceful_restart": {
+          "enabled": false,
+          "restart_time": 120,
+          "stale_routes_time": 360,
+          "helper_only": false
+        },
+        "ebgp_multihop": {
+          "enabled": false,
+          "multihop_ttl": 1
+        },
+        "error_handling": {
+          "treat_as_withdraw": false,
+          "erroneous_update_messages": 0
+        },
+        "statistics": {
+          "messages": {
+            "sent": {
+              "updates": "16",
+              "notifications": "0"
+            },
+            "received": {
+              "updates": "37",
+              "notifications": "0"
+            }
+          },
+          "queues": {
+            "input": 0,
+            "output": 0
+          }
+        },
+        "cisco_extensions": {
+          "in_bytes": 360496,
+          "out_bytes": 3068,
+          "connection_down_count": 0,
+          "previous_connection_state": "idle",
+          "all_msg_rx_count": 18622,
+          "all_msg_tx_count": 18601
+        }
+      },
+      {
+        "address": "100.100.100.108",
+        "neighbor_group": "RR",
+        "config": {
+          "remote_as": 100,
+          "peer_type": "INTERNAL",
+          "send_community": "NONE",
+          "enabled": true,
+          "dynamically_configured": false
+        },
+        "state": {
+          "session_state": "ESTABLISHED",
+          "established_transitions": "1",
+          "supported_capabilities": [
+            "openconfig-bgp-types:ROUTE_REFRESH",
+            "openconfig-bgp-types:ASN32",
+            "openconfig-bgp-types:MPBGP"
+          ],
+          "last_established_time": 1744111175.797028,
+          "last_established_readable": "2025-04-08 12:19:35"
+        },
+        "transport": {
+          "local_address": "100.100.100.101",
+          "local_port": 54234,
+          "remote_address": "100.100.100.108",
+          "remote_port": 179,
+          "passive_mode": false,
+          "tcp_mss": 1240
+        },
+        "timers": {
+          "connect_retry": 30,
+          "hold_time": 180,
+          "keepalive_interval": 60,
+          "min_advertisement_interval": 0,
+          "negotiated_hold_time": 180
+        },
+        "graceful_restart": {
+          "enabled": false,
+          "restart_time": 120,
+          "stale_routes_time": 360,
+          "helper_only": false
+        },
+        "ebgp_multihop": {
+          "enabled": false,
+          "multihop_ttl": 1
+        },
+        "error_handling": {
+          "treat_as_withdraw": false,
+          "erroneous_update_messages": 0
+        },
+        "statistics": {
+          "messages": {
+            "sent": {
+              "updates": "2",
+              "notifications": "0"
+            },
+            "received": {
+              "updates": "3",
+              "notifications": "0"
+            }
+          },
+          "queues": {
+            "input": 0,
+            "output": 0
+          }
+        },
+        "address_families": [
+          {
+            "name": "l3vpn_ipv4_unicast",
+            "enabled": true,
+            "active": true,
+            "prefixes": {
+              "received": 1,
+              "received_pre_policy": 1,
+              "sent": 1,
+              "installed": 0
+            },
+            "cisco_extensions": {
+              "neighbor_version": "8",
+              "prefixes_denied_count": 0,
+              "prefixes_denied_policy": 0,
+              "prefixes_suppressed": 0,
+              "prefixes_withdrawn": 0,
+              "rx_processed_messages": 2
+            }
+          }
+        ],
+        "cisco_extensions": {
+          "in_bytes": 353445,
+          "out_bytes": 241,
+          "connection_down_count": 0,
+          "previous_connection_state": "idle",
+          "all_msg_rx_count": 18589,
+          "all_msg_tx_count": 18587
+        }
+      }
+    ],
+    "vrfs": [
+      {
+        "name": "100",
+        "rd": null,
+        "address_families": [
+          {
+            "name": "ipv4_unicast",
+            "enabled": true,
+            "total_paths": 1,
+            "total_prefixes": 1,
+            "redistributed": []
+          }
+        ],
+        "as_number": 100,
+        "router_id": "100.100.100.101",
+        "total_paths": 1,
+        "total_prefixes": 1
+      }
+    ],
+    "llm_friendly_data": {
+      "timestamp": "2025-04-21 10:02:58",
+      "router": {
+        "as": 100,
+        "id": "100.100.100.101",
+        "prefixes": 57
+      },
+      "address_families": [
+        {
+          "name": "l3vpn_ipv4_unicast",
+          "prefixes": 1
+        }
+      ],
+      "neighbor_groups": [
+        {
+          "name": "RR",
+          "remote_as": 100,
+          "update_source": "Loopback0",
+          "address_families": [
+            {
+              "name": "l3vpn_ipv4_unicast"
+            }
+          ]
+        },
+        {
+          "name": "SR-PCE",
+          "remote_as": 100,
+          "update_source": "Loopback0",
+          "address_families": []
+        }
+      ],
+      "neighbors": [
+        {
+          "address": "100.100.100.107",
+          "remote_as": 100,
+          "group": "SR-PCE",
+          "state": "ESTABLISHED",
+          "uptime": "2025-04-08 12:19:40",
+          "prefixes": {}
+        },
+        {
+          "address": "100.100.100.108",
+          "remote_as": 100,
+          "group": "RR",
+          "state": "ESTABLISHED",
+          "uptime": "2025-04-08 12:19:35",
+          "prefixes": {
+            "l3vpn_ipv4_unicast": {
+              "received": 1,
+              "sent": 1
+            }
+          }
+        }
+      ],
+      "vrfs": [
+        {
+          "name": "100",
+          "as": 100,
+          "router_id": "100.100.100.101",
+          "prefixes": 1,
+          "address_families": [
+            {
+              "name": "ipv4_unicast",
+              "prefixes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "summary": "Data collected at: 2025-04-21 10:02:58\nAS Number: 100\nRouter ID: 100.100.100.101\nTotal Paths: 57\nTotal Prefixes: 57\nAddress Families: l3vpn_ipv4_unicast\nNeighbor Groups:\n  * RR (Remote AS: 100)\n    - l3vpn_ipv4_unicast \n  * SR-PCE (Remote AS: 100)\nNeighbors:\n  * 100.100.100.107 (AS: 100, Group: SR-PCE, State: ESTABLISHED)\n    - Up since: 2025-04-08 12:19:40\n    - Established transitions: 1\n    - Updates: sent 16, received 37\n  * 100.100.100.108 (AS: 100, Group: RR, State: ESTABLISHED)\n    - Up since: 2025-04-08 12:19:35\n    - Established transitions: 1\n    - Updates: sent 2, received 3\n    - l3vpn_ipv4_unicast: received 1, sent 1, installed 0\nVRFs:\n  * 100 - AS: 100, Router ID: 100.100.100.101\n    - Total Paths: 1, Total Prefixes: 1\n    - ipv4_unicast (Paths: 1, Prefixes: 1)"
+}

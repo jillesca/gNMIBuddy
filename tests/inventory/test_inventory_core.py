@@ -73,7 +73,7 @@ class TestGetDevice:
         assert isinstance(device, Device)
         assert device.name == "test-device-1"
         assert str(device.ip_address) == "10.0.0.1"
-        assert device.port == 57777
+        assert device.port == 57400
 
     def test_get_device_from_hosts(self, inventory_paths):
         """Test retrieving a device from the test_devices.json file."""
@@ -93,7 +93,7 @@ class TestGetDevice:
         assert isinstance(device, Device)
         assert device.name == "test-device-2"
         assert str(device.ip_address) == "10.0.0.2"
-        assert device.port == 57777
+        assert device.port == 57400
         assert device.username == "test_user"
 
 

@@ -1,0 +1,671 @@
+{
+  "response": [
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/protocols/protocol[identifier=ISIS][name=1]/isis/interfaces",
+      "val": {
+        "interface": [
+          {
+            "interface-id": "Loopback0",
+            "interface-ref": {
+              "state": {
+                "interface": "Loopback0"
+              }
+            },
+            "state": {
+              "interface-id": "Loopback0",
+              "enabled": true,
+              "passive": true,
+              "hello-padding": "STRICT",
+              "circuit-type": "POINT_TO_POINT"
+            },
+            "afi-safi": {
+              "af": [
+                {
+                  "afi-name": "openconfig-isis-types:IPV4",
+                  "safi-name": "openconfig-isis-types:UNICAST",
+                  "state": {
+                    "afi-name": "openconfig-isis-types:IPV4",
+                    "safi-name": "openconfig-isis-types:UNICAST",
+                    "enabled": true
+                  }
+                }
+              ]
+            },
+            "levels": {
+              "level": [
+                {
+                  "level-number": 1,
+                  "state": {
+                    "level-number": 1,
+                    "enabled": true
+                  },
+                  "afi-safi": {
+                    "af": [
+                      {
+                        "afi-name": "openconfig-isis-types:IPV4",
+                        "safi-name": "openconfig-isis-types:UNICAST",
+                        "state": {
+                          "afi-name": "openconfig-isis-types:IPV4",
+                          "safi-name": "openconfig-isis-types:UNICAST",
+                          "metric": 0,
+                          "enabled": true
+                        },
+                        "segment-routing": {
+                          "prefix-sids": {
+                            "prefix-sid": [
+                              {
+                                "prefix": "0.0.0.0/32",
+                                "state": {
+                                  "prefix": "0.0.0.0/32",
+                                  "sid-id": 16101,
+                                  "Cisco-IOS-XR-openconfig-isis-ext:sid-type": "INDEX",
+                                  "Cisco-IOS-XR-openconfig-isis-ext:sid-index": 101
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "hello-authentication": {
+                    "state": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "level-number": 2,
+                  "state": {
+                    "level-number": 2,
+                    "enabled": true
+                  },
+                  "afi-safi": {
+                    "af": [
+                      {
+                        "afi-name": "openconfig-isis-types:IPV4",
+                        "safi-name": "openconfig-isis-types:UNICAST",
+                        "state": {
+                          "afi-name": "openconfig-isis-types:IPV4",
+                          "safi-name": "openconfig-isis-types:UNICAST",
+                          "metric": 0,
+                          "enabled": true
+                        },
+                        "segment-routing": {
+                          "prefix-sids": {
+                            "prefix-sid": [
+                              {
+                                "prefix": "0.0.0.0/32",
+                                "state": {
+                                  "prefix": "0.0.0.0/32",
+                                  "sid-id": 16101,
+                                  "Cisco-IOS-XR-openconfig-isis-ext:sid-type": "INDEX",
+                                  "Cisco-IOS-XR-openconfig-isis-ext:sid-index": 101
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "hello-authentication": {
+                    "state": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            },
+            "mpls": {
+              "igp-ldp-sync": {
+                "state": {
+                  "enabled": false
+                }
+              }
+            },
+            "authentication": {
+              "state": {
+                "enabled": false
+              }
+            },
+            "timers": {
+              "state": {
+                "csnp-interval": 0,
+                "lsp-pacing-interval": "33"
+              }
+            },
+            "enable-bfd": {
+              "state": {
+                "enabled": false
+              }
+            },
+            "bfd": {
+              "state": {
+                "bfd-tlv": false
+              }
+            }
+          },
+          {
+            "interface-id": "GigabitEthernet0/0/0/0",
+            "interface-ref": {
+              "state": {
+                "interface": "GigabitEthernet0/0/0/0"
+              }
+            },
+            "state": {
+              "interface-id": "GigabitEthernet0/0/0/0",
+              "enabled": true,
+              "passive": false,
+              "hello-padding": "STRICT",
+              "circuit-type": "POINT_TO_POINT"
+            },
+            "afi-safi": {
+              "af": [
+                {
+                  "afi-name": "openconfig-isis-types:IPV4",
+                  "safi-name": "openconfig-isis-types:UNICAST",
+                  "state": {
+                    "afi-name": "openconfig-isis-types:IPV4",
+                    "safi-name": "openconfig-isis-types:UNICAST",
+                    "enabled": true
+                  }
+                }
+              ]
+            },
+            "mpls": {
+              "igp-ldp-sync": {
+                "state": {
+                  "enabled": false
+                }
+              }
+            },
+            "authentication": {
+              "state": {
+                "enabled": false
+              }
+            },
+            "circuit-counters": {
+              "state": {
+                "adj-changes": 2,
+                "init-fails": 0,
+                "rejected-adj": 0,
+                "id-field-len-mismatches": 0,
+                "max-area-address-mismatches": 0,
+                "auth-type-fails": 0,
+                "auth-fails": 0,
+                "lan-dis-changes": 0,
+                "adj-number": 1
+              }
+            },
+            "levels": {
+              "level": [
+                {
+                  "level-number": 1,
+                  "afi-safi": {
+                    "af": [
+                      {
+                        "afi-name": "openconfig-isis-types:IPV4",
+                        "safi-name": "openconfig-isis-types:UNICAST",
+                        "state": {
+                          "afi-name": "openconfig-isis-types:IPV4",
+                          "safi-name": "openconfig-isis-types:UNICAST",
+                          "metric": 1,
+                          "enabled": true
+                        }
+                      }
+                    ]
+                  },
+                  "state": {
+                    "level-number": 1,
+                    "enabled": true
+                  },
+                  "timers": {
+                    "state": {
+                      "hello-interval": 10,
+                      "hello-multiplier": 3
+                    }
+                  },
+                  "hello-authentication": {
+                    "state": {
+                      "enabled": false
+                    }
+                  },
+                  "adjacencies": {
+                    "adjacency": [
+                      {
+                        "system-id": "0100.0100.0103",
+                        "state": {
+                          "system-id": "0100.0100.0103",
+                          "neighbor-ipv4-address": "100.101.103.103",
+                          "neighbor-ipv6-address": "::",
+                          "neighbor-snpa": "0242.ac12.0002",
+                          "local-extended-circuit-id": 4,
+                          "neighbor-extended-circuit-id": 6,
+                          "priority": 0,
+                          "neighbor-circuit-type": "LEVEL_1",
+                          "adjacency-type": "LEVEL_1",
+                          "adjacency-state": "UP",
+                          "up-timestamp": "1744111136919877775",
+                          "multi-topology": false,
+                          "topology": [
+                            "IPV4_UNICAST"
+                          ],
+                          "restart-support": true,
+                          "restart-suppress": false,
+                          "restart-status": false,
+                          "area-address": [
+                            "49.0100"
+                          ],
+                          "nlpid": [
+                            "IPV4"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "packet-counters": {
+                    "lsp": {
+                      "state": {
+                        "received": 1428,
+                        "processed": 1428,
+                        "dropped": 0,
+                        "sent": 2861,
+                        "retransmit": 0
+                      }
+                    },
+                    "iih": {
+                      "state": {
+                        "received": 128354,
+                        "processed": 128354,
+                        "dropped": 0,
+                        "sent": 128441,
+                        "retransmit": 0
+                      }
+                    },
+                    "psnp": {
+                      "state": {
+                        "received": 2857,
+                        "processed": 2857,
+                        "dropped": 0,
+                        "sent": 1429,
+                        "retransmit": 0
+                      }
+                    },
+                    "csnp": {
+                      "state": {
+                        "received": 1,
+                        "processed": 1,
+                        "dropped": 0,
+                        "sent": 1,
+                        "retransmit": 0
+                      }
+                    },
+                    "unknown": {
+                      "state": {
+                        "received": 0,
+                        "processed": 0,
+                        "dropped": 0,
+                        "sent": 0,
+                        "retransmit": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "level-number": 2,
+                  "afi-safi": {
+                    "af": [
+                      {
+                        "afi-name": "openconfig-isis-types:IPV4",
+                        "safi-name": "openconfig-isis-types:UNICAST",
+                        "state": {
+                          "afi-name": "openconfig-isis-types:IPV4",
+                          "safi-name": "openconfig-isis-types:UNICAST",
+                          "metric": 1,
+                          "enabled": true
+                        }
+                      }
+                    ]
+                  },
+                  "state": {
+                    "level-number": 2,
+                    "enabled": false
+                  },
+                  "hello-authentication": {
+                    "state": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            },
+            "timers": {
+              "state": {
+                "csnp-interval": 0,
+                "lsp-pacing-interval": "33"
+              }
+            },
+            "enable-bfd": {
+              "state": {
+                "enabled": false
+              }
+            },
+            "bfd": {
+              "state": {
+                "bfd-tlv": false
+              }
+            }
+          },
+          {
+            "interface-id": "GigabitEthernet0/0/0/1",
+            "interface-ref": {
+              "state": {
+                "interface": "GigabitEthernet0/0/0/1"
+              }
+            },
+            "state": {
+              "interface-id": "GigabitEthernet0/0/0/1",
+              "enabled": true,
+              "passive": false,
+              "hello-padding": "STRICT",
+              "circuit-type": "POINT_TO_POINT"
+            },
+            "afi-safi": {
+              "af": [
+                {
+                  "afi-name": "openconfig-isis-types:IPV4",
+                  "safi-name": "openconfig-isis-types:UNICAST",
+                  "state": {
+                    "afi-name": "openconfig-isis-types:IPV4",
+                    "safi-name": "openconfig-isis-types:UNICAST",
+                    "enabled": true
+                  }
+                }
+              ]
+            },
+            "mpls": {
+              "igp-ldp-sync": {
+                "state": {
+                  "enabled": false
+                }
+              }
+            },
+            "authentication": {
+              "state": {
+                "enabled": false
+              }
+            },
+            "circuit-counters": {
+              "state": {
+                "adj-changes": 2,
+                "init-fails": 0,
+                "rejected-adj": 0,
+                "id-field-len-mismatches": 0,
+                "max-area-address-mismatches": 0,
+                "auth-type-fails": 0,
+                "auth-fails": 0,
+                "lan-dis-changes": 0,
+                "adj-number": 1
+              }
+            },
+            "levels": {
+              "level": [
+                {
+                  "level-number": 1,
+                  "afi-safi": {
+                    "af": [
+                      {
+                        "afi-name": "openconfig-isis-types:IPV4",
+                        "safi-name": "openconfig-isis-types:UNICAST",
+                        "state": {
+                          "afi-name": "openconfig-isis-types:IPV4",
+                          "safi-name": "openconfig-isis-types:UNICAST",
+                          "metric": 1,
+                          "enabled": true
+                        }
+                      }
+                    ]
+                  },
+                  "state": {
+                    "level-number": 1,
+                    "enabled": true
+                  },
+                  "timers": {
+                    "state": {
+                      "hello-interval": 10,
+                      "hello-multiplier": 3
+                    }
+                  },
+                  "hello-authentication": {
+                    "state": {
+                      "enabled": false
+                    }
+                  },
+                  "adjacencies": {
+                    "adjacency": [
+                      {
+                        "system-id": "0100.0100.0105",
+                        "state": {
+                          "system-id": "0100.0100.0105",
+                          "neighbor-ipv4-address": "100.101.105.105",
+                          "neighbor-ipv6-address": "::",
+                          "neighbor-snpa": "0242.ac13.0003",
+                          "local-extended-circuit-id": 5,
+                          "neighbor-extended-circuit-id": 6,
+                          "priority": 0,
+                          "neighbor-circuit-type": "LEVEL_1",
+                          "adjacency-type": "LEVEL_1",
+                          "adjacency-state": "UP",
+                          "up-timestamp": "1744111136883736594",
+                          "multi-topology": false,
+                          "topology": [
+                            "IPV4_UNICAST"
+                          ],
+                          "restart-support": true,
+                          "restart-suppress": false,
+                          "restart-status": false,
+                          "area-address": [
+                            "49.0100"
+                          ],
+                          "nlpid": [
+                            "IPV4"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "packet-counters": {
+                    "lsp": {
+                      "state": {
+                        "received": 1430,
+                        "processed": 1430,
+                        "dropped": 0,
+                        "sent": 2859,
+                        "retransmit": 0
+                      }
+                    },
+                    "iih": {
+                      "state": {
+                        "received": 128392,
+                        "processed": 128392,
+                        "dropped": 0,
+                        "sent": 128385,
+                        "retransmit": 0
+                      }
+                    },
+                    "psnp": {
+                      "state": {
+                        "received": 2857,
+                        "processed": 2857,
+                        "dropped": 0,
+                        "sent": 1431,
+                        "retransmit": 0
+                      }
+                    },
+                    "csnp": {
+                      "state": {
+                        "received": 1,
+                        "processed": 1,
+                        "dropped": 0,
+                        "sent": 1,
+                        "retransmit": 0
+                      }
+                    },
+                    "unknown": {
+                      "state": {
+                        "received": 0,
+                        "processed": 0,
+                        "dropped": 0,
+                        "sent": 0,
+                        "retransmit": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "level-number": 2,
+                  "afi-safi": {
+                    "af": [
+                      {
+                        "afi-name": "openconfig-isis-types:IPV4",
+                        "safi-name": "openconfig-isis-types:UNICAST",
+                        "state": {
+                          "afi-name": "openconfig-isis-types:IPV4",
+                          "safi-name": "openconfig-isis-types:UNICAST",
+                          "metric": 1,
+                          "enabled": true
+                        }
+                      }
+                    ]
+                  },
+                  "state": {
+                    "level-number": 2,
+                    "enabled": false
+                  },
+                  "hello-authentication": {
+                    "state": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            },
+            "timers": {
+              "state": {
+                "csnp-interval": 0,
+                "lsp-pacing-interval": "33"
+              }
+            },
+            "enable-bfd": {
+              "state": {
+                "enabled": false
+              }
+            },
+            "bfd": {
+              "state": {
+                "bfd-tlv": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/protocols/protocol[identifier=ISIS][name=1]/isis/global",
+      "val": {
+        "segment-routing": {
+          "state": {
+            "enabled": true,
+            "srgb": "default-srgb"
+          }
+        },
+        "lsp-bit": {
+          "overload-bit": {
+            "state": {
+              "set-bit": false,
+              "set-bit-on-boot": false,
+              "advertise-high-metric": false
+            }
+          },
+          "attached-bit": {
+            "state": {
+              "ignore-bit": false,
+              "suppress-bit": false
+            }
+          }
+        },
+        "nsr": {
+          "state": {
+            "enabled": false
+          }
+        },
+        "graceful-restart": {
+          "state": {
+            "enabled": false,
+            "helper-only": true
+          }
+        },
+        "timers": {
+          "spf": {
+            "state": {
+              "spf-hold-interval": "5000",
+              "spf-first-interval": "50",
+              "spf-second-interval": "200",
+              "adaptive-timer": "EXPONENTIAL"
+            }
+          },
+          "lsp-generation": {
+            "state": {
+              "lsp-max-wait-interval": "5000",
+              "lsp-first-wait-interval": "50",
+              "lsp-second-wait-interval": "200",
+              "adaptive-timer": "EXPONENTIAL"
+            }
+          }
+        },
+        "mpls": {
+          "igp-ldp-sync": {
+            "state": {
+              "enabled": false
+            }
+          }
+        },
+        "afi-safi": {
+          "af": [
+            {
+              "afi-name": "openconfig-isis-types:IPV4",
+              "safi-name": "openconfig-isis-types:UNICAST",
+              "state": {
+                "afi-name": "openconfig-isis-types:IPV4",
+                "safi-name": "openconfig-isis-types:UNICAST"
+              },
+              "multi-topology": {
+                "state": {
+                  "afi-name": "openconfig-isis-types:IPV4",
+                  "safi-name": "openconfig-isis-types:UNICAST",
+                  "enabled": false
+                }
+              }
+            }
+          ]
+        },
+        "state": {
+          "authentication-check": true,
+          "instance-id": 0,
+          "net": [
+            "49.0100.0100.0100.0101.00"
+          ],
+          "maximum-area-addresses": 3,
+          "level-capability": "LEVEL_1_2",
+          "max-ecmp-paths": 8,
+          "poi-tlv": false,
+          "iid-tlv": true,
+          "fast-flooding": false,
+          "hello-padding": "STRICT"
+        }
+      }
+    }
+  ],
+  "timestamp": 1745234761991833342
+}

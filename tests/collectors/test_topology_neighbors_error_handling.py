@@ -14,7 +14,7 @@ Key Test Scenarios:
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from src.schemas.models import Device, NetworkOS
 from src.schemas.responses import (
     ErrorResponse,
@@ -82,7 +82,7 @@ class TestTopologyNeighborsErrorHandling:
         # Arrange: Mock _build_graph_ip_only to return ErrorResponse
         error_response = ErrorResponse(
             type="gNMIException",
-            message="GRPC ERROR Host: 192.168.1.1:57777, Error: authentication failed",
+            message="GRPC ERROR Host: 192.168.1.1:57400, Error: authentication failed",
             details={"error_code": 401, "grpc_code": "UNAUTHENTICATED"},
         )
 
@@ -268,11 +268,11 @@ class TestTopologyNeighborsErrorHandling:
         original_error = ErrorResponse(
             type="gNMIException",
             message=(
-                "GRPC ERROR Host: 10.10.20.101:57777, Error: authentication failed during interface collection"
+                "GRPC ERROR Host: 10.10.20.101:57400, Error: authentication failed during interface collection"
             ),
             details={
                 "host": "10.10.20.101",
-                "port": 57777,
+                "port": 57400,
                 "error_class": "AuthenticationException",
                 "operation": "interface_collection",
                 "timestamp": "2025-08-05T07:11:33",

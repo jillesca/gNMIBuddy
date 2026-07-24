@@ -35,7 +35,7 @@ class TestFileHandlerPaths:
             {
                 "ip_address": "10.0.0.1",
                 "nos": "iosxr",
-                "port": 57777,
+                "port": 57400,
                 "username": "test_user",
                 "password": "test_pass",
                 "name": "test-device-1",
@@ -43,7 +43,7 @@ class TestFileHandlerPaths:
             {
                 "ip_address": "10.0.0.2",
                 "nos": "iosxr",
-                "port": 57777,
+                "port": 57400,
                 "username": "test_user",
                 "password": "test_pass",
                 "name": "test-device-2",

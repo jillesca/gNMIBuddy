@@ -23,7 +23,7 @@ def test_system_info_parser_basic(sample_input):
     # Check gRPC server parsing
     assert isinstance(result["grpc_servers"], list)
     assert result["grpc_servers"][0]["name"] == "DEFAULT"
-    assert result["grpc_servers"][0]["port"] == 57777
+    assert result["grpc_servers"][0]["port"] == 57400
     # Check logging selectors
     assert isinstance(result["logging"], list)
     assert result["logging"][0]["severity"] == "DEBUG"

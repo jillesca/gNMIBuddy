@@ -23,7 +23,7 @@ class TestAPIIntegration:
         return Device(
             name="api-test-device",
             ip_address=ipaddress.IPv4Address("10.0.1.100"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="gnmi_user",
             password="super_secret_password",
@@ -46,7 +46,7 @@ class TestAPIIntegration:
         sanitized_device = Device(
             name="api-test-device",
             ip_address=ipaddress.IPv4Address("10.0.1.100"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="gnmi_user",
             password="***",  # Sanitized

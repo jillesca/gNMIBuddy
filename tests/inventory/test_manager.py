@@ -45,7 +45,7 @@ class TestInventoryManager(unittest.TestCase):
         self.assertIsInstance(device, Device)
         self.assertEqual(device.name, "test-device-1")
         self.assertEqual(str(device.ip_address), "10.0.0.1")
-        self.assertEqual(device.port, 57777)
+        self.assertEqual(device.port, 57400)
         self.assertEqual(device.nos, NetworkOS.IOSXR)
         self.assertEqual(device.username, "test_user")
         self.assertEqual(device.password, "test_pass")
@@ -90,7 +90,7 @@ class TestInventoryManager(unittest.TestCase):
         # Verify device properties
         device1 = devices["test-device-1"]
         self.assertEqual(str(device1.ip_address), "10.0.0.1")
-        self.assertEqual(device1.port, 57777)
+        self.assertEqual(device1.port, 57400)
         self.assertEqual(device1.nos, NetworkOS.IOSXR)
 
     def test_list_devices_with_empty_inventory(self):
@@ -141,7 +141,7 @@ class TestAutoInitialization(unittest.TestCase):
         test_device1 = Device(
             name="test-device-1",
             ip_address=ipaddress.IPv4Address("10.0.0.1"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",
@@ -149,7 +149,7 @@ class TestAutoInitialization(unittest.TestCase):
         test_device2 = Device(
             name="test-device-2",
             ip_address=ipaddress.IPv4Address("10.0.0.2"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",
@@ -188,7 +188,7 @@ class TestAutoInitialization(unittest.TestCase):
         test_device = Device(
             name="test-device-1",
             ip_address=ipaddress.IPv4Address("10.0.0.1"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",
@@ -222,7 +222,7 @@ class TestAutoInitialization(unittest.TestCase):
         test_device = Device(
             name="test-device-1",
             ip_address=ipaddress.IPv4Address("10.0.0.1"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="test_user",
             password="test_pass",

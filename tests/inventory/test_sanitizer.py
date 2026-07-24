@@ -8,7 +8,6 @@ class-based data structures, and edge cases.
 
 import ipaddress
 import pytest
-from typing import List
 from src.inventory.sanitizer import DeviceDataSanitizer
 from src.schemas.models import Device, DeviceListResult, NetworkOS
 
@@ -27,7 +26,7 @@ class TestDeviceDataSanitizer:
         return Device(
             name="test-device",
             ip_address=ipaddress.IPv4Address("192.168.1.1"),
-            port=57777,
+            port=57400,
             nos=NetworkOS.IOSXR,
             username="admin",
             password="secret123",
@@ -80,7 +79,7 @@ class TestDeviceDataSanitizer:
         # Verify non-sensitive data is preserved
         assert sanitized.name == "test-device"
         assert sanitized.ip_address == ipaddress.IPv4Address("192.168.1.1")
-        assert sanitized.port == 57777
+        assert sanitized.port == 57400
         assert sanitized.nos == NetworkOS.IOSXR
         assert sanitized.username == "admin"
         assert sanitized.path_root == "/path/to/root.ca"  # Not sensitive

@@ -38,7 +38,7 @@ class TestSimplifiedRoutingFunctionality:
             name="test-device-1",
             ip_address=ipaddress.IPv4Address("10.10.20.103"),
             nos=NetworkOS.IOSXR,
-            port=57777,
+            port=57400,
             username="test_user",
             password="test_pass",
         )
@@ -192,7 +192,7 @@ class TestSimplifiedRoutingFunctionality:
             name="test-device",
             ip_address=ipaddress.IPv4Address("10.0.0.1"),
             nos=NetworkOS.IOSXR,
-            port=57777,
+            port=57400,
             username="test_user",
             password="test_pass",
         )
@@ -246,7 +246,7 @@ class TestSimplifiedRoutingFunctionality:
             name="test-device",
             ip_address=ipaddress.IPv4Address("10.0.0.1"),
             nos=NetworkOS.IOSXR,
-            port=57777,
+            port=57400,
             username="test_user",
             password="test_pass",
         )
@@ -307,7 +307,7 @@ class TestSimplifiedRoutingFunctionality:
             name="test-device",
             ip_address=ipaddress.IPv4Address("10.0.0.1"),
             nos=NetworkOS.IOSXR,
-            port=57777,
+            port=57400,
             username="test_user",
             password="test_pass",
         )

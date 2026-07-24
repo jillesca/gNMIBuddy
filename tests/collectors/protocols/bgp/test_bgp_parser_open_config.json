@@ -1,0 +1,290 @@
+{
+  "response": [
+    {
+      "path": "network-instances/network-instance[name=DEFAULT]/protocols/protocol[identifier=BGP][name=default]/global",
+      "val": {
+        "global": {
+          "state": {
+            "as": 100,
+            "router-id": "100.100.100.101",
+            "total-paths": 57,
+            "total-prefixes": 57
+          },
+          "afi-safis": {
+            "afi-safi": [
+              {
+                "afi-safi-name": "openconfig-bgp-types:L3VPN_IPV4_UNICAST",
+                "state": {
+                  "afi-safi-name": "openconfig-bgp-types:L3VPN_IPV4_UNICAST",
+                  "enabled": true,
+                  "total-paths": 1,
+                  "total-prefixes": 1
+                }
+              }
+            ]
+          }
+        },
+        "peer-groups": {
+          "peer-group": [
+            {
+              "peer-group-name": "RR",
+              "state": {
+                "peer-group-name": "RR",
+                "peer-as": 100,
+                "send-community": "NONE"
+              },
+              "transport": {
+                "state": {
+                  "local-address": "Loopback0"
+                }
+              },
+              "afi-safis": {
+                "afi-safi": [
+                  {
+                    "afi-safi-name": "openconfig-bgp-types:L3VPN_IPV4_UNICAST",
+                    "state": {
+                      "afi-safi-name": "openconfig-bgp-types:L3VPN_IPV4_UNICAST",
+                      "enabled": true
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "peer-group-name": "SR-PCE",
+              "state": {
+                "peer-group-name": "SR-PCE",
+                "peer-as": 100,
+                "send-community": "NONE"
+              },
+              "transport": {
+                "state": {
+                  "local-address": "Loopback0"
+                }
+              }
+            }
+          ]
+        },
+        "neighbors": {
+          "neighbor": [
+            {
+              "neighbor-address": "100.100.100.107",
+              "state": {
+                "neighbor-address": "100.100.100.107",
+                "peer-group": "SR-PCE",
+                "peer-as": 100,
+                "peer-type": "INTERNAL",
+                "send-community": "NONE",
+                "enabled": true,
+                "dynamically-configured": false,
+                "session-state": "ESTABLISHED",
+                "established-transitions": "1",
+                "supported-capabilities": [
+                  "openconfig-bgp-types:ROUTE_REFRESH",
+                  "openconfig-bgp-types:ASN32",
+                  "openconfig-bgp-types:MPBGP"
+                ],
+                "last-established": 1744111180080186100,
+                "messages": {
+                  "sent": {
+                    "UPDATE": "16",
+                    "NOTIFICATION": "0"
+                  },
+                  "received": {
+                    "UPDATE": "37",
+                    "NOTIFICATION": "0"
+                  }
+                },
+                "queues": {
+                  "input": 0,
+                  "output": 0
+                },
+                "Cisco-IOS-XR-openconfig-bgp-ext:cisco": {
+                  "in-bytes": 359603,
+                  "out-bytes": 3068,
+                  "connection-down-count": 0,
+                  "previous-connection-state": "idle",
+                  "all-msg-rx-count": 18575,
+                  "all-msg-tx-count": 18554
+                }
+              },
+              "transport": {
+                "state": {
+                  "local-address": "100.100.100.101",
+                  "local-port": 179,
+                  "remote-address": "100.100.100.107",
+                  "remote-port": 61013,
+                  "passive-mode": false,
+                  "tcp-mss": 1240
+                }
+              },
+              "timers": {
+                "state": {
+                  "connect-retry": 30,
+                  "hold-time": 180,
+                  "keepalive-interval": 60,
+                  "minimum-advertisement-interval": 0,
+                  "negotiated-hold-time": 180
+                }
+              },
+              "graceful-restart": {
+                "state": {
+                  "enabled": false,
+                  "restart-time": 120,
+                  "stale-routes-time": 360,
+                  "helper-only": false
+                }
+              },
+              "ebgp-multihop": {
+                "state": {
+                  "enabled": false,
+                  "multihop-ttl": 1
+                }
+              },
+              "error-handling": {
+                "state": {
+                  "treat-as-withdraw": false,
+                  "erroneous-update-messages": 0
+                }
+              }
+            },
+            {
+              "neighbor-address": "100.100.100.108",
+              "state": {
+                "neighbor-address": "100.100.100.108",
+                "peer-group": "RR",
+                "peer-as": 100,
+                "peer-type": "INTERNAL",
+                "send-community": "NONE",
+                "enabled": true,
+                "dynamically-configured": false,
+                "session-state": "ESTABLISHED",
+                "established-transitions": "1",
+                "supported-capabilities": [
+                  "openconfig-bgp-types:ROUTE_REFRESH",
+                  "openconfig-bgp-types:ASN32",
+                  "openconfig-bgp-types:MPBGP"
+                ],
+                "last-established": 1744111175797028000,
+                "messages": {
+                  "sent": {
+                    "UPDATE": "2",
+                    "NOTIFICATION": "0"
+                  },
+                  "received": {
+                    "UPDATE": "3",
+                    "NOTIFICATION": "0"
+                  }
+                },
+                "queues": {
+                  "input": 0,
+                  "output": 0
+                },
+                "Cisco-IOS-XR-openconfig-bgp-ext:cisco": {
+                  "in-bytes": 352552,
+                  "out-bytes": 241,
+                  "connection-down-count": 0,
+                  "previous-connection-state": "idle",
+                  "all-msg-rx-count": 18542,
+                  "all-msg-tx-count": 18540
+                }
+              },
+              "transport": {
+                "state": {
+                  "local-address": "100.100.100.101",
+                  "local-port": 54234,
+                  "remote-address": "100.100.100.108",
+                  "remote-port": 179,
+                  "passive-mode": false,
+                  "tcp-mss": 1240
+                }
+              },
+              "timers": {
+                "state": {
+                  "connect-retry": 30,
+                  "hold-time": 180,
+                  "keepalive-interval": 60,
+                  "minimum-advertisement-interval": 0,
+                  "negotiated-hold-time": 180
+                }
+              },
+              "graceful-restart": {
+                "state": {
+                  "enabled": false,
+                  "restart-time": 120,
+                  "stale-routes-time": 360,
+                  "helper-only": false
+                }
+              },
+              "ebgp-multihop": {
+                "state": {
+                  "enabled": false,
+                  "multihop-ttl": 1
+                }
+              },
+              "error-handling": {
+                "state": {
+                  "treat-as-withdraw": false,
+                  "erroneous-update-messages": 0
+                }
+              },
+              "afi-safis": {
+                "afi-safi": [
+                  {
+                    "afi-safi-name": "openconfig-bgp-types:L3VPN_IPV4_UNICAST",
+                    "state": {
+                      "afi-safi-name": "openconfig-bgp-types:L3VPN_IPV4_UNICAST",
+                      "enabled": true,
+                      "active": true,
+                      "prefixes": {
+                        "received": 1,
+                        "received-pre-policy": 1,
+                        "sent": 1,
+                        "installed": 0
+                      },
+                      "Cisco-IOS-XR-openconfig-bgp-ext:cisco": {
+                        "neighbor-version": "8",
+                        "prefixes-denied-count": 0,
+                        "prefixes-denied-policy": 0,
+                        "prefixes-suppressed": 0,
+                        "prefixes-withdrawn": 0,
+                        "rx-processed-messages": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "network-instances/network-instance[name=100]/protocols/protocol[identifier=BGP][name=default]/global",
+      "val": {
+        "global": {
+          "state": {
+            "as": 100,
+            "router-id": "100.100.100.101",
+            "total-paths": 1,
+            "total-prefixes": 1
+          },
+          "afi-safis": {
+            "afi-safi": [
+              {
+                "afi-safi-name": "openconfig-bgp-types:IPV4_UNICAST",
+                "state": {
+                  "afi-safi-name": "openconfig-bgp-types:IPV4_UNICAST",
+                  "enabled": true,
+                  "total-paths": 1,
+                  "total-prefixes": 1
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "timestamp": 1745217670920999829
+}
